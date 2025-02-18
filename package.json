@@ -1,0 +1,46 @@
+{
+  "name": "agent-ui-client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "agent": "langgraphjs dev --no-browser",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@langchain/core": "^0.3.40",
+    "@langchain/langgraph": "^0.2.46",
+    "@langchain/openai": "^0.4.4",
+    "@langchain/langgraph-api": "*",
+    "@langchain/langgraph-cli": "*",
+    "@langchain/langgraph-sdk": "*",
+    "esbuild": "^0.25.0",
+    "esbuild-plugin-tailwindcss": "^2.0.1",
+    "tailwindcss": "^4.0.6",
+    "uuid": "^11.0.5",
+    "zod": "^3.24.2"
+  },
+  "resolutions": {
+    "@langchain/langgraph-api": "http://localhost:3123/16/@langchain/langgraph-api",
+    "@langchain/langgraph-cli": "http://localhost:3123/16/@langchain/langgraph-cli",
+    "@langchain/langgraph-sdk": "http://localhost:3123/16/@langchain/langgraph-sdk"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.19.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.18",
+    "globals": "^15.14.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.22.0",
+    "vite": "^6.1.0"
+  }
+}

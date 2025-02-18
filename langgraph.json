@@ -1,0 +1,10 @@
+{
+  "graphs": {
+    "agent": "./agent/agent.tsx:graph"
+  },
+  "ui": {
+    "agent": "./agent/ui.tsx"
+  },
+  "_INTERNAL_docker_tag": "20",
+  "env": ".env"
+}
