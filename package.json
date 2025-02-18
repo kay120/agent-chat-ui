@@ -26,9 +26,9 @@
     "zod": "^3.24.2"
   },
   "resolutions": {
-    "@langchain/langgraph-api": "http://localhost:3123/16/@langchain/langgraph-api",
-    "@langchain/langgraph-cli": "http://localhost:3123/16/@langchain/langgraph-cli",
-    "@langchain/langgraph-sdk": "http://localhost:3123/16/@langchain/langgraph-sdk"
+    "@langchain/langgraph-api": "http://localhost:3123/17/@langchain/langgraph-api",
+    "@langchain/langgraph-cli": "http://localhost:3123/17/@langchain/langgraph-cli",
+    "@langchain/langgraph-sdk": "http://localhost:3123/17/@langchain/langgraph-sdk"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

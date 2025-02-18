@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@langchain/langgraph-api': http://localhost:3123/16/@langchain/langgraph-api
-  '@langchain/langgraph-cli': http://localhost:3123/16/@langchain/langgraph-cli
-  '@langchain/langgraph-sdk': http://localhost:3123/16/@langchain/langgraph-sdk
+  '@langchain/langgraph-api': http://localhost:3123/17/@langchain/langgraph-api
+  '@langchain/langgraph-cli': http://localhost:3123/17/@langchain/langgraph-cli
+  '@langchain/langgraph-sdk': http://localhost:3123/17/@langchain/langgraph-sdk
 
 importers:
 
@@ -20,14 +20,14 @@ importers:
         specifier: ^0.2.46
         version: 0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0)
       '@langchain/langgraph-api':
-        specifier: http://localhost:3123/16/@langchain/langgraph-api
-        version: http://localhost:3123/16/@langchain/langgraph-api(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)
+        specifier: http://localhost:3123/17/@langchain/langgraph-api
+        version: http://localhost:3123/17/@langchain/langgraph-api(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)
       '@langchain/langgraph-cli':
-        specifier: http://localhost:3123/16/@langchain/langgraph-cli
-        version: http://localhost:3123/16/@langchain/langgraph-cli(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)
+        specifier: http://localhost:3123/17/@langchain/langgraph-cli
+        version: http://localhost:3123/17/@langchain/langgraph-cli(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)
       '@langchain/langgraph-sdk':
-        specifier: http://localhost:3123/16/@langchain/langgraph-sdk
-        version: http://localhost:3123/16/@langchain/langgraph-sdk(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0)
+        specifier: http://localhost:3123/17/@langchain/langgraph-sdk
+        version: http://localhost:3123/17/@langchain/langgraph-sdk(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0)
       '@langchain/openai':
         specifier: ^0.4.4
         version: 0.4.4(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))
@@ -735,8 +735,8 @@ packages:
     resolution: {integrity: sha512-RGhJOTzJv6H+3veBAnDlH2KXuZ68CXMEg6B6DPTzL3IGDyd+vLxXG4FIttzUwjdeQKjrrFBwlXpJDl7bkoApzQ==}
     engines: {node: '>=18'}
 
-  '@langchain/langgraph-api@http://localhost:3123/16/@langchain/langgraph-api':
-    resolution: {tarball: http://localhost:3123/16/@langchain/langgraph-api}
+  '@langchain/langgraph-api@http://localhost:3123/17/@langchain/langgraph-api':
+    resolution: {tarball: http://localhost:3123/17/@langchain/langgraph-api}
     version: 0.0.10
     engines: {node: '>=18'}
     peerDependencies:
@@ -751,14 +751,14 @@ packages:
     peerDependencies:
       '@langchain/core': '>=0.2.31 <0.4.0'
 
-  '@langchain/langgraph-cli@http://localhost:3123/16/@langchain/langgraph-cli':
-    resolution: {tarball: http://localhost:3123/16/@langchain/langgraph-cli}
+  '@langchain/langgraph-cli@http://localhost:3123/17/@langchain/langgraph-cli':
+    resolution: {tarball: http://localhost:3123/17/@langchain/langgraph-cli}
     version: 0.0.10
     engines: {node: '>=18'}
     hasBin: true
 
-  '@langchain/langgraph-sdk@http://localhost:3123/16/@langchain/langgraph-sdk':
-    resolution: {tarball: http://localhost:3123/16/@langchain/langgraph-sdk}
+  '@langchain/langgraph-sdk@http://localhost:3123/17/@langchain/langgraph-sdk':
+    resolution: {tarball: http://localhost:3123/17/@langchain/langgraph-sdk}
     version: 0.0.42
     peerDependencies:
       '@langchain/core': '>=0.2.31 <0.4.0'
@@ -2866,7 +2866,7 @@ snapshots:
     transitivePeerDependencies:
       - openai
 
-  '@langchain/langgraph-api@http://localhost:3123/16/@langchain/langgraph-api(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)':
+  '@langchain/langgraph-api@http://localhost:3123/17/@langchain/langgraph-api(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)':
     dependencies:
       '@babel/code-frame': 7.26.2
       '@hono/node-server': 1.13.8(hono@4.7.1)
@@ -2902,11 +2902,11 @@ snapshots:
       '@langchain/core': 0.3.40(openai@4.85.1(zod@3.24.2))
       uuid: 10.0.0
 
-  '@langchain/langgraph-cli@http://localhost:3123/16/@langchain/langgraph-cli(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)':
+  '@langchain/langgraph-cli@http://localhost:3123/17/@langchain/langgraph-cli(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)':
     dependencies:
       '@babel/code-frame': 7.26.2
       '@commander-js/extra-typings': 13.1.0(commander@13.1.0)
-      '@langchain/langgraph-api': http://localhost:3123/16/@langchain/langgraph-api(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)
+      '@langchain/langgraph-api': http://localhost:3123/17/@langchain/langgraph-api(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2))))(@langchain/langgraph@0.2.46(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0))(openai@4.85.1(zod@3.24.2))(typescript@5.7.3)
       chokidar: 4.0.3
       commander: 13.1.0
       dedent: 1.5.3
@@ -2931,7 +2931,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@langchain/langgraph-sdk@http://localhost:3123/16/@langchain/langgraph-sdk(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0)':
+  '@langchain/langgraph-sdk@http://localhost:3123/17/@langchain/langgraph-sdk(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0)':
     dependencies:
       '@langchain/core': 0.3.40(openai@4.85.1(zod@3.24.2))
       '@types/json-schema': 7.0.15
@@ -2944,7 +2944,7 @@ snapshots:
     dependencies:
       '@langchain/core': 0.3.40(openai@4.85.1(zod@3.24.2))
       '@langchain/langgraph-checkpoint': 0.0.15(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))
-      '@langchain/langgraph-sdk': http://localhost:3123/16/@langchain/langgraph-sdk(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0)
+      '@langchain/langgraph-sdk': http://localhost:3123/17/@langchain/langgraph-sdk(@langchain/core@0.3.40(openai@4.85.1(zod@3.24.2)))(react@19.0.0)
       uuid: 10.0.0
       zod: 3.24.2
     transitivePeerDependencies:
