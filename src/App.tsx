@@ -6,6 +6,7 @@ import type {
   RemoveUIMessage,
 } from "@langchain/langgraph-sdk/react-ui/types";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui/client";
+import { Thread } from "@/components/assistant-ui/thread";
 
 function App() {
   const thread = useStream<
@@ -19,6 +20,12 @@ function App() {
     apiUrl: "http://localhost:2024",
     assistantId: "agent",
   });
+
+   return (
+    <div className="h-full">
+      <Thread />
+    </div>
+  );
 
   return (
     <>
