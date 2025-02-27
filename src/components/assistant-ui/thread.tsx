@@ -2,8 +2,10 @@ import {
   ActionBarPrimitive,
   BranchPickerPrimitive,
   ComposerPrimitive,
+  getExternalStoreMessages,
   MessagePrimitive,
   ThreadPrimitive,
+  useMessage,
 } from "@assistant-ui/react";
 import type { FC } from "react";
 import {
@@ -17,12 +19,14 @@ import {
   SendHorizontalIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui/client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MarkdownText } from "@/components/assistant-ui/markdown-text";
 import { TooltipIconButton } from "@/components/assistant-ui/tooltip-icon-button";
-
+import { Message } from "@langchain/langgraph-sdk";
+import { useStreamContext } from "@/providers/Stream";
 
 export const Thread: FC = () => {
   return (
@@ -78,9 +82,7 @@ const ThreadWelcome: FC = () => {
           <Avatar>
             <AvatarFallback>C</AvatarFallback>
           </Avatar>
-          <p className="mt-4 font-medium">
-            How can I help you today?
-          </p>
+          <p className="mt-4 font-medium">How can I help you today?</p>
         </div>
         <ThreadWelcomeSuggestions />
       </div>
@@ -93,12 +95,12 @@ const ThreadWelcomeSuggestions: FC = () => {
     <div className="mt-3 flex w-full items-stretch justify-center gap-4">
       <ThreadPrimitive.Suggestion
         className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in"
-        prompt="What is the weather in Tokyo?"
+        prompt="What's the current price of $APPL?"
         method="replace"
         autoSend
       >
         <span className="line-clamp-2 text-ellipsis text-sm font-semibold">
-          What is the weather in Tokyo?
+          What's the current price of $APPL?
         </span>
       </ThreadPrimitive.Suggestion>
       <ThreadPrimitive.Suggestion
@@ -108,7 +110,7 @@ const ThreadWelcomeSuggestions: FC = () => {
         autoSend
       >
         <span className="line-clamp-2 text-ellipsis text-sm font-semibold">
-          What is assistant-ui?
+          What's the weather like in San Francisco Today?
         </span>
       </ThreadPrimitive.Suggestion>
     </div>
@@ -205,12 +207,66 @@ const EditComposer: FC = () => {
   );
 };
 
+function CustomComponent({
+  message,
+  idx,
+  thread,
+}: {
+  message: Message;
+  idx: number;
+  thread: ReturnType<typeof useStreamContext>;
+}) {
+  const meta = thread.getMessagesMetadata(message, idx);
+  const seenState = meta?.firstSeenState;
+  const customComponent = seenState?.values.ui
+    .slice()
+    .reverse()
+    .find(
+      ({ additional_kwargs }) =>
+        additional_kwargs.run_id === seenState.metadata?.run_id,
+    );
+
+  return (
+    <div key={message.id}>
+      <pre>{JSON.stringify(message, null, 2)}</pre>
+      {customComponent && (
+        <LoadExternalComponent
+          assistantId="agent"
+          stream={thread}
+          message={customComponent}
+        />
+      )}
+    </div>
+  );
+}
+
 const AssistantMessage: FC = () => {
+  const thread = useStreamContext();
+  const assistantMsgs = useMessage((m) => {
+    const langchainMessage = getExternalStoreMessages<Message>(m);
+    return langchainMessage;
+  })?.[0];
+  let threadMsgIdx: number | undefined = undefined;
+  const threadMsg = thread.messages.find((m, idx) => {
+    if (m.id === assistantMsgs?.id) {
+      threadMsgIdx = idx;
+      return true;
+    }
+  });
+
   return (
     <MessagePrimitive.Root className="grid grid-cols-[auto_auto_1fr] grid-rows-[auto_1fr] relative w-full max-w-[var(--thread-max-width)] py-4">
       <Avatar className="col-start-1 row-span-full row-start-1 mr-4">
         <AvatarFallback>A</AvatarFallback>
       </Avatar>
+
+      {threadMsg && threadMsgIdx !== undefined && (
+        <CustomComponent
+          message={threadMsg}
+          idx={threadMsgIdx}
+          thread={thread}
+        />
+      )}
 
       <div className="text-foreground max-w-[calc(var(--thread-max-width)*0.8)] break-words leading-7 col-span-2 col-start-2 row-start-1 my-1.5">
         <MessagePrimitive.Content components={{ Text: MarkdownText }} />
@@ -271,7 +327,10 @@ const BranchPicker: FC<BranchPickerPrimitive.Root.Props> = ({
   return (
     <BranchPickerPrimitive.Root
       hideWhenSingleBranch
-      className={cn("text-muted-foreground inline-flex items-center text-xs", className)}
+      className={cn(
+        "text-muted-foreground inline-flex items-center text-xs",
+        className,
+      )}
       {...rest}
     >
       <BranchPickerPrimitive.Previous asChild>

@@ -1,9 +1,12 @@
-import "./ui.css";
+import "./index.css";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import type { AIMessage, Message } from "@langchain/langgraph-sdk";
 import { useState } from "react";
 
-function ReactComponent(props: { instruction: string; logo: string }) {
+export default function StockPrice(props: {
+  instruction: string;
+  logo: string;
+}) {
   const [counter, setCounter] = useState(0);
 
   // useStream should be able to be infered from context
@@ -17,7 +20,7 @@ function ReactComponent(props: { instruction: string; logo: string }) {
     .reverse()
     .find(
       (message): message is AIMessage =>
-        message.type === "ai" && !!message.tool_calls?.length
+        message.type === "ai" && !!message.tool_calls?.length,
     );
 
   const toolCallId = aiTool?.tool_calls?.[0]?.id;
@@ -52,6 +55,3 @@ function ReactComponent(props: { instruction: string; logo: string }) {
     </div>
   );
 }
-
-const ComponentMap = { "react-component": ReactComponent } as const;
-export default ComponentMap;

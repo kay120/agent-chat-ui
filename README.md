@@ -2,7 +2,7 @@
 
 ## Setup
 
-1. Clone `langgraph` repo and `langgraphjs-api` repo. 
+1. Clone `langgraph` repo and `langgraphjs-api` repo.
 1. Checkout the following branches:
    - `langgraph`: `dqbd/sdk-js-react-ui`
    - `langgraphjs-api`: `dqbd/api-ui`
