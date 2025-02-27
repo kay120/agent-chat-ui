@@ -218,6 +218,7 @@ function CustomComponent({
 }) {
   const meta = thread.getMessagesMetadata(message, idx);
   const seenState = meta?.firstSeenState;
+  console.log("seenState", meta);
   const customComponent = seenState?.values.ui
     .slice()
     .reverse()
@@ -226,9 +227,13 @@ function CustomComponent({
         additional_kwargs.run_id === seenState.metadata?.run_id,
     );
 
+  if (!customComponent) {
+    console.log("no custom component", message, meta);
+    return null;
+  }
+
   return (
     <div key={message.id}>
-      <pre>{JSON.stringify(message, null, 2)}</pre>
       {customComponent && (
         <LoadExternalComponent
           assistantId="agent"
@@ -245,10 +250,12 @@ const AssistantMessage: FC = () => {
   const assistantMsgs = useMessage((m) => {
     const langchainMessage = getExternalStoreMessages<Message>(m);
     return langchainMessage;
-  })?.[0];
+  });
+
+  const assistantMsg = assistantMsgs[0];
   let threadMsgIdx: number | undefined = undefined;
   const threadMsg = thread.messages.find((m, idx) => {
-    if (m.id === assistantMsgs?.id) {
+    if (m.id === assistantMsg?.id) {
       threadMsgIdx = idx;
       return true;
     }

@@ -21,6 +21,9 @@ importers:
       "@langchain/core":
         specifier: ^0.3.41
         version: 0.3.41(openai@4.85.4(zod@3.24.2))
+      "@langchain/google-genai":
+        specifier: ^0.1.10
+        version: 0.1.10(@langchain/core@0.3.41(openai@4.85.4(zod@3.24.2)))(zod@3.24.2)
       "@langchain/langgraph":
         specifier: ^0.2.49
         version: 0.2.49(@langchain/core@0.3.41(openai@4.85.4(zod@3.24.2)))(react@19.0.0)
@@ -879,6 +882,13 @@ packages:
         integrity: sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==,
       }
 
+  "@google/generative-ai@0.21.0":
+    resolution:
+      {
+        integrity: sha512-7XhUbtnlkSEZK15kN3t+tzIMxsbKm/dSkKBFalj+20NvPKe1kBY7mR2P7vuijEn+f06z5+A8bVGKO0v39cr6Wg==,
+      }
+    engines: { node: ">=18.0.0" }
+
   "@hono/node-server@1.13.8":
     resolution:
       {
@@ -985,6 +995,15 @@ packages:
         integrity: sha512-e/vOyfBxH6Wf2iWvQTecfnkTLGyy6QMTjHgRdU89d3+cHHnNURRCjFbq0dOLWqxnW3eWbXkmNhf3MauRDM+zbQ==,
       }
     engines: { node: ">=18" }
+
+  "@langchain/google-genai@0.1.10":
+    resolution:
+      {
+        integrity: sha512-+0xFWvauNDNp8Nvhy5F5g8RbB5g4WWQSIxoPI4IQIUICBBT/kS/Omf1VJI6Loc0IH93m9ZSwYxRVCRu3qx51TQ==,
+      }
+    engines: { node: ">=18" }
+    peerDependencies:
+      "@langchain/core": ">=0.3.17 <0.4.0"
 
   "@langchain/langgraph-api@http://localhost:3123/17/@langchain/langgraph-api":
     resolution: { tarball: http://localhost:3123/17/@langchain/langgraph-api }
@@ -5313,6 +5332,8 @@ snapshots:
 
   "@floating-ui/utils@0.2.9": {}
 
+  "@google/generative-ai@0.21.0": {}
+
   "@hono/node-server@1.13.8(hono@4.7.2)":
     dependencies:
       hono: 4.7.2
@@ -5381,6 +5402,14 @@ snapshots:
       zod-to-json-schema: 3.24.3(zod@3.24.2)
     transitivePeerDependencies:
       - openai
+
+  "@langchain/google-genai@0.1.10(@langchain/core@0.3.41(openai@4.85.4(zod@3.24.2)))(zod@3.24.2)":
+    dependencies:
+      "@google/generative-ai": 0.21.0
+      "@langchain/core": 0.3.41(openai@4.85.4(zod@3.24.2))
+      zod-to-json-schema: 3.24.3(zod@3.24.2)
+    transitivePeerDependencies:
+      - zod
 
   "@langchain/langgraph-api@http://localhost:3123/17/@langchain/langgraph-api(@langchain/core@0.3.41(openai@4.85.4(zod@3.24.2)))(@langchain/langgraph-checkpoint@0.0.15(@langchain/core@0.3.41(openai@4.85.4(zod@3.24.2))))(@langchain/langgraph@0.2.49(@langchain/core@0.3.41(openai@4.85.4(zod@3.24.2)))(react@19.0.0))(openai@4.85.4(zod@3.24.2))(typescript@5.7.3)":
     dependencies:

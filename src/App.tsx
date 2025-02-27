@@ -3,7 +3,7 @@ import { Thread } from "@/components/assistant-ui/thread";
 
 function App() {
   return (
-    <div className="h-full">
+    <div className="h-screen">
       <Thread />
     </div>
   );

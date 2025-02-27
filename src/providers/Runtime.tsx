@@ -21,14 +21,7 @@ export function RuntimeProvider({
 
     const input = message.content[0].text;
     const humanMessage: HumanMessage = { type: "human", content: input };
-    // TODO: I dont think I need to do this, since we're passing stream.messages into the state hook, and it should update when we call `submit`
-    // setMessages((currentConversation) => [
-    //   ...currentConversation,
-    //   humanMessage,
-    // ]);
-
     stream.submit({ messages: [humanMessage] });
-    console.log("Sent message", humanMessage);
   };
 
   const runtime = useExternalStoreRuntime({
