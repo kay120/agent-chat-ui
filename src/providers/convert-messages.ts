@@ -79,15 +79,6 @@ export function convertLangChainMessages(message: Message): ThreadMessageLike {
         role: "user",
         id: message.id,
         content: [{ type: "text", text: content }],
-        // ...(message.additional_kwargs
-        //   ? {
-        //       metadata: {
-        //         custom: {
-        //           ...message.additional_kwargs,
-        //         },
-        //       },
-        //     }
-        //   : {}),
       };
     case "ai":
       const aiMsg = message as AIMessage;
@@ -110,20 +101,11 @@ export function convertLangChainMessages(message: Message): ThreadMessageLike {
             text: content,
           },
         ],
-        // ...(message.additional_kwargs
-        //   ? {
-        //       metadata: {
-        //         custom: {
-        //           ...message.additional_kwargs,
-        //         },
-        //       },
-        //     }
-        //   : {}),
       };
     case "tool":
       const toolMsg = message as ToolMessage;
       return {
-        role: "user",
+        role: "assistant",
         content: [
           {
             type: "tool-call",

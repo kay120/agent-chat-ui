@@ -1,6 +1,5 @@
 import {
   ActionBarPrimitive,
-  BranchPickerPrimitive,
   ComposerPrimitive,
   getExternalStoreMessages,
   MessagePrimitive,
@@ -8,17 +7,7 @@ import {
   useMessage,
 } from "@assistant-ui/react";
 import type { FC } from "react";
-import {
-  ArrowDownIcon,
-  CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  CopyIcon,
-  PencilIcon,
-  RefreshCwIcon,
-  SendHorizontalIcon,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowDownIcon, PencilIcon, SendHorizontalIcon } from "lucide-react";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui/client";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -168,8 +157,6 @@ const UserMessage: FC = () => {
       <div className="bg-muted text-foreground max-w-[calc(var(--thread-max-width)*0.8)] break-words rounded-3xl px-5 py-2.5 col-start-2 row-start-2">
         <MessagePrimitive.Content />
       </div>
-
-      <BranchPicker className="col-span-full col-start-1 row-start-3 -mr-1 justify-end" />
     </MessagePrimitive.Root>
   );
 };
@@ -218,7 +205,6 @@ function CustomComponent({
 }) {
   const meta = thread.getMessagesMetadata(message, idx);
   const seenState = meta?.firstSeenState;
-  console.log("seenState", meta);
   const customComponent = seenState?.values.ui
     .slice()
     .reverse()
@@ -228,7 +214,6 @@ function CustomComponent({
     );
 
   if (!customComponent) {
-    console.log("no custom component", message, meta);
     return null;
   }
 
@@ -278,82 +263,7 @@ const AssistantMessage: FC = () => {
       <div className="text-foreground max-w-[calc(var(--thread-max-width)*0.8)] break-words leading-7 col-span-2 col-start-2 row-start-1 my-1.5">
         <MessagePrimitive.Content components={{ Text: MarkdownText }} />
       </div>
-
-      <AssistantActionBar />
-
-      <BranchPicker className="col-start-2 row-start-2 -ml-2 mr-2" />
     </MessagePrimitive.Root>
-  );
-};
-
-const AssistantActionBar: FC = () => {
-  return (
-    <ActionBarPrimitive.Root
-      hideWhenRunning
-      autohide="not-last"
-      autohideFloat="single-branch"
-      className="text-muted-foreground flex gap-1 col-start-3 row-start-2 -ml-1 data-[floating]:bg-background data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:p-1 data-[floating]:shadow-sm"
-    >
-      {/* <MessagePrimitive.If speaking={false}>
-        <ActionBarPrimitive.Speak asChild>
-          <TooltipIconButton tooltip="Read aloud">
-            <AudioLinesIcon />
-          </TooltipIconButton>
-        </ActionBarPrimitive.Speak>
-      </MessagePrimitive.If>
-      <MessagePrimitive.If speaking>
-        <ActionBarPrimitive.StopSpeaking asChild>
-          <TooltipIconButton tooltip="Stop">
-            <StopCircleIcon />
-          </TooltipIconButton>
-        </ActionBarPrimitive.StopSpeaking>
-      </MessagePrimitive.If> */}
-      <ActionBarPrimitive.Copy asChild>
-        <TooltipIconButton tooltip="Copy">
-          <MessagePrimitive.If copied>
-            <CheckIcon />
-          </MessagePrimitive.If>
-          <MessagePrimitive.If copied={false}>
-            <CopyIcon />
-          </MessagePrimitive.If>
-        </TooltipIconButton>
-      </ActionBarPrimitive.Copy>
-      <ActionBarPrimitive.Reload asChild>
-        <TooltipIconButton tooltip="Refresh">
-          <RefreshCwIcon />
-        </TooltipIconButton>
-      </ActionBarPrimitive.Reload>
-    </ActionBarPrimitive.Root>
-  );
-};
-
-const BranchPicker: FC<BranchPickerPrimitive.Root.Props> = ({
-  className,
-  ...rest
-}) => {
-  return (
-    <BranchPickerPrimitive.Root
-      hideWhenSingleBranch
-      className={cn(
-        "text-muted-foreground inline-flex items-center text-xs",
-        className,
-      )}
-      {...rest}
-    >
-      <BranchPickerPrimitive.Previous asChild>
-        <TooltipIconButton tooltip="Previous">
-          <ChevronLeftIcon />
-        </TooltipIconButton>
-      </BranchPickerPrimitive.Previous>
-      <span className="font-medium">
-        <BranchPickerPrimitive.Number /> / <BranchPickerPrimitive.Count />
-      </span>
-      <BranchPickerPrimitive.Next asChild>
-        <TooltipIconButton tooltip="Next">
-          <ChevronRightIcon />
-        </TooltipIconButton>
-      </BranchPickerPrimitive.Next>
-    </BranchPickerPrimitive.Root>
   );
 };
 

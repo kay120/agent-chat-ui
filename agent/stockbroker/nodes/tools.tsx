@@ -1,5 +1,4 @@
 import { StockbrokerState } from "../types";
-import { ToolMessage } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { typedUi } from "@langchain/langgraph-sdk/react-ui/server";
 import type ComponentMap from "../../uis/index";
@@ -64,19 +63,8 @@ export async function callTools(
     ui.write("portfolio", {});
   }
 
-  const toolMessages =
-    message.tool_calls?.map((tc) => {
-      return new ToolMessage({
-        name: tc.name,
-        tool_call_id: tc.id ?? "",
-        content: "Successfully handled tool call",
-      });
-    }) || [];
-
-  console.log("Returning", [message, ...toolMessages]);
-
   return {
-    messages: [message, ...toolMessages],
+    messages: [message],
     // TODO: Fix the ui return type.
     ui: ui.collect as any[],
     timestamp: Date.now(),

@@ -15,7 +15,9 @@ export default function StockPrice(props: {
     apiUrl: "http://localhost:3123",
   });
 
-  const aiTool = thread.messages
+  const messagesCopy = thread.messages;
+
+  const aiTool = messagesCopy
     .slice()
     .reverse()
     .find(
