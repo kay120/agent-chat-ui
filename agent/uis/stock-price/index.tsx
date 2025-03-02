@@ -10,7 +10,7 @@ export default function StockPrice(props: {
   const [counter, setCounter] = useState(0);
 
   // useStream should be able to be infered from context
-  const thread = useStream<{ messages: Message[] }, { messages: Message[] }>({
+  const thread = useStream<{ messages: Message[] }>({
     assistantId: "assistant_123",
     apiUrl: "http://localhost:3123",
   });
@@ -22,7 +22,7 @@ export default function StockPrice(props: {
     .reverse()
     .find(
       (message): message is AIMessage =>
-        message.type === "ai" && !!message.tool_calls?.length,
+        message.type === "ai" && !!message.tool_calls?.length
     );
 
   const toolCallId = aiTool?.tool_calls?.[0]?.id;
