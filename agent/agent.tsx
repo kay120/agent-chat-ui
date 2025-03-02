@@ -32,10 +32,9 @@ async function router(
   const prompt = `You're a highly helpful AI assistant, tasked with routing the user's query to the appropriate tool.
 You should analyze the user's input, and choose the appropriate tool to use.`;
 
-  const messagesCopy = state.messages;
-  const recentHumanMessage = messagesCopy
-    .reverse()
-    .find((m) => m.getType() === "human");
+  const recentHumanMessage = state.messages.findLast(
+    (m) => m.getType() === "human"
+  );
 
   if (!recentHumanMessage) {
     throw new Error("No human message found in state");
@@ -66,11 +65,7 @@ function handleRoute(
 
 async function handleGeneralInput(state: GenerativeUIState) {
   const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
-  const messagesCopy = state.messages;
-  messagesCopy.reverse();
-  console.log("messagesCopy", messagesCopy);
-
-  const response = await llm.invoke(messagesCopy);
+  const response = await llm.invoke(state.messages);
 
   return {
     messages: [response],
