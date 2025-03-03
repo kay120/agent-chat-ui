@@ -3,7 +3,7 @@
     "agent": "./agent/agent.tsx:graph"
   },
   "ui": {
-    "agent": "./agent/ui.tsx"
+    "agent": "./agent/uis/index.tsx"
   },
   "_INTERNAL_docker_tag": "20",
   "env": ".env"
