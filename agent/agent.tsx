@@ -6,7 +6,7 @@ import { stockbrokerGraph } from "./stockbroker";
 import { ChatOpenAI } from "@langchain/openai";
 
 async function router(
-  state: GenerativeUIState
+  state: GenerativeUIState,
 ): Promise<Partial<GenerativeUIState>> {
   const routerDescription = `The route to take based on the user's input.
 - stockbroker: can fetch the price of a ticker, purchase/sell a ticker, or get the user's portfolio
@@ -35,7 +35,7 @@ async function router(
 You should analyze the user's input, and choose the appropriate tool to use.`;
 
   const recentHumanMessage = state.messages.findLast(
-    (m) => m.getType() === "human"
+    (m) => m.getType() === "human",
   );
 
   if (!recentHumanMessage) {
@@ -60,7 +60,7 @@ You should analyze the user's input, and choose the appropriate tool to use.`;
 }
 
 function handleRoute(
-  state: GenerativeUIState
+  state: GenerativeUIState,
 ): "stockbroker" | "weather" | "generalInput" {
   return state.next;
 }

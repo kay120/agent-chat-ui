@@ -1,9 +1,9 @@
 import "./App.css";
-import { Thread } from "@/components/assistant-ui/thread";
+import { Thread } from "@/components/thread";
 
 function App() {
   return (
-    <div className="h-screen">
+    <div>
       <Thread />
     </div>
   );

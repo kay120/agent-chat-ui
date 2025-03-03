@@ -22,7 +22,7 @@ export default function StockPrice(props: {
     .reverse()
     .find(
       (message): message is AIMessage =>
-        message.type === "ai" && !!message.tool_calls?.length
+        message.type === "ai" && !!message.tool_calls?.length,
     );
 
   const toolCallId = aiTool?.tool_calls?.[0]?.id;
