@@ -1,5 +1,5 @@
 import { useStreamContext } from "@/providers/Stream";
-import { Message } from "@langchain/langgraph-sdk";
+import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { getContentString } from "../utils";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -43,19 +43,17 @@ function CustomComponent({
 export function AssistantMessage({
   message,
   isLoading,
+  handleRegenerate,
 }: {
   message: Message;
   isLoading: boolean;
+  handleRegenerate: (parentCheckpoint: Checkpoint | null | undefined) => void;
 }) {
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
 
   const contentString = getContentString(message.content);
-
-  const handleRegenerate = () => {
-    thread.submit(undefined, { checkpoint: parentCheckpoint, streamMode: ["values"] });
-  };
 
   return (
     <div className="flex items-start mr-auto gap-2 group">
@@ -80,7 +78,7 @@ export function AssistantMessage({
             content={contentString}
             isLoading={isLoading}
             isAiMessage={true}
-            handleRegenerate={handleRegenerate}
+            handleRegenerate={() => handleRegenerate(parentCheckpoint)}
           />
         </div>
       </div>

@@ -5,7 +5,7 @@ import { useStreamContext } from "@/providers/Stream";
 import { useState, FormEvent } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Message } from "@langchain/langgraph-sdk";
+import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { AssistantMessage, AssistantMessageLoading } from "./messages/ai";
 import { HumanMessage } from "./messages/human";
 import {
@@ -86,6 +86,18 @@ export function Thread() {
     setInput("");
   };
 
+  const handleRegenerate = (
+    parentCheckpoint: Checkpoint | null | undefined,
+  ) => {
+    // Do this so the loading state is correct
+    prevMessageLength.current = prevMessageLength.current - 1;
+    setFirstTokenReceived(false);
+    stream.submit(undefined, {
+      checkpoint: parentCheckpoint,
+      streamMode: ["values"],
+    });
+  };
+
   const chatStarted = isLoading || messages.length > 0;
   const renderMessages = messages.filter(
     (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
@@ -128,6 +140,7 @@ export function Thread() {
                 key={"id" in message ? message.id : `${message.type}-${index}`}
                 message={message as Message}
                 isLoading={isLoading}
+                handleRegenerate={handleRegenerate}
               />
             ),
           )}
