@@ -54,7 +54,7 @@ export function AssistantMessage({
   const contentString = getContentString(message.content);
 
   const handleRegenerate = () => {
-    thread.submit(undefined, { checkpoint: parentCheckpoint });
+    thread.submit(undefined, { checkpoint: parentCheckpoint, streamMode: ["values"] });
   };
 
   return (
