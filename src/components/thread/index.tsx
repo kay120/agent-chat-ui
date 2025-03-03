@@ -17,23 +17,6 @@ import { TooltipIconButton } from "./tooltip-icon-button";
 import { SquarePen } from "lucide-react";
 import { StringParam, useQueryParam } from "use-query-params";
 
-// const dummyMessages = [
-//   { type: "human", content: "Hi! What can you do?" },
-//   {
-//     type: "ai",
-//     content: `Hello! I can assist you with a variety of tasks, including:
-
-// 1. **Answering Questions**: I can provide information on a wide range of topics, from science and history to technology and culture.
-// 2. **Writing Assistance**: I can help you draft emails, essays, reports, and creative writing pieces.
-// 3. **Learning Support**: I can explain concepts, help with homework, and provide study tips.
-// 4. **Language Help**: I can assist with translations, grammar, and vocabulary in multiple languages.
-// 5. **Recommendations**: I can suggest books, movies, recipes, and more based on your interests.
-// 6. **General Advice**: I can offer tips on various subjects, including productivity, wellness, and personal development.
-
-// If you have something specific in mind, feel free to ask!`,
-//   },
-// ];
-
 function Title({ className }: { className?: string }) {
   return (
     <div className={cn("flex gap-2 items-center", className)}>
@@ -43,21 +26,26 @@ function Title({ className }: { className?: string }) {
   );
 }
 
-function NewThread({ onClick }: { onClick: () => void }) {
-  const [_, setThreadId] = useQueryParam('threadId', StringParam);
+function NewThread() {
+  const [_, setThreadId] = useQueryParam("threadId", StringParam);
 
   return (
-    <TooltipIconButton tooltip="New thread" variant="ghost" onClick={() => setThreadId(null)}>
-      <SquarePen />
+    <TooltipIconButton
+      size="lg"
+      className="p-4"
+      tooltip="New thread"
+      variant="ghost"
+      onClick={() => setThreadId(null)}
+    >
+      <SquarePen className="size-5" />
     </TooltipIconButton>
-  )
+  );
 }
 
 export function Thread() {
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const stream = useStreamContext();
-  // const messages = [...dummyMessages, ...stream.messages];
   const messages = stream.messages;
   const isLoading = stream.isLoading;
   const prevMessageLength = useRef(0);
@@ -99,18 +87,6 @@ export function Thread() {
     setInput("");
   };
 
-  const handleNewThread = () => {
-    stream.submit({
-      messages: [
-        {
-          id: uuidv4(),
-          type: "human",
-          content: "New thread",
-        },
-      ],
-    });
-  }
-
   const chatStarted = isLoading || messages.length > 0;
   const renderMessages = messages.filter(
     (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
@@ -130,8 +106,8 @@ export function Thread() {
           </div>
         )}
         {chatStarted && (
-          <div className="hidden md:flex gap-3 absolute top-4 right-4">
-            <NewThread onClick={handleNewThread} />
+          <div className="hidden md:flex items-center gap-3 absolute top-4 right-4">
+            <NewThread />
             <Title />
           </div>
         )}
