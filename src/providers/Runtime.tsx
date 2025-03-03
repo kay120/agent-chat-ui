@@ -31,7 +31,7 @@ function ensureToolCallsHaveResponses(messages: Message[]): Message[] {
         id: tc.id ?? "",
         name: tc.name,
         content: "Successfully handled tool call.",
-      })) ?? []),
+      })) ?? [])
     );
   });
 
@@ -56,9 +56,7 @@ export function RuntimeProvider({
       humanMessage,
     ];
     console.log("Sending new messages", newMessages);
-    stream.submit({
-      messages: newMessages,
-    });
+    stream.submit({ messages: newMessages }, { streamMode: ["values"] });
   };
 
   useEffect(() => {
