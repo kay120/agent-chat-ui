@@ -12,6 +12,7 @@ import {
   DO_NOT_RENDER_ID_PREFIX,
   ensureToolCallsHaveResponses,
 } from "@/lib/ensure-tool-responses";
+import { LangGraphLogoSVG } from "../icons/langgraph";
 
 // const dummyMessages = [
 //   { type: "human", content: "Hi! What can you do?" },
@@ -29,6 +30,15 @@ import {
 // If you have something specific in mind, feel free to ask!`,
 //   },
 // ];
+
+function Title({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex gap-2 items-center", className)}>
+      <LangGraphLogoSVG width={32} height={32} />
+      <h1 className="text-xl font-medium">LangGraph Chat</h1>
+    </div>
+  );
+}
 
 export function Thread() {
   const [input, setInput] = useState("");
@@ -89,14 +99,16 @@ export function Thread() {
       )}
     >
       <div className={cn("flex-1 px-4", chatStarted ? "pb-28" : "mt-64")}>
-        <h1
-          className={cn(
-            "text-2xl font-medium mb-12 text-center",
-            chatStarted && "hidden",
-          )}
-        >
-          Chat
-        </h1>
+        {!chatStarted && (
+          <div className="flex justify-center">
+            <Title className="mb-12" />
+          </div>
+        )}
+        {chatStarted && (
+          <div className="hidden md:flex absolute top-4 right-4">
+            <Title />
+          </div>
+        )}
 
         <div
           className={cn(
