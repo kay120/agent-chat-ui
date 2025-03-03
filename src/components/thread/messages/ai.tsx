@@ -4,6 +4,41 @@ import { getContentString } from "../utils";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MarkdownText } from "../markdown-text";
+import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui/client";
+
+function CustomComponent({
+  message,
+  thread,
+}: {
+  message: Message;
+  thread: ReturnType<typeof useStreamContext>;
+}) {
+  const meta = thread.getMessagesMetadata(message);
+  const seenState = meta?.firstSeenState;
+  const customComponent = seenState?.values.ui
+    .slice()
+    .reverse()
+    .find(
+      ({ additional_kwargs }) =>
+        additional_kwargs.run_id === seenState.metadata?.run_id,
+    );
+
+  if (!customComponent) {
+    return null;
+  }
+
+  return (
+    <div key={message.id}>
+      {customComponent && (
+        <LoadExternalComponent
+          assistantId="agent"
+          stream={thread}
+          message={customComponent}
+        />
+      )}
+    </div>
+  );
+}
 
 export function AssistantMessage({
   message,
@@ -28,9 +63,12 @@ export function AssistantMessage({
         <AvatarFallback>A</AvatarFallback>
       </Avatar>
       <div className="flex flex-col gap-2">
-        <div className="rounded-2xl bg-muted px-4 py-2">
-          <MarkdownText>{contentString}</MarkdownText>
-        </div>
+        <CustomComponent message={message} thread={thread} />
+        {contentString.length > 0 && (
+          <div className="rounded-2xl bg-muted px-4 py-2">
+            <MarkdownText>{contentString}</MarkdownText>
+          </div>
+        )}
         <div className="flex gap-2 items-center mr-auto opacity-0 group-hover:opacity-100 transition-opacity">
           <BranchSwitcher
             branch={meta?.branch}

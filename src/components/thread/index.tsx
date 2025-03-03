@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/providers/Stream";
@@ -7,6 +8,10 @@ import { Button } from "../ui/button";
 import { Message } from "@langchain/langgraph-sdk";
 import { AssistantMessage, AssistantMessageLoading } from "./messages/ai";
 import { HumanMessage } from "./messages/human";
+import {
+  DO_NOT_RENDER_ID_PREFIX,
+  ensureToolCallsHaveResponses,
+} from "@/lib/ensure-tool-responses";
 
 // const dummyMessages = [
 //   { type: "human", content: "Hi! What can you do?" },
@@ -50,9 +55,18 @@ export function Thread() {
     if (!input.trim() || isLoading) return;
     setFirstTokenReceived(false);
 
+    const newHumanMessage: Message = {
+      id: uuidv4(),
+      type: "human",
+      content: input,
+    };
+
     stream.submit(
       {
-        messages: [{ type: "human", content: input }],
+        messages: [
+          ...ensureToolCallsHaveResponses(stream.messages),
+          newHumanMessage,
+        ],
       },
       {
         streamMode: ["values"],
@@ -63,6 +77,9 @@ export function Thread() {
   };
 
   const chatStarted = isLoading || messages.length > 0;
+  const renderMessages = messages.filter(
+    (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
+  );
 
   return (
     <div
@@ -87,7 +104,7 @@ export function Thread() {
             !chatStarted && "hidden",
           )}
         >
-          {messages.map((message, index) =>
+          {renderMessages.map((message, index) =>
             message.type === "human" ? (
               <HumanMessage
                 key={"id" in message ? message.id : `${message.type}-${index}`}
@@ -120,7 +137,6 @@ export function Thread() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            disabled={isLoading}
             placeholder="Type your message..."
             className="p-5 border-[0px] shadow-none ring-0 outline-none focus:outline-none focus:ring-0"
           />
