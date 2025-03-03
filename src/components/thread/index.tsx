@@ -13,6 +13,9 @@ import {
   ensureToolCallsHaveResponses,
 } from "@/lib/ensure-tool-responses";
 import { LangGraphLogoSVG } from "../icons/langgraph";
+import { TooltipIconButton } from "./tooltip-icon-button";
+import { SquarePen } from "lucide-react";
+import { StringParam, useQueryParam } from "use-query-params";
 
 // const dummyMessages = [
 //   { type: "human", content: "Hi! What can you do?" },
@@ -38,6 +41,16 @@ function Title({ className }: { className?: string }) {
       <h1 className="text-xl font-medium">LangGraph Chat</h1>
     </div>
   );
+}
+
+function NewThread({ onClick }: { onClick: () => void }) {
+  const [_, setThreadId] = useQueryParam('threadId', StringParam);
+
+  return (
+    <TooltipIconButton tooltip="New thread" variant="ghost" onClick={() => setThreadId(null)}>
+      <SquarePen />
+    </TooltipIconButton>
+  )
 }
 
 export function Thread() {
@@ -86,6 +99,18 @@ export function Thread() {
     setInput("");
   };
 
+  const handleNewThread = () => {
+    stream.submit({
+      messages: [
+        {
+          id: uuidv4(),
+          type: "human",
+          content: "New thread",
+        },
+      ],
+    });
+  }
+
   const chatStarted = isLoading || messages.length > 0;
   const renderMessages = messages.filter(
     (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
@@ -105,7 +130,8 @@ export function Thread() {
           </div>
         )}
         {chatStarted && (
-          <div className="hidden md:flex absolute top-4 right-4">
+          <div className="hidden md:flex gap-3 absolute top-4 right-4">
+            <NewThread onClick={handleNewThread} />
             <Title />
           </div>
         )}

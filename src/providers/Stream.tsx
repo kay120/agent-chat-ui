@@ -1,10 +1,11 @@
 import React, { createContext, useContext, ReactNode } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
-import type { Message } from "@langchain/langgraph-sdk";
+import { Client, type Message } from "@langchain/langgraph-sdk";
 import type {
   UIMessage,
   RemoveUIMessage,
 } from "@langchain/langgraph-sdk/react-ui/types";
+import { useQueryParam, StringParam } from 'use-query-params';
 
 const useTypedStream = useStream<
   { messages: Message[]; ui: UIMessage[] },
@@ -23,9 +24,13 @@ const StreamContext = createContext<StreamContextType | undefined>(undefined);
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const [threadId, setThreadId] = useQueryParam('threadId', StringParam);
+
   const streamValue = useTypedStream({
     apiUrl: "http://localhost:2024",
     assistantId: "agent",
+    threadId: threadId || "",
+    onThreadId: setThreadId,
   });
 
   return (
