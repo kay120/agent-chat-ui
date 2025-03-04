@@ -14,7 +14,7 @@ import {
 } from "@/lib/ensure-tool-responses";
 import { LangGraphLogoSVG } from "../icons/langgraph";
 import { TooltipIconButton } from "./tooltip-icon-button";
-import { SquarePen } from "lucide-react";
+import { ArrowDown, SquarePen } from "lucide-react";
 import { StringParam, useQueryParam } from "use-query-params";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 
@@ -37,6 +37,22 @@ function StickyToBottomContent(props: {
 
       {props.footer}
     </div>
+  );
+}
+
+function ScrollToBottom(props: { className?: string }) {
+  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
+
+  if (isAtBottom) return null;
+  return (
+    <Button
+      variant="outline"
+      className={props.className}
+      onClick={() => scrollToBottom()}
+    >
+      <ArrowDown className="w-4 h-4" />
+      <span>Scroll to bottom</span>
+    </Button>
   );
 }
 
@@ -178,6 +194,9 @@ export function Thread() {
                     <h1 className="text-2xl font-medium">LangGraph Chat</h1>
                   </div>
                 )}
+
+                <ScrollToBottom className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 animate-in fade-in-0 zoom-in-95" />
+
                 <div className="bg-background rounded-2xl border shadow-md mx-auto w-full max-w-4xl">
                   <form
                     onSubmit={handleSubmit}
