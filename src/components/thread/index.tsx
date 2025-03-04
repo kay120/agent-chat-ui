@@ -27,6 +27,7 @@ function Title({ className }: { className?: string }) {
 }
 
 function NewThread() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setThreadId] = useQueryParam("threadId", StringParam);
 
   return (

@@ -27,6 +27,7 @@ function EditableContent({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
+      className="focus-visible:ring-0"
     />
   );
 }
@@ -57,7 +58,7 @@ export function HumanMessage({
   return (
     <div
       className={cn(
-        "flex items-center ml-auto gap-2 px-4 py-2 group",
+        "flex items-center ml-auto gap-2 group",
         isEditing && "w-full max-w-xl",
       )}
     >
@@ -69,9 +70,16 @@ export function HumanMessage({
             onSubmit={handleSubmitEdit}
           />
         ) : (
-          <p className="text-right">{contentString}</p>
+          <p className="text-right py-1">{contentString}</p>
         )}
-        <div className="flex gap-2 items-center ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+
+        <div
+          className={cn(
+            "flex gap-2 items-center ml-auto transition-opacity",
+            "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
+            isEditing && "opacity-100",
+          )}
+        >
           <BranchSwitcher
             branch={meta?.branch}
             branchOptions={meta?.branchOptions}
