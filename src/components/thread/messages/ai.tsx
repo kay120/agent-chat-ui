@@ -49,11 +49,11 @@ export function AssistantMessage({
   isLoading: boolean;
   handleRegenerate: (parentCheckpoint: Checkpoint | null | undefined) => void;
 }) {
+  const contentString = getContentString(message.content);
+
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
-
-  const contentString = getContentString(message.content);
 
   return (
     <div className="flex items-start mr-auto gap-2 group">

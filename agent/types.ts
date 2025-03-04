@@ -5,7 +5,7 @@ export const GenerativeUIAnnotation = Annotation.Root({
   messages: MessagesAnnotation.spec["messages"],
   ui: Annotation({ default: () => [], reducer: uiMessageReducer }),
   timestamp: Annotation<number>,
-  next: Annotation<"stockbroker" | "weather" | "generalInput">(),
+  next: Annotation<"stockbroker" | "tripPlanner" | "generalInput">(),
 });
 
 export type GenerativeUIState = typeof GenerativeUIAnnotation.State;
