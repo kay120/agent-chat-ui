@@ -50,12 +50,6 @@ const StreamSession = ({
     onThreadId: setThreadId,
   });
 
-  if (streamValue.error) {
-    if (typeof streamValue.error === "object") {
-      console.log((streamValue.error as any)?.["message"]);
-    }
-  }
-
   return (
     <StreamContext.Provider value={streamValue}>
       {children}
