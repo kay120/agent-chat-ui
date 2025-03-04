@@ -137,7 +137,9 @@ export function Thread() {
               onClick={() => setThreadId(null)}
             >
               <LangGraphLogoSVG width={32} height={32} />
-              <span className="text-xl font-medium">LangGraph Chat</span>
+              <span className="text-xl font-semibold tracking-tight">
+                LangGraph Chat
+              </span>
             </button>
 
             <TooltipIconButton
@@ -192,7 +194,9 @@ export function Thread() {
                 {!threadId && (
                   <div className="flex gap-3 items-center">
                     <LangGraphLogoSVG className="flex-shrink-0 h-8" />
-                    <h1 className="text-2xl font-medium">LangGraph Chat</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                      LangGraph Chat
+                    </h1>
                   </div>
                 )}
 
