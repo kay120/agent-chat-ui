@@ -198,7 +198,7 @@ export function Thread() {
                     <h1 className="text-2xl font-semibold tracking-tight">
                       LangGraph Chat
                     </h1>
-                  </div> 
+                  </div>
                 )}
 
                 <ScrollToBottom className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 animate-in fade-in-0 zoom-in-95" />
