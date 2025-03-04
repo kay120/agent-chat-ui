@@ -17,7 +17,7 @@ function CustomComponent({
   const meta = thread.getMessagesMetadata(message);
   const seenState = meta?.firstSeenState;
   const customComponent = seenState?.values.ui
-    .slice()
+    ?.slice()
     .reverse()
     .find(
       ({ additional_kwargs }) =>

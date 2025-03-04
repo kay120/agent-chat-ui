@@ -14,7 +14,7 @@ import { ArrowRight } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
 
 const useTypedStream = useStream<
-  { messages: Message[]; ui: UIMessage[] },
+  { messages: Message[]; ui?: UIMessage[] },
   {
     UpdateType: {
       messages?: Message[] | Message | string;
