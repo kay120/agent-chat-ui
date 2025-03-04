@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MarkdownText } from "../markdown-text";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui/client";
 import { cn } from "@/lib/utils";
-import { ToolCalls } from "./tool-calls";
+import { ToolCalls, ToolResult } from "./tool-calls";
 
 function CustomComponent({
   message,
@@ -61,40 +61,45 @@ export function AssistantMessage({
     "tool_calls" in message &&
     message.tool_calls &&
     message.tool_calls.length > 0;
+  const isToolResult = message.type === "tool";
 
   return (
     <div className="flex items-start mr-auto gap-2 group">
       <Avatar>
         <AvatarFallback>A</AvatarFallback>
       </Avatar>
-      <div className="flex flex-col gap-2">
-        {hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />}
-        <CustomComponent message={message} thread={thread} />
-        {contentString.length > 0 && (
-          <div className="rounded-2xl bg-muted px-4 py-2">
-            <MarkdownText>{contentString}</MarkdownText>
-          </div>
-        )}
-        <div
-          className={cn(
-            "flex gap-2 items-center mr-auto transition-opacity",
-            "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
+      {isToolResult ? (
+        <ToolResult message={message} />
+      ) : (
+        <div className="flex flex-col gap-2">
+          {hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />}
+          <CustomComponent message={message} thread={thread} />
+          {contentString.length > 0 && (
+            <div className="rounded-2xl bg-muted px-4 py-2">
+              <MarkdownText>{contentString}</MarkdownText>
+            </div>
           )}
-        >
-          <BranchSwitcher
-            branch={meta?.branch}
-            branchOptions={meta?.branchOptions}
-            onSelect={(branch) => thread.setBranch(branch)}
-            isLoading={isLoading}
-          />
-          <CommandBar
-            content={contentString}
-            isLoading={isLoading}
-            isAiMessage={true}
-            handleRegenerate={() => handleRegenerate(parentCheckpoint)}
-          />
+          <div
+            className={cn(
+              "flex gap-2 items-center mr-auto transition-opacity",
+              "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
+            )}
+          >
+            <BranchSwitcher
+              branch={meta?.branch}
+              branchOptions={meta?.branchOptions}
+              onSelect={(branch) => thread.setBranch(branch)}
+              isLoading={isLoading}
+            />
+            <CommandBar
+              content={contentString}
+              isLoading={isLoading}
+              isAiMessage={true}
+              handleRegenerate={() => handleRegenerate(parentCheckpoint)}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
