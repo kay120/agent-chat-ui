@@ -49,9 +49,23 @@ export function HumanMessage({
 
   const handleSubmitEdit = () => {
     setIsEditing(false);
+
+    const newMessage: Message = { type: "human", content: value };
     thread.submit(
-      { messages: [{ type: "human", content: value }] },
-      { checkpoint: parentCheckpoint },
+      { messages: [newMessage] },
+      {
+        checkpoint: parentCheckpoint,
+        streamMode: ["values"],
+        optimisticValues: (prev) => {
+          const values = meta?.firstSeenState?.values;
+          if (!values) return prev;
+
+          return {
+            ...values,
+            messages: [...(values.messages ?? []), newMessage],
+          };
+        },
+      },
     );
   };
 
