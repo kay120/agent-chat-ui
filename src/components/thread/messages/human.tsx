@@ -69,7 +69,7 @@ export function HumanMessage({
             onSubmit={handleSubmitEdit}
           />
         ) : (
-          <p>{contentString}</p>
+          <p className="text-right">{contentString}</p>
         )}
         <div className="flex gap-2 items-center ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
           <BranchSwitcher
