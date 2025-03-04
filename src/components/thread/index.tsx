@@ -51,6 +51,8 @@ export function Thread() {
   const isLoading = stream.isLoading;
 
   const prevMessageLength = useRef(0);
+
+  // TODO: this should be part of the useStream hook
   useEffect(() => {
     if (
       messages.length !== prevMessageLength.current &&
@@ -76,7 +78,17 @@ export function Thread() {
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
-      { streamMode: ["values"] },
+      {
+        streamMode: ["values"],
+        optimisticValues: (prev) => ({
+          ...prev,
+          messages: [
+            ...(prev.messages ?? []),
+            ...toolMessages,
+            newHumanMessage,
+          ],
+        }),
+      },
     );
 
     setInput("");
