@@ -14,8 +14,10 @@ import { ArrowRight } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
 import { getApiKey } from "@/lib/api-key";
 
+export type StateType = { messages: Message[]; ui?: UIMessage[] };
+
 const useTypedStream = useStream<
-  { messages: Message[]; ui?: UIMessage[] },
+  StateType,
   {
     UpdateType: {
       messages?: Message[] | Message | string;

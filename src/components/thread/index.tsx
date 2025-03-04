@@ -23,6 +23,7 @@ import {
 import { BooleanParam, StringParam, useQueryParam } from "use-query-params";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import ThreadHistory from "./history";
+import { toast } from "sonner";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -74,6 +75,36 @@ export function Thread() {
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
+
+  const lastError = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!stream.error) {
+      lastError.current = undefined;
+      return;
+    }
+    try {
+      const message = (stream.error as any).message;
+      if (!message || lastError.current === message) {
+        // Message has already been logged. do not modify ref, return early.
+        return;
+      }
+
+      // Message is defined, and it has not been logged yet. Save it, and send the error
+      lastError.current = message;
+      toast.error("An error occurred. Please try again.", {
+        description: (
+          <p>
+            <strong>Error:</strong> <code>{message}</code>
+          </p>
+        ),
+        richColors: true,
+        closeButton: true,
+      });
+    } catch {
+      // no-op
+    }
+  }, [stream.error]);
 
   // TODO: this should be part of the useStream hook
   const prevMessageLength = useRef(0);
@@ -178,7 +209,7 @@ export function Thread() {
         <StickToBottom className="relative flex-1 overflow-hidden">
           <StickyToBottomContent
             className={cn(
-              "absolute inset-0 overflow-auto",
+              "absolute inset-0 overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
               !threadId && "flex flex-col items-stretch mt-[25vh]",
               threadId && "grid grid-rows-[1fr_auto]",
             )}
