@@ -74,8 +74,9 @@ export function Thread() {
       messages[messages.length - 1].type === "ai"
     ) {
       setFirstTokenReceived(true);
-      prevMessageLength.current = messages.length;
     }
+
+    prevMessageLength.current = messages.length;
   }, [messages]);
 
   const handleSubmit = (e: FormEvent) => {
