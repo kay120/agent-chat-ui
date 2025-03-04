@@ -13,8 +13,7 @@ async function router(
   state: GenerativeUIState,
 ): Promise<Partial<GenerativeUIState>> {
   const routerDescription = `The route to take based on the user's input.
-- stockbroker: can fetch the price of a ticker, purchase/sell a ticker, or get the user's portfolio
-- tripPlanner: helps the user plan their trip. it can suggest restaurants, and places to stay in any given location.
+${allToolDescriptions}
 - generalInput: handles all other cases where the above tools don't apply
 `;
   const routerSchema = z.object({
