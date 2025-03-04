@@ -29,7 +29,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const streamValue = useTypedStream({
     apiUrl: "http://localhost:2024",
     assistantId: "agent",
-    threadId,
+    threadId: threadId ?? null,
     onThreadId: setThreadId,
   });
 
