@@ -58,6 +58,8 @@ function StickyToBottomContent(props: {
 }
 
 export function Thread() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_, setThreadId] = useQueryParam("threadId", StringParam);
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const stream = useStreamContext();
@@ -136,10 +138,13 @@ export function Thread() {
       >
         {chatStarted && (
           <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
-            <div className="flex gap-2 items-center">
+            <button
+              className="flex gap-2 items-center cursor-pointer"
+              onClick={() => setThreadId(null)}
+            >
               <LangGraphLogoSVG width={32} height={32} />
-              <h1 className="text-xl font-medium">LangGraph Chat</h1>
-            </div>
+              <span className="text-xl font-medium">LangGraph Chat</span>
+            </button>
 
             <NewThread />
 
