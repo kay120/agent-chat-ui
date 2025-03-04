@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode, useState } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
 import type {
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const useTypedStream = useStream<
   { messages: Message[]; ui: UIMessage[] },
@@ -28,16 +29,19 @@ const StreamContext = createContext<StreamContextType | undefined>(undefined);
 
 const StreamSession = ({
   children,
+  apiKey,
   apiUrl,
   assistantId,
 }: {
   children: ReactNode;
+  apiKey: string | null;
   apiUrl: string;
   assistantId: string;
 }) => {
   const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
   const streamValue = useTypedStream({
     apiUrl,
+    apiKey: apiKey ?? undefined,
     assistantId,
     threadId: threadId ?? null,
     onThreadId: setThreadId,
@@ -54,6 +58,21 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [apiUrl, setApiUrl] = useQueryParam("apiUrl", StringParam);
+  const [apiKey, _setApiKey] = useState(() => {
+    try {
+      const key = window.localStorage.getItem("lg:chat:apiKey");
+      return key || null;
+    } catch {
+      // pass
+    }
+    return null;
+  });
+
+  const setApiKey = (key: string) => {
+    window.localStorage.setItem("lg:chat:apiKey", key);
+    _setApiKey(key);
+  };
+
   const [assistantId, setAssistantId] = useQueryParam(
     "assistantId",
     StringParam,
@@ -61,7 +80,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 
   if (!apiUrl || !assistantId) {
     return (
-      <div className="flex items-center justify-center min-h-screen w-screen p-4">
+      <div className="flex items-center justify-center min-h-screen w-full p-4">
         <div className="animate-in fade-in-0 zoom-in-95 flex flex-col border bg-background shadow-lg rounded-lg max-w-2xl">
           <div className="flex flex-col gap-2 mt-14 p-6 border-b">
             <div className="flex items-start flex-col gap-2">
@@ -83,10 +102,11 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
               const formData = new FormData(form);
               const apiUrl = formData.get("apiUrl") as string;
               const assistantId = formData.get("assistantId") as string;
+              const apiKey = formData.get("apiKey") as string;
 
               setApiUrl(apiUrl);
+              setApiKey(apiKey);
               setAssistantId(assistantId);
-              console.log({ apiUrl, assistantId });
 
               form.reset();
             }}
@@ -103,7 +123,6 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
                 name="apiUrl"
                 className="bg-background"
                 defaultValue={apiUrl ?? "http://localhost:2024"}
-                onChange={(e) => setApiUrl(e.target.value)}
               />
             </div>
 
@@ -119,7 +138,21 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
                 name="assistantId"
                 className="bg-background"
                 defaultValue={assistantId ?? "agent"}
-                onChange={(e) => setAssistantId(e.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="apiKey">LangSmith API Key</Label>
+              <p className="text-muted-foreground text-sm">
+                This value is stored in your browser's local storage and is only
+                used to authenticate requests sent to your LangGraph server.
+              </p>
+              <PasswordInput
+                id="apiKey"
+                name="apiKey"
+                defaultValue={apiKey ?? ""}
+                className="bg-background"
+                placeholder="lsv2_pt_..."
               />
             </div>
 
@@ -136,7 +169,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   }
 
   return (
-    <StreamSession apiUrl={apiUrl} assistantId={assistantId}>
+    <StreamSession apiKey={apiKey} apiUrl={apiUrl} assistantId={assistantId}>
       {children}
     </StreamSession>
   );
