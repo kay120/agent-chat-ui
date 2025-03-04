@@ -161,10 +161,6 @@ export default function StockPrice(props: {
     }
   };
 
-  const handleOrderTypeChange = (type: "buy" | "sell") => {
-    setOrderType(type);
-  };
-
   const toggleLiveUpdates = () => {
     setIsLiveUpdating((prev) => !prev);
   };

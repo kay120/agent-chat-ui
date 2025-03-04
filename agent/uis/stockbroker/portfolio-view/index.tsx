@@ -146,7 +146,6 @@ export default function PortfolioView() {
   };
 
   // Calculate total value and percent change for display
-  const totalValue = portfolio.totalValue;
   const totalChange = portfolio.holdings.reduce(
     (acc, curr) => acc + (curr.price - curr.avgCost) * curr.shares,
     0,
