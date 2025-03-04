@@ -5,7 +5,7 @@ import { useStreamContext } from "@/providers/Stream";
 import { useState, FormEvent } from "react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Message } from "@langchain/langgraph-sdk";
+import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { AssistantMessage, AssistantMessageLoading } from "./messages/ai";
 import { HumanMessage } from "./messages/human";
 import {
@@ -72,31 +72,37 @@ export function Thread() {
       content: input,
     };
 
+    const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
-      {
-        messages: [
-          ...ensureToolCallsHaveResponses(stream.messages),
-          newHumanMessage,
-        ],
-      },
-      {
-        streamMode: ["values"],
-      },
+      { messages: [...toolMessages, newHumanMessage] },
+      { streamMode: ["values"] }
     );
 
     setInput("");
   };
 
+  const handleRegenerate = (
+    parentCheckpoint: Checkpoint | null | undefined
+  ) => {
+    // Do this so the loading state is correct
+    prevMessageLength.current = prevMessageLength.current - 1;
+    setFirstTokenReceived(false);
+    stream.submit(undefined, {
+      checkpoint: parentCheckpoint,
+      streamMode: ["values"],
+    });
+  };
+
   const chatStarted = isLoading || messages.length > 0;
   const renderMessages = messages.filter(
-    (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
+    (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX)
   );
 
   return (
     <div
       className={cn(
         "flex flex-col w-full h-full",
-        chatStarted ? "relative" : "",
+        chatStarted ? "relative" : ""
       )}
     >
       <div className={cn("flex-1 px-4", chatStarted ? "pb-28" : "mt-64")}>
@@ -115,23 +121,24 @@ export function Thread() {
         <div
           className={cn(
             "flex flex-col gap-4 max-w-4xl w-full mx-auto mt-12 overflow-y-auto",
-            !chatStarted && "hidden",
+            !chatStarted && "hidden"
           )}
         >
           {renderMessages.map((message, index) =>
             message.type === "human" ? (
               <HumanMessage
                 key={"id" in message ? message.id : `${message.type}-${index}`}
-                message={message as Message}
+                message={message}
                 isLoading={isLoading}
               />
             ) : (
               <AssistantMessage
                 key={"id" in message ? message.id : `${message.type}-${index}`}
-                message={message as Message}
+                message={message}
                 isLoading={isLoading}
+                handleRegenerate={handleRegenerate}
               />
-            ),
+            )
           )}
           {isLoading && !firstTokenReceived && <AssistantMessageLoading />}
         </div>
@@ -140,7 +147,7 @@ export function Thread() {
       <div
         className={cn(
           "bg-white rounded-2xl border-[1px] border-gray-200 shadow-md p-3 mx-auto w-full max-w-5xl",
-          chatStarted ? "fixed bottom-6 left-0 right-0" : "",
+          chatStarted ? "fixed bottom-6 left-0 right-0" : ""
         )}
       >
         <form
@@ -154,6 +161,7 @@ export function Thread() {
             placeholder="Type your message..."
             className="p-5 border-[0px] shadow-none ring-0 outline-none focus:outline-none focus:ring-0"
           />
+
           <Button
             type="submit"
             className="p-5"
