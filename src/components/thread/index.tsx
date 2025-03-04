@@ -18,15 +18,6 @@ import { SquarePen } from "lucide-react";
 import { StringParam, useQueryParam } from "use-query-params";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 
-function Title({ className }: { className?: string }) {
-  return (
-    <div className={cn("flex gap-2 items-center", className)}>
-      <LangGraphLogoSVG width={32} height={32} />
-      <h1 className="text-xl font-medium">LangGraph Chat</h1>
-    </div>
-  );
-}
-
 function NewThread() {
   const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
   if (!threadId) return null;
@@ -144,7 +135,11 @@ export function Thread() {
       >
         {chatStarted && (
           <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
-            <Title />
+            <div className="flex gap-2 items-center">
+              <LangGraphLogoSVG width={32} height={32} />
+              <h1 className="text-xl font-medium">LangGraph Chat</h1>
+            </div>
+
             <NewThread />
 
             <div className="absolute inset-x-0 top-full h-5 bg-gradient-to-b from-background to-background/0" />
@@ -192,13 +187,13 @@ export function Thread() {
             }
             footer={
               <div className="sticky flex flex-col items-center gap-8 bottom-8 px-4">
-                {!chatStarted && <Title />}
-                <div
-                  className={cn(
-                    "bg-background rounded-2xl border shadow-md mx-auto w-full max-w-4xl",
-                    // chatStarted && "fixed bottom-6 inset-x-0",
-                  )}
-                >
+                {!chatStarted && (
+                  <div className="flex gap-3 items-center">
+                    <LangGraphLogoSVG className="flex-shrink-0 h-8" />
+                    <h1 className="text-2xl font-medium">LangGraph Chat</h1>
+                  </div>
+                )}
+                <div className="bg-background rounded-2xl border shadow-md mx-auto w-full max-w-4xl">
                   <form
                     onSubmit={handleSubmit}
                     className="grid grid-rows-[1fr_auto] gap-2 max-w-4xl mx-auto"
