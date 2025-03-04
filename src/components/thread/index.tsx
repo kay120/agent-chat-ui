@@ -18,23 +18,6 @@ import { SquarePen } from "lucide-react";
 import { StringParam, useQueryParam } from "use-query-params";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 
-function NewThread() {
-  const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
-  if (!threadId) return null;
-
-  return (
-    <TooltipIconButton
-      size="lg"
-      className="p-4"
-      tooltip="New thread"
-      variant="ghost"
-      onClick={() => setThreadId(null)}
-    >
-      <SquarePen className="size-5" />
-    </TooltipIconButton>
-  );
-}
-
 function StickyToBottomContent(props: {
   content: ReactNode;
   footer?: ReactNode;
@@ -58,17 +41,16 @@ function StickyToBottomContent(props: {
 }
 
 export function Thread() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, setThreadId] = useQueryParam("threadId", StringParam);
+  const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
+
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
-  const prevMessageLength = useRef(0);
-
   // TODO: this should be part of the useStream hook
+  const prevMessageLength = useRef(0);
   useEffect(() => {
     if (
       messages.length !== prevMessageLength.current &&
@@ -123,20 +105,15 @@ export function Thread() {
     });
   };
 
-  const chatStarted = isLoading || messages.length > 0;
-  const renderMessages = messages.filter(
-    (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
-  );
-
   return (
     <div className="flex flex-col w-full h-screen overflow-hidden">
       <div
         className={cn(
           "grow grid grid-rows-[auto_1fr]",
-          !chatStarted && "grid-rows-[1fr]",
+          !threadId && "grid-rows-[1fr]",
         )}
       >
-        {chatStarted && (
+        {threadId && (
           <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
             <button
               className="flex gap-2 items-center cursor-pointer"
@@ -146,7 +123,15 @@ export function Thread() {
               <span className="text-xl font-medium">LangGraph Chat</span>
             </button>
 
-            <NewThread />
+            <TooltipIconButton
+              size="lg"
+              className="p-4"
+              tooltip="New thread"
+              variant="ghost"
+              onClick={() => setThreadId(null)}
+            >
+              <SquarePen className="size-5" />
+            </TooltipIconButton>
 
             <div className="absolute inset-x-0 top-full h-5 bg-gradient-to-b from-background to-background/0" />
           </div>
@@ -156,36 +141,30 @@ export function Thread() {
           <StickyToBottomContent
             className={cn(
               "absolute inset-0",
-              !chatStarted && "flex flex-col items-stretch mt-[25vh]",
-              chatStarted && "grid grid-rows-[1fr_auto]",
+              !threadId && "flex flex-col items-stretch mt-[25vh]",
+              threadId && "grid grid-rows-[1fr_auto]",
             )}
-            contentClassName="pt-8 pb-16 px-4 max-w-4xl mx-auto flex flex-col gap-4 w-full empty:hidden"
+            contentClassName="pt-8 pb-16 px-4 max-w-4xl mx-auto flex flex-col gap-4 w-full"
             content={
               <>
-                {renderMessages.map((message, index) =>
-                  message.type === "human" ? (
-                    <HumanMessage
-                      key={
-                        "id" in message
-                          ? message.id
-                          : `${message.type}-${index}`
-                      }
-                      message={message}
-                      isLoading={isLoading}
-                    />
-                  ) : (
-                    <AssistantMessage
-                      key={
-                        "id" in message
-                          ? message.id
-                          : `${message.type}-${index}`
-                      }
-                      message={message}
-                      isLoading={isLoading}
-                      handleRegenerate={handleRegenerate}
-                    />
-                  ),
-                )}
+                {messages
+                  .filter((m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX))
+                  .map((message, index) =>
+                    message.type === "human" ? (
+                      <HumanMessage
+                        key={message.id || `${message.type}-${index}`}
+                        message={message}
+                        isLoading={isLoading}
+                      />
+                    ) : (
+                      <AssistantMessage
+                        key={message.id || `${message.type}-${index}`}
+                        message={message}
+                        isLoading={isLoading}
+                        handleRegenerate={handleRegenerate}
+                      />
+                    ),
+                  )}
                 {isLoading && !firstTokenReceived && (
                   <AssistantMessageLoading />
                 )}
@@ -193,7 +172,7 @@ export function Thread() {
             }
             footer={
               <div className="sticky flex flex-col items-center gap-8 bottom-8 px-4">
-                {!chatStarted && (
+                {!threadId && (
                   <div className="flex gap-3 items-center">
                     <LangGraphLogoSVG className="flex-shrink-0 h-8" />
                     <h1 className="text-2xl font-medium">LangGraph Chat</h1>
