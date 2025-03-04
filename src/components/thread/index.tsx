@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/providers/Stream";
 import { useState, FormEvent } from "react";
@@ -16,6 +16,7 @@ import { LangGraphLogoSVG } from "../icons/langgraph";
 import { TooltipIconButton } from "./tooltip-icon-button";
 import { SquarePen } from "lucide-react";
 import { StringParam, useQueryParam } from "use-query-params";
+import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 
 function Title({ className }: { className?: string }) {
   return (
@@ -27,8 +28,8 @@ function Title({ className }: { className?: string }) {
 }
 
 function NewThread() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_, setThreadId] = useQueryParam("threadId", StringParam);
+  const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
+  if (!threadId) return null;
 
   return (
     <TooltipIconButton
@@ -40,6 +41,28 @@ function NewThread() {
     >
       <SquarePen className="size-5" />
     </TooltipIconButton>
+  );
+}
+
+function StickyToBottomContent(props: {
+  content: ReactNode;
+  footer?: ReactNode;
+  className?: string;
+  contentClassName?: string;
+}) {
+  const context = useStickToBottomContext();
+  return (
+    <div
+      ref={context.scrollRef}
+      style={{ width: "100%", height: "100%" }}
+      className={props.className}
+    >
+      <div ref={context.contentRef} className={props.contentClassName}>
+        {props.content}
+      </div>
+
+      {props.footer}
+    </div>
   );
 }
 
@@ -112,72 +135,96 @@ export function Thread() {
   );
 
   return (
-    <div
-      className={cn("flex flex-col w-full h-full", chatStarted && "relative")}
-    >
-      <div className={cn("flex-1 px-4", chatStarted ? "pb-28" : "mt-64")}>
-        {!chatStarted && (
-          <div className="flex justify-center">
-            <Title className="mb-12" />
-          </div>
-        )}
-        {chatStarted && (
-          <div className="hidden md:flex items-center gap-3 absolute top-4 right-4">
-            <NewThread />
-            <Title />
-          </div>
-        )}
-
-        <div
-          className={cn(
-            "flex flex-col gap-4 max-w-4xl w-full mx-auto mt-12 overflow-y-auto",
-            !chatStarted && "hidden",
-          )}
-        >
-          {renderMessages.map((message, index) =>
-            message.type === "human" ? (
-              <HumanMessage
-                key={"id" in message ? message.id : `${message.type}-${index}`}
-                message={message}
-                isLoading={isLoading}
-              />
-            ) : (
-              <AssistantMessage
-                key={"id" in message ? message.id : `${message.type}-${index}`}
-                message={message}
-                isLoading={isLoading}
-                handleRegenerate={handleRegenerate}
-              />
-            ),
-          )}
-          {isLoading && !firstTokenReceived && <AssistantMessageLoading />}
-        </div>
-      </div>
-
+    <div className="flex flex-col w-full h-screen overflow-hidden">
       <div
         className={cn(
-          "bg-background rounded-2xl border shadow-md mx-auto w-full max-w-4xl",
-          chatStarted && "fixed bottom-6 left-0 right-0",
+          "grow grid grid-rows-[auto_1fr]",
+          !chatStarted && "grid-rows-[1fr]",
         )}
       >
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-rows-[1fr,auto] gap-2 max-w-4xl mx-auto"
-        >
-          <Input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            className="px-4 py-6 border-none bg-transparent shadow-none ring-0 outline-none focus:outline-none focus:ring-0"
-          />
+        {chatStarted && (
+          <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
+            <Title />
+            <NewThread />
 
-          <div className="flex items-center justify-end p-2 pt-0">
-            <Button type="submit" disabled={isLoading || !input.trim()}>
-              Send
-            </Button>
+            <div className="absolute inset-x-0 top-full h-5 bg-gradient-to-b from-background to-background/0" />
           </div>
-        </form>
+        )}
+
+        <StickToBottom className="relative">
+          <StickyToBottomContent
+            className={cn(
+              "absolute inset-0",
+              !chatStarted && "flex flex-col items-stretch mt-[25vh]",
+              chatStarted && "grid grid-rows-[1fr_auto]",
+            )}
+            contentClassName="pt-8 pb-16 px-4 max-w-4xl mx-auto flex flex-col gap-4 w-full empty:hidden"
+            content={
+              <>
+                {renderMessages.map((message, index) =>
+                  message.type === "human" ? (
+                    <HumanMessage
+                      key={
+                        "id" in message
+                          ? message.id
+                          : `${message.type}-${index}`
+                      }
+                      message={message}
+                      isLoading={isLoading}
+                    />
+                  ) : (
+                    <AssistantMessage
+                      key={
+                        "id" in message
+                          ? message.id
+                          : `${message.type}-${index}`
+                      }
+                      message={message}
+                      isLoading={isLoading}
+                      handleRegenerate={handleRegenerate}
+                    />
+                  ),
+                )}
+                {isLoading && !firstTokenReceived && (
+                  <AssistantMessageLoading />
+                )}
+              </>
+            }
+            footer={
+              <div className="sticky flex flex-col items-center gap-8 bottom-8 px-4">
+                {!chatStarted && <Title />}
+                <div
+                  className={cn(
+                    "bg-background rounded-2xl border shadow-md mx-auto w-full max-w-4xl",
+                    // chatStarted && "fixed bottom-6 inset-x-0",
+                  )}
+                >
+                  <form
+                    onSubmit={handleSubmit}
+                    className="grid grid-rows-[1fr_auto] gap-2 max-w-4xl mx-auto"
+                  >
+                    <Input
+                      type="text"
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="Type your message..."
+                      className="px-4 py-6 border-none bg-transparent shadow-none ring-0 outline-none focus:outline-none focus:ring-0"
+                    />
+
+                    <div className="flex items-center justify-end p-2 pt-0">
+                      <Button
+                        type="submit"
+                        disabled={isLoading || !input.trim()}
+                      >
+                        Send
+                      </Button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            }
+          />
+        </StickToBottom>
       </div>
     </div>
   );
