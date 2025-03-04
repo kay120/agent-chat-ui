@@ -1,3 +1,4 @@
+import "./index.css";
 import { TripDetails } from "../../../trip-planner/types";
 import { useState } from "react";
 
@@ -6,7 +7,6 @@ export default function AccommodationsList({
 }: {
   tripDetails: TripDetails;
 }) {
-  console.log("tripDetails", tripDetails);
   // Placeholder data - ideally would come from props
   const [accommodations] = useState([
     {

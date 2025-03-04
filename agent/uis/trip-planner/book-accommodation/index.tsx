@@ -1,3 +1,4 @@
+import "./index.css";
 import { TripDetails } from "../../../trip-planner/types";
 import { useState } from "react";
 
