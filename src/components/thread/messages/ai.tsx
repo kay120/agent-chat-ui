@@ -47,11 +47,11 @@ export function AssistantMessage({
   message: Message;
   isLoading: boolean;
 }) {
+  const contentString = getContentString(message.content);
+
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
-
-  const contentString = getContentString(message.content);
 
   const handleRegenerate = () => {
     thread.submit(undefined, { checkpoint: parentCheckpoint });

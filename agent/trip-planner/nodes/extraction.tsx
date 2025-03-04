@@ -82,6 +82,7 @@ Before you can help them, you need to extract the following information from the
 You are provided with the ENTIRE conversation history between you, and the user. Use these messages to extract the necessary information.
 
 Do NOT guess, or make up any information. If the user did NOT specify a location, please respond with a request for them to specify the location.
+You should ONLY send a clarification message if the user did not provide the location. You do NOT need any of the other fields, so if they're missing, proceed without them.
 It should be a single sentence, along the lines of "Please specify the location for the trip you want to go on".
 
 Extract only what is specified by the user. It is okay to leave fields blank if the user did not specify them.
