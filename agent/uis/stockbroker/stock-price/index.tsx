@@ -1,3 +1,4 @@
+import "./index.css";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import type { AIMessage, Message } from "@langchain/langgraph-sdk";
 import { useState, useEffect, useCallback } from "react";

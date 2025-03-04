@@ -5,6 +5,7 @@ import { GenerativeUIAnnotation, GenerativeUIState } from "./types";
 import { stockbrokerGraph } from "./stockbroker";
 import { ChatOpenAI } from "@langchain/openai";
 import { tripPlannerGraph } from "./trip-planner";
+import { formatMessages } from "./utils/format-messages";
 
 const allToolDescriptions = `- stockbroker: can fetch the price of a ticker, purchase/sell a ticker, or get the user's portfolio
 - tripPlanner: helps the user plan their trip. it can suggest restaurants, and places to stay in any given location.`;
@@ -37,17 +38,25 @@ ${allToolDescriptions}
   const prompt = `You're a highly helpful AI assistant, tasked with routing the user's query to the appropriate tool.
 You should analyze the user's input, and choose the appropriate tool to use.`;
 
-  const recentHumanMessage = state.messages.findLast(
-    (m) => m.getType() === "human",
-  );
+  const allMessagesButLast = state.messages.slice(0, -1);
+  const lastMessage = state.messages.at(-1);
 
-  if (!recentHumanMessage) {
-    throw new Error("No human message found in state");
-  }
+  const formattedPreviousMessages = formatMessages(allMessagesButLast);
+  const formattedLastMessage = lastMessage ? formatMessages([lastMessage]) : "";
+
+  const humanMessage = `Here is the full conversation, excluding the most recent message:
+  
+${formattedPreviousMessages}
+
+Here is the most recent message:
+
+${formattedLastMessage}
+
+Please pick the proper route based on the most recent message, in the context of the entire conversation.`;
 
   const response = await llm.invoke([
     { role: "system", content: prompt },
-    recentHumanMessage,
+    { role: "user", content: humanMessage },
   ]);
 
   const toolCall = response.tool_calls?.[0]?.args as
