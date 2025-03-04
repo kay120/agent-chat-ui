@@ -48,8 +48,8 @@ export function Thread() {
   const stream = useStreamContext();
   const messages = stream.messages;
   const isLoading = stream.isLoading;
-  const prevMessageLength = useRef(0);
 
+  const prevMessageLength = useRef(0);
   useEffect(() => {
     if (
       messages.length !== prevMessageLength.current &&
@@ -75,14 +75,14 @@ export function Thread() {
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
       { messages: [...toolMessages, newHumanMessage] },
-      { streamMode: ["values"] }
+      { streamMode: ["values"] },
     );
 
     setInput("");
   };
 
   const handleRegenerate = (
-    parentCheckpoint: Checkpoint | null | undefined
+    parentCheckpoint: Checkpoint | null | undefined,
   ) => {
     // Do this so the loading state is correct
     prevMessageLength.current = prevMessageLength.current - 1;
@@ -95,15 +95,12 @@ export function Thread() {
 
   const chatStarted = isLoading || messages.length > 0;
   const renderMessages = messages.filter(
-    (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX)
+    (m) => !m.id?.startsWith(DO_NOT_RENDER_ID_PREFIX),
   );
 
   return (
     <div
-      className={cn(
-        "flex flex-col w-full h-full",
-        chatStarted ? "relative" : ""
-      )}
+      className={cn("flex flex-col w-full h-full", chatStarted && "relative")}
     >
       <div className={cn("flex-1 px-4", chatStarted ? "pb-28" : "mt-64")}>
         {!chatStarted && (
@@ -121,7 +118,7 @@ export function Thread() {
         <div
           className={cn(
             "flex flex-col gap-4 max-w-4xl w-full mx-auto mt-12 overflow-y-auto",
-            !chatStarted && "hidden"
+            !chatStarted && "hidden",
           )}
         >
           {renderMessages.map((message, index) =>
@@ -138,7 +135,7 @@ export function Thread() {
                 isLoading={isLoading}
                 handleRegenerate={handleRegenerate}
               />
-            )
+            ),
           )}
           {isLoading && !firstTokenReceived && <AssistantMessageLoading />}
         </div>
@@ -146,29 +143,27 @@ export function Thread() {
 
       <div
         className={cn(
-          "bg-white rounded-2xl border-[1px] border-gray-200 shadow-md p-3 mx-auto w-full max-w-5xl",
-          chatStarted ? "fixed bottom-6 left-0 right-0" : ""
+          "bg-background rounded-2xl border shadow-md mx-auto w-full max-w-4xl",
+          chatStarted && "fixed bottom-6 left-0 right-0",
         )}
       >
         <form
           onSubmit={handleSubmit}
-          className="flex w-full gap-2 max-w-5xl mx-auto"
+          className="grid grid-rows-[1fr,auto] gap-2 max-w-4xl mx-auto"
         >
           <Input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            className="p-5 border-[0px] shadow-none ring-0 outline-none focus:outline-none focus:ring-0"
+            className="px-4 py-6 border-none bg-transparent shadow-none ring-0 outline-none focus:outline-none focus:ring-0"
           />
 
-          <Button
-            type="submit"
-            className="p-5"
-            disabled={isLoading || !input.trim()}
-          >
-            Send
-          </Button>
+          <div className="flex items-center justify-end p-2 pt-0">
+            <Button type="submit" disabled={isLoading || !input.trim()}>
+              Send
+            </Button>
+          </div>
         </form>
       </div>
     </div>
