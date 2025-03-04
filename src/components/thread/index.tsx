@@ -14,9 +14,15 @@ import {
 } from "@/lib/ensure-tool-responses";
 import { LangGraphLogoSVG } from "../icons/langgraph";
 import { TooltipIconButton } from "./tooltip-icon-button";
-import { ArrowDown, LoaderCircle, SquarePen } from "lucide-react";
-import { StringParam, useQueryParam } from "use-query-params";
+import {
+  ArrowDown,
+  LoaderCircle,
+  PanelRightOpen,
+  SquarePen,
+} from "lucide-react";
+import { BooleanParam, StringParam, useQueryParam } from "use-query-params";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
+import ThreadHistory from "./history";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -58,6 +64,10 @@ function ScrollToBottom(props: { className?: string }) {
 
 export function Thread() {
   const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
+  const [_, setChatHistoryOpen] = useQueryParam(
+    "chatHistoryOpen",
+    BooleanParam,
+  );
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
 
@@ -122,24 +132,34 @@ export function Thread() {
   };
 
   return (
-    <div className="flex flex-col w-full h-screen overflow-hidden">
+    <div className="flex w-full h-screen overflow-hidden">
+      <ThreadHistory />
       <div
         className={cn(
-          "grow grid grid-rows-[auto_1fr]",
+          "flex-1 flex flex-col min-w-0 overflow-hidden",
           !threadId && "grid-rows-[1fr]",
         )}
       >
         {threadId && (
           <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
-            <button
-              className="flex gap-2 items-center cursor-pointer"
-              onClick={() => setThreadId(null)}
-            >
-              <LangGraphLogoSVG width={32} height={32} />
-              <span className="text-xl font-semibold tracking-tight">
-                LangGraph Chat
-              </span>
-            </button>
+            <div className="flex gap-2 items-center justify-start">
+              <button
+                className="flex gap-2 items-center cursor-pointer"
+                onClick={() => setThreadId(null)}
+              >
+                <LangGraphLogoSVG width={32} height={32} />
+                <span className="text-xl font-semibold tracking-tight">
+                  LangGraph Chat
+                </span>
+              </button>
+              <Button
+                className="flex lg:hidden"
+                variant="ghost"
+                onClick={() => setChatHistoryOpen((p) => !p)}
+              >
+                <PanelRightOpen />
+              </Button>
+            </div>
 
             <TooltipIconButton
               size="lg"
@@ -155,10 +175,10 @@ export function Thread() {
           </div>
         )}
 
-        <StickToBottom className="relative">
+        <StickToBottom className="relative flex-1 overflow-hidden">
           <StickyToBottomContent
             className={cn(
-              "absolute inset-0",
+              "absolute inset-0 overflow-auto",
               !threadId && "flex flex-col items-stretch mt-[25vh]",
               threadId && "grid grid-rows-[1fr_auto]",
             )}

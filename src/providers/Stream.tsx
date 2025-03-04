@@ -12,6 +12,7 @@ import { LangGraphLogoSVG } from "@/components/icons/langgraph";
 import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
+import { getApiKey } from "@/lib/api-key";
 
 const useTypedStream = useStream<
   { messages: Message[]; ui?: UIMessage[] },
@@ -59,13 +60,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [apiUrl, setApiUrl] = useQueryParam("apiUrl", StringParam);
   const [apiKey, _setApiKey] = useState(() => {
-    try {
-      const key = window.localStorage.getItem("lg:chat:apiKey");
-      return key || null;
-    } catch {
-      // pass
-    }
-    return null;
+    return getApiKey();
   });
 
   const setApiKey = (key: string) => {
