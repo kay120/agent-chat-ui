@@ -14,7 +14,6 @@ import {
 } from "@/lib/ensure-tool-responses";
 import { LangGraphLogoSVG } from "../icons/langgraph";
 import { TooltipIconButton } from "./tooltip-icon-button";
-import { ArrowDown, SquarePen } from "lucide-react";
 import { ArrowDown, LoaderCircle, SquarePen } from "lucide-react";
 import { StringParam, useQueryParam } from "use-query-params";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
