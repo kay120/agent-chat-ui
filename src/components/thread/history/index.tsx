@@ -21,7 +21,7 @@ function ThreadList({
   const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
 
   return (
-    <div className="h-full overflow-y-scroll flex flex-col gap-2 items-start justify-start [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+    <div className="h-full flex flex-col gap-2 items-start justify-start overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
       {threads.map((t) => {
         let itemText = t.thread_id;
         if (

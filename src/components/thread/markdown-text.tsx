@@ -205,10 +205,7 @@ const defaultComponents = memoizeMarkdownComponents({
     const isCodeBlock = useIsMarkdownCodeBlock();
     return (
       <code
-        className={cn(
-          !isCodeBlock && "bg-muted rounded border font-semibold",
-          className,
-        )}
+        className={cn(!isCodeBlock && "rounded font-semibold", className)}
         {...props}
       />
     );

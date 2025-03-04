@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MarkdownText } from "../markdown-text";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui/client";
 import { cn } from "@/lib/utils";
+import { ToolCalls } from "./tool-calls";
 
 function CustomComponent({
   message,
@@ -56,12 +57,18 @@ export function AssistantMessage({
   const meta = thread.getMessagesMetadata(message);
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
 
+  const hasToolCalls =
+    "tool_calls" in message &&
+    message.tool_calls &&
+    message.tool_calls.length > 0;
+
   return (
     <div className="flex items-start mr-auto gap-2 group">
       <Avatar>
         <AvatarFallback>A</AvatarFallback>
       </Avatar>
       <div className="flex flex-col gap-2">
+        {hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />}
         <CustomComponent message={message} thread={thread} />
         {contentString.length > 0 && (
           <div className="rounded-2xl bg-muted px-4 py-2">
