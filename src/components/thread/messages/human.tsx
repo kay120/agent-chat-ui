@@ -49,17 +49,8 @@ export function HumanMessage({
   const handleSubmitEdit = () => {
     setIsEditing(false);
     thread.submit(
-      {
-        messages: [
-          {
-            ...message,
-            content: value,
-          },
-        ],
-      },
-      {
-        checkpoint: parentCheckpoint,
-      },
+      { messages: [{ type: "human", content: value }] },
+      { checkpoint: parentCheckpoint },
     );
   };
 
