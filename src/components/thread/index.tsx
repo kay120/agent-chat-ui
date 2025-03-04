@@ -13,23 +13,9 @@ import {
   ensureToolCallsHaveResponses,
 } from "@/lib/ensure-tool-responses";
 import { LangGraphLogoSVG } from "../icons/langgraph";
-
-// const dummyMessages = [
-//   { type: "human", content: "Hi! What can you do?" },
-//   {
-//     type: "ai",
-//     content: `Hello! I can assist you with a variety of tasks, including:
-
-// 1. **Answering Questions**: I can provide information on a wide range of topics, from science and history to technology and culture.
-// 2. **Writing Assistance**: I can help you draft emails, essays, reports, and creative writing pieces.
-// 3. **Learning Support**: I can explain concepts, help with homework, and provide study tips.
-// 4. **Language Help**: I can assist with translations, grammar, and vocabulary in multiple languages.
-// 5. **Recommendations**: I can suggest books, movies, recipes, and more based on your interests.
-// 6. **General Advice**: I can offer tips on various subjects, including productivity, wellness, and personal development.
-
-// If you have something specific in mind, feel free to ask!`,
-//   },
-// ];
+import { TooltipIconButton } from "./tooltip-icon-button";
+import { SquarePen } from "lucide-react";
+import { StringParam, useQueryParam } from "use-query-params";
 
 function Title({ className }: { className?: string }) {
   return (
@@ -40,11 +26,26 @@ function Title({ className }: { className?: string }) {
   );
 }
 
+function NewThread() {
+  const [_, setThreadId] = useQueryParam("threadId", StringParam);
+
+  return (
+    <TooltipIconButton
+      size="lg"
+      className="p-4"
+      tooltip="New thread"
+      variant="ghost"
+      onClick={() => setThreadId(null)}
+    >
+      <SquarePen className="size-5" />
+    </TooltipIconButton>
+  );
+}
+
 export function Thread() {
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const stream = useStreamContext();
-  // const messages = [...dummyMessages, ...stream.messages];
   const messages = stream.messages;
   const isLoading = stream.isLoading;
   const prevMessageLength = useRef(0);
@@ -105,7 +106,8 @@ export function Thread() {
           </div>
         )}
         {chatStarted && (
-          <div className="hidden md:flex absolute top-4 right-4">
+          <div className="hidden md:flex items-center gap-3 absolute top-4 right-4">
+            <NewThread />
             <Title />
           </div>
         )}
