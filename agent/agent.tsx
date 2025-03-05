@@ -77,12 +77,20 @@ function handleRoute(
   return state.next;
 }
 
+const GENERAL_INPUT_SYSTEM_PROMPT = `You are an AI assistant.
+If the user asks what you can do, describe these tools.
+${allToolDescriptions}
+
+If the last message is a tool result, describe what the action was, congratulate the user, or send a friendly followup in response to the tool action. Ensure this is a clear and concise message.
+
+Otherwise, just answer as normal.`;
+
 async function handleGeneralInput(state: GenerativeUIState) {
   const llm = new ChatOpenAI({ model: "gpt-4o-mini", temperature: 0 });
   const response = await llm.invoke([
     {
       role: "system",
-      content: `You are an AI assistant.\nIf the user asks what you can do, describe these tools. Otherwise, just answer as normal.\n\n${allToolDescriptions}`,
+      content: GENERAL_INPUT_SYSTEM_PROMPT,
     },
     ...state.messages,
   ]);

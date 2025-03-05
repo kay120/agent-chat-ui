@@ -1,5 +1,5 @@
 import "./index.css";
-import React, { useEffect } from "react";
+import React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TripDetails } from "../../../trip-planner/types";
@@ -10,50 +10,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { faker } from "@faker-js/faker";
 import { format } from "date-fns";
-
-const IMAGE_URLS = [
-  "https://a0.muscache.com/im/pictures/c88d4356-9e33-4277-83fd-3053e5695333.jpg?im_w=1200&im_format=avif",
-  "https://a0.muscache.com/im/pictures/miso/Hosting-999231834211657440/original/fa140513-cc51-48a6-83c9-ef4e11e69bc2.jpeg?im_w=1200&im_format=avif",
-  "https://a0.muscache.com/im/pictures/miso/Hosting-5264493/original/10d2c21f-84c2-46c5-b20b-b51d1c2c971a.jpeg?im_w=1200&im_format=avif",
-  "https://a0.muscache.com/im/pictures/d0e3bb05-a96a-45cf-af92-980269168096.jpg?im_w=720&im_format=avif",
-  "https://a0.muscache.com/im/pictures/miso/Hosting-50597302/original/eb1bb383-4b70-45ae-b3ce-596f83436e6f.jpeg?im_w=720&im_format=avif",
-  "https://a0.muscache.com/im/pictures/miso/Hosting-900891950206269231/original/7cc71402-9430-48b4-b4f1-e8cac69fd7d3.jpeg?im_w=720&im_format=avif",
-  "https://a0.muscache.com/im/pictures/460efdcd-1286-431d-b4e5-e316d6427707.jpg?im_w=720&im_format=avif",
-  "https://a0.muscache.com/im/pictures/prohost-api/Hosting-51234810/original/5231025a-4c39-4a96-ac9c-b088fceb5531.jpeg?im_w=720&im_format=avif",
-  "https://a0.muscache.com/im/pictures/miso/Hosting-14886949/original/a9d72542-cd1f-418d-b070-a73035f94fe4.jpeg?im_w=720&im_format=avif",
-  "https://a0.muscache.com/im/pictures/2011683a-c045-4b5a-97a8-37bca4b98079.jpg?im_w=720&im_format=avif",
-  "https://a0.muscache.com/im/pictures/11bcbeec-749c-4897-8593-1ec6f6dc04ad.jpg?im_w=720&im_format=avif",
-  "https://a0.muscache.com/im/pictures/prohost-api/Hosting-18327626/original/fba2e4e8-9d68-47a8-838e-dab5353e5209.jpeg?im_w=720&im_format=avif",
-];
-
-export type Accommodation = {
-  id: string;
-  name: string;
-  price: number;
-  rating: number;
-  city: string;
-  image: string;
-};
-
-function getAccommodations(city: string): Accommodation[] {
-  // Shuffle the image URLs array and take the first 6
-  const shuffledImages = [...IMAGE_URLS]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 6);
-
-  return Array.from({ length: 6 }, (_, index) => ({
-    id: faker.string.uuid(),
-    name: faker.location.streetAddress(),
-    price: faker.number.int({ min: 100, max: 1000 }),
-    rating: Number(
-      faker.number.float({ min: 4.0, max: 5.0, fractionDigits: 2 }).toFixed(2),
-    ),
-    city: city,
-    image: shuffledImages[index],
-  }));
-}
+import { Accommodation } from "agent/types";
+import { capitalizeSentence } from "../../../utils/capitalize";
 
 const StarSVG = ({ fill = "white" }: { fill?: string }) => (
   <svg
@@ -94,7 +53,7 @@ function AccommodationCard({
           <p>·</p>
           <p>{accommodation.price}</p>
         </div>
-        <p className="text-sm">{accommodation.city}</p>
+        <p className="text-sm">{capitalizeSentence(accommodation.city)}</p>
       </div>
     </div>
   );
@@ -144,7 +103,7 @@ function SelectedAccommodation({
               <StarSVG fill="black" />
               {accommodation.rating}
             </span>
-            <p className="text-gray-600">{accommodation.city}</p>
+            <p className="text-gray-600">{capitalizeSentence(accommodation.city)}</p>
           </div>
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex justify-between">
@@ -179,16 +138,11 @@ function SelectedAccommodation({
 
 export default function AccommodationsList({
   tripDetails,
+  accommodations,
 }: {
   tripDetails: TripDetails;
+  accommodations: Accommodation[];
 }) {
-  const [places, setPlaces] = React.useState<Accommodation[]>([]);
-
-  useEffect(() => {
-    const accommodations = getAccommodations(tripDetails.location);
-    setPlaces(accommodations);
-  }, []);
-
   const [selectedAccommodation, setSelectedAccommodation] = React.useState<
     Accommodation | undefined
   >();
@@ -213,7 +167,7 @@ export default function AccommodationsList({
         className="w-full sm:max-w-sm md:max-w-2xl lg:max-w-3xl"
       >
         <CarouselContent>
-          {places.map((accommodation) => (
+          {accommodations.map((accommodation) => (
             <CarouselItem
               key={accommodation.id}
               className="basis-1/2 md:basis-1/4"

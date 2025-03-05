@@ -4,6 +4,7 @@ import { typedUi } from "@langchain/langgraph-sdk/react-ui/server";
 import type ComponentMap from "../../uis/index";
 import { z } from "zod";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
+import { getAccommodationsListProps } from "../utils/get-accommodations";
 
 const schema = z.object({
   listAccommodations: z
@@ -85,11 +86,9 @@ export async function callTools(
   }
 
   if (tripPlan.listAccommodations) {
-    // TODO: Replace with an accommodations list UI component
-    ui.write("accommodations-list", { tripDetails: state.tripDetails });
+    ui.write("accommodations-list", getAccommodationsListProps(state.tripDetails));
   }
   if (tripPlan.bookAccommodation && tripPlan.accommodationName) {
-    // TODO: Replace with a book accommodation UI component
     ui.write("book-accommodation", {
       tripDetails: state.tripDetails,
       accommodationName: tripPlan.accommodationName,
@@ -97,12 +96,10 @@ export async function callTools(
   }
 
   if (tripPlan.listRestaurants) {
-    // TODO: Replace with a restaurants list UI component
     ui.write("restaurants-list", { tripDetails: state.tripDetails });
   }
 
   if (tripPlan.bookRestaurant && tripPlan.restaurantName) {
-    // TODO: Replace with a book restaurant UI component
     ui.write("book-restaurant", {
       tripDetails: state.tripDetails,
       restaurantName: tripPlan.restaurantName,
