@@ -111,7 +111,7 @@ export async function callTools(
 
   return {
     messages: [response],
-    ui: ui.collect,
+    ui: ui.collect as TripPlannerUpdate["ui"],
     timestamp: Date.now(),
   };
 }

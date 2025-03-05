@@ -65,7 +65,7 @@ export async function callTools(
 
   return {
     messages: [message],
-    ui: ui.collect,
+    ui: ui.collect as StockbrokerUpdate["ui"],
     timestamp: Date.now(),
   };
 }

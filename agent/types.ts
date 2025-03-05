@@ -1,9 +1,16 @@
 import { MessagesAnnotation, Annotation } from "@langchain/langgraph";
-import { uiMessageReducer } from "@langchain/langgraph-sdk/react-ui/types";
+import {
+  RemoveUIMessage,
+  UIMessage,
+  uiMessageReducer,
+} from "@langchain/langgraph-sdk/react-ui/types";
 
 export const GenerativeUIAnnotation = Annotation.Root({
   messages: MessagesAnnotation.spec["messages"],
-  ui: Annotation({ default: () => [], reducer: uiMessageReducer }),
+  ui: Annotation<
+    UIMessage[],
+    UIMessage | RemoveUIMessage | (UIMessage | RemoveUIMessage)[]
+  >({ default: () => [], reducer: uiMessageReducer }),
   timestamp: Annotation<number>,
   next: Annotation<"stockbroker" | "tripPlanner" | "generalInput">(),
 });
