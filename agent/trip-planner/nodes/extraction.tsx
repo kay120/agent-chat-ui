@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { TripDetails, TripPlannerState } from "../types";
+import { TripDetails, TripPlannerState, TripPlannerUpdate } from "../types";
 import { z } from "zod";
 import { formatMessages } from "agent/utils/format-messages";
 
@@ -43,7 +43,7 @@ function calculateDates(
 
 export async function extraction(
   state: TripPlannerState,
-): Promise<Partial<TripPlannerState>> {
+): Promise<TripPlannerUpdate> {
   const schema = z.object({
     location: z
       .string()

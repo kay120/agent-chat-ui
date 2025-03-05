@@ -1,12 +1,20 @@
 import "./index.css";
-import { useStream } from "@langchain/langgraph-sdk/react";
-import type { AIMessage, Message } from "@langchain/langgraph-sdk";
+import {
+  useStreamContext,
+  type UIMessage,
+} from "@langchain/langgraph-sdk/react-ui";
+import type { AIMessage, Message, ToolMessage } from "@langchain/langgraph-sdk";
 import { useState, useEffect, useCallback } from "react";
 
 export default function StockPrice(props: {
   instruction: string;
   logo: string;
 }) {
+  const thread = useStreamContext<
+    { messages: Message[]; ui: UIMessage[] },
+    { MetaType: { ui: UIMessage | undefined } }
+  >();
+
   const [quantity, setQuantity] = useState(1);
   const [stockData, setStockData] = useState({
     symbol: "AAPL",
@@ -51,23 +59,16 @@ export default function StockPrice(props: {
   const [limitPrice, setLimitPrice] = useState(stockData.price.toFixed(2));
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
 
-  // useStream should be able to be infered from context
-  const thread = useStream<{ messages: Message[] }>({
-    assistantId: "assistant_123",
-    apiUrl: "http://localhost:3123",
-  });
-
-  const messagesCopy = thread.messages;
-
-  const aiTool = messagesCopy
-    .slice()
-    .reverse()
-    .find(
-      (message): message is AIMessage =>
-        message.type === "ai" && !!message.tool_calls?.length,
-    );
+  const aiTool = thread.messages.findLast(
+    (message): message is AIMessage =>
+      message.type === "ai" && !!message.tool_calls?.length,
+  );
 
   const toolCallId = aiTool?.tool_calls?.[0]?.id;
+  const toolResponse = thread.messages.findLast(
+    (message): message is ToolMessage =>
+      message.type === "tool" && message.tool_call_id === toolCallId,
+  );
 
   // Simulated price history generation on component mount
   useEffect(() => {
@@ -248,6 +249,7 @@ export default function StockPrice(props: {
   const range = max - min || 1;
   const chartPath = generateChartPath();
 
+  if (toolResponse) return <div>Responded</div>;
   return (
     <div className="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
       <div

@@ -1,11 +1,11 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { TripPlannerState } from "../types";
+import { TripPlannerState, TripPlannerUpdate } from "../types";
 import { z } from "zod";
 import { formatMessages } from "agent/utils/format-messages";
 
 export async function classify(
   state: TripPlannerState,
-): Promise<Partial<TripPlannerState>> {
+): Promise<TripPlannerUpdate> {
   if (!state.tripDetails) {
     // Can not classify if tripDetails are undefined
     return {};

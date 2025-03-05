@@ -4,7 +4,7 @@ import { getContentString } from "../utils";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MarkdownText } from "../markdown-text";
-import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui/client";
+import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
 import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
 
@@ -36,6 +36,7 @@ function CustomComponent({
           assistantId="agent"
           stream={thread}
           message={customComponent}
+          meta={{ ui: customComponent }}
         />
       )}
     </div>
