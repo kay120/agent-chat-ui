@@ -61,6 +61,7 @@ export async function extraction(
     numberOfGuests: z
       .number()
       .optional()
+      .default(2)
       .describe("The number of guests for the trip"),
   });
 
@@ -113,7 +114,10 @@ Extract only what is specified by the user. It is okay to leave fields blank if 
   const extractionDetailsWithDefaults: TripDetails = {
     startDate,
     endDate,
-    numberOfGuests: extractedDetails.numberOfGuests ?? 2,
+    numberOfGuests:
+      extractedDetails.numberOfGuests !== undefined
+        ? extractedDetails.numberOfGuests
+        : 2,
     location: extractedDetails.location,
   };
 

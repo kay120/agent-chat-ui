@@ -16,3 +16,12 @@ export const GenerativeUIAnnotation = Annotation.Root({
 });
 
 export type GenerativeUIState = typeof GenerativeUIAnnotation.State;
+
+export type Accommodation = {
+  id: string;
+  name: string;
+  price: number;
+  rating: number;
+  city: string;
+  image: string;
+};
