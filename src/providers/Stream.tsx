@@ -110,7 +110,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             className="flex flex-col gap-6 p-6 bg-muted/50"
           >
             <div className="flex flex-col gap-2">
-              <Label htmlFor="apiUrl">Deployment URL</Label>
+              <Label htmlFor="apiUrl">Deployment URL<span className="text-rose-500">*</span></Label>
               <p className="text-muted-foreground text-sm">
                 This is the URL of your LangGraph deployment. Can be a local, or
                 production deployment.
@@ -124,7 +124,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="assistantId">Assistant / Graph ID</Label>
+              <Label htmlFor="assistantId">Assistant / Graph ID<span className="text-rose-500">*</span></Label>
               <p className="text-muted-foreground text-sm">
                 This is the ID of the graph (can be the graph name), or
                 assistant to fetch threads from, and invoke when actions are
@@ -141,7 +141,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
             <div className="flex flex-col gap-2">
               <Label htmlFor="apiKey">LangSmith API Key</Label>
               <p className="text-muted-foreground text-sm">
-                This value is stored in your browser's local storage and is only
+                This is NOT required if This value is stored in your browser's local storage and is only
                 used to authenticate requests sent to your LangGraph server.
               </p>
               <PasswordInput
