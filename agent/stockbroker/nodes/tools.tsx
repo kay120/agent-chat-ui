@@ -1,4 +1,4 @@
-import { StockbrokerState } from "../types";
+import { StockbrokerState, StockbrokerUpdate } from "../types";
 import { ChatOpenAI } from "@langchain/openai";
 import { typedUi } from "@langchain/langgraph-sdk/react-ui/server";
 import type ComponentMap from "../../uis/index";
@@ -32,7 +32,7 @@ const STOCKBROKER_TOOLS = [
 export async function callTools(
   state: StockbrokerState,
   config: LangGraphRunnableConfig,
-): Promise<Partial<StockbrokerState>> {
+): Promise<StockbrokerUpdate> {
   const ui = typedUi<typeof ComponentMap>(config);
 
   const message = await llm.bindTools(STOCKBROKER_TOOLS).invoke([
@@ -65,8 +65,7 @@ export async function callTools(
 
   return {
     messages: [message],
-    // TODO: Fix the ui return type.
-    ui: ui.collect as any[],
+    ui: ui.collect,
     timestamp: Date.now(),
   };
 }
