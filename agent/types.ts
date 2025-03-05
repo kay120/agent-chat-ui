@@ -3,7 +3,7 @@ import {
   RemoveUIMessage,
   UIMessage,
   uiMessageReducer,
-} from "@langchain/langgraph-sdk/react-ui/types";
+} from "@langchain/langgraph-sdk/react-ui/server";
 
 export const GenerativeUIAnnotation = Annotation.Root({
   messages: MessagesAnnotation.spec["messages"],
