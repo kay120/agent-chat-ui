@@ -162,7 +162,7 @@ export function Thread() {
     });
   };
 
-  const chatStarted = !!threadId || !!messages.length
+  const chatStarted = !!threadId || !!messages.length;
 
   return (
     <div className="flex w-full h-screen overflow-hidden">
