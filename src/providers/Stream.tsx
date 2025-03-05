@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowRight } from "lucide-react";
 import { PasswordInput } from "@/components/ui/password-input";
 import { getApiKey } from "@/lib/api-key";
+import { useThreads } from "./Thread";
 
 export type StateType = { messages: Message[]; ui?: UIMessage[] };
 
@@ -30,6 +31,10 @@ const useTypedStream = useStream<
 type StreamContextType = ReturnType<typeof useTypedStream>;
 const StreamContext = createContext<StreamContextType | undefined>(undefined);
 
+async function sleep(ms = 4000) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const StreamSession = ({
   children,
   apiKey,
@@ -42,12 +47,18 @@ const StreamSession = ({
   assistantId: string;
 }) => {
   const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
+  const { getThreads, setThreads } = useThreads();
   const streamValue = useTypedStream({
     apiUrl,
     apiKey: apiKey ?? undefined,
     assistantId,
     threadId: threadId ?? null,
-    onThreadId: setThreadId,
+    onThreadId: (id) => {
+      setThreadId(id);
+      // Refetch threads list when thread ID changes.
+      // Wait for some seconds before fetching so we're able to get the new thread that was created.
+      sleep().then(() => getThreads().then(setThreads).catch(console.error));
+    },
   });
 
   return (

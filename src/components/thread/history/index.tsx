@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { useThreads } from "@/hooks/useThreads";
+import { useThreads } from "@/providers/Thread";
 import { Thread } from "@langchain/langgraph-sdk";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { getContentString } from "../utils";
 import { useQueryParam, StringParam, BooleanParam } from "use-query-params";
 import {
@@ -67,29 +67,32 @@ function ThreadHistoryLoading() {
 }
 
 export default function ThreadHistory() {
-  const [threads, setThreads] = useState<Thread[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
   const [chatHistoryOpen, setChatHistoryOpen] = useQueryParam(
     "chatHistoryOpen",
     BooleanParam,
   );
 
-  const { getThreads } = useThreads();
+  const { getThreads, threads, setThreads, threadsLoading, setThreadsLoading } =
+    useThreads();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setLoading(true);
+    setThreadsLoading(true);
     getThreads()
       .then(setThreads)
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => setThreadsLoading(false));
   }, []);
 
   return (
     <>
       <div className="hidden lg:flex flex-col border-r-[1px] border-slate-300 items-start justify-start gap-6 h-screen w-[300px] shrink-0 px-2 py-4 shadow-inner-right">
         <h1 className="text-2xl font-medium pl-4">Thread History</h1>
-        {loading ? <ThreadHistoryLoading /> : <ThreadList threads={threads} />}
+        {threadsLoading ? (
+          <ThreadHistoryLoading />
+        ) : (
+          <ThreadList threads={threads} />
+        )}
       </div>
       <Sheet open={!!chatHistoryOpen} onOpenChange={setChatHistoryOpen}>
         <SheetContent side="left" className="lg:hidden flex">
