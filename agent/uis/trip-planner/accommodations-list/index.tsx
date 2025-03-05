@@ -1,5 +1,10 @@
 import "./index.css";
-import React from "react";
+import { v4 as uuidv4 } from "uuid";
+import {
+  useStreamContext,
+  type UIMessage,
+} from "@langchain/langgraph-sdk/react-ui";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TripDetails } from "../../../trip-planner/types";
@@ -13,6 +18,9 @@ import {
 import { format } from "date-fns";
 import { Accommodation } from "agent/types";
 import { capitalizeSentence } from "../../../utils/capitalize";
+import { Message } from "@langchain/langgraph-sdk";
+import { getToolResponse } from "../../utils/get-tool-response";
+import { DO_NOT_RENDER_ID_PREFIX } from "@/lib/ensure-tool-responses";
 
 const StarSVG = ({ fill = "white" }: { fill?: string }) => (
   <svg
@@ -63,10 +71,12 @@ function SelectedAccommodation({
   accommodation,
   onHide,
   tripDetails,
+  onBook,
 }: {
   accommodation: Accommodation;
   onHide: () => void;
   tripDetails: TripDetails;
+  onBook: (accommodation: Accommodation) => void;
 }) {
   const startDate = new Date(tripDetails.startDate);
   const endDate = new Date(tripDetails.endDate);
@@ -127,7 +137,7 @@ function SelectedAccommodation({
           </div>
         </div>
         <Button
-          onClick={() => console.log("Booked")}
+          onClick={() => onBook(accommodation)}
           variant="secondary"
           className="w-full bg-gray-800 text-white hover:bg-gray-900 cursor-pointer transition-colors ease-in-out duration-200"
         >
@@ -138,16 +148,159 @@ function SelectedAccommodation({
   );
 }
 
+function BookedAccommodation({
+  accommodation,
+  tripDetails,
+}: {
+  accommodation: Accommodation;
+  tripDetails: TripDetails;
+}) {
+  const startDate = new Date(tripDetails.startDate);
+  const endDate = new Date(tripDetails.endDate);
+  const totalTripDurationDays = Math.max(
+    startDate.getDate() - endDate.getDate(),
+    1,
+  );
+  const totalPrice = totalTripDurationDays * accommodation.price;
+
+  return (
+    <div
+      className="relative w-full h-[400px] rounded-2xl shadow-md overflow-hidden"
+      style={{
+        backgroundImage: `url(${accommodation.image})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="absolute bottom-0 left-0 right-0 flex flex-col gap-2 p-6 text-white bg-gradient-to-t from-black/90 via-black/70 to-transparent">
+        <p className="text-lg font-medium">Booked Accommodation</p>
+
+        <div className="flex justify-between items-baseline">
+          <h3 className="text-xl font-semibold"></h3>
+        </div>
+        <div className="grid grid-cols-2 gap-x-12 gap-y-2 text-sm">
+          <div className="flex justify-between">
+            <span>Address:</span>
+          </div>
+          <div className="flex justify-between">
+            <span>
+              {accommodation.name}, {capitalizeSentence(accommodation.city)}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Rating:</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="flex items-center gap-1">
+              <StarSVG />
+              {accommodation.rating}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Dates:</span>
+          </div>
+          <div className="flex justify-between">
+            <span>
+              {format(startDate, "MMM d, yyyy")} -{" "}
+              {format(endDate, "MMM d, yyyy")}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Guests:</span>
+          </div>
+          <div className="flex justify-between">
+            <span>{tripDetails.numberOfGuests}</span>
+          </div>
+
+          <div className="flex justify-between font-semibold">
+            <span>Total Price:</span>
+          </div>
+          <div className="flex justify-between font-semibold">
+            <span>${totalPrice.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AccommodationsList({
+  toolCallId,
   tripDetails,
   accommodations,
 }: {
+  toolCallId: string;
   tripDetails: TripDetails;
   accommodations: Accommodation[];
 }) {
-  const [selectedAccommodation, setSelectedAccommodation] = React.useState<
+  const thread = useStreamContext<
+    { messages: Message[]; ui: UIMessage[] },
+    { MetaType: { ui: UIMessage | undefined } }
+  >();
+
+  const [selectedAccommodation, setSelectedAccommodation] = useState<
     Accommodation | undefined
   >();
+  const [accommodationBooked, setAccommodationBooked] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || accommodationBooked) return;
+    const toolResponse = getToolResponse(toolCallId, thread);
+    if (toolResponse) {
+      setAccommodationBooked(true);
+      try {
+        const parsedContent: {
+          accommodation: Accommodation;
+          tripDetails: TripDetails;
+        } = JSON.parse(toolResponse.content as string);
+        setSelectedAccommodation(parsedContent.accommodation);
+      } catch {
+        console.error("Failed to parse tool response content.");
+      }
+    }
+  }, []);
+
+  function handleBookAccommodation(accommodation: Accommodation) {
+    const orderDetails = {
+      accommodation,
+      tripDetails,
+    };
+
+    thread.submit({
+      messages: [
+        {
+          type: "tool",
+          tool_call_id: toolCallId,
+          id: `${DO_NOT_RENDER_ID_PREFIX}${uuidv4()}`,
+          name: "trip-planner",
+          content: JSON.stringify(orderDetails),
+        },
+        {
+          type: "human",
+          content: `Booked ${accommodation.name} for ${tripDetails.numberOfGuests}.`,
+        },
+      ],
+    });
+
+    setAccommodationBooked(true);
+    if (selectedAccommodation?.id !== accommodation.id) {
+      setSelectedAccommodation(accommodation);
+    }
+  }
+
+  if (accommodationBooked && selectedAccommodation) {
+    return (
+      <BookedAccommodation
+        tripDetails={tripDetails}
+        accommodation={selectedAccommodation}
+      />
+    );
+  } else if (accommodationBooked) {
+    return <div>Successfully booked accommodation!</div>;
+  }
 
   if (selectedAccommodation) {
     return (
@@ -155,6 +308,7 @@ export default function AccommodationsList({
         tripDetails={tripDetails}
         onHide={() => setSelectedAccommodation(undefined)}
         accommodation={selectedAccommodation}
+        onBook={handleBookAccommodation}
       />
     );
   }

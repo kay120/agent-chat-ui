@@ -81,15 +81,16 @@ export async function callTools(
   const tripPlan = response.tool_calls?.[0]?.args as
     | z.infer<typeof schema>
     | undefined;
-  if (!tripPlan) {
+  const toolCallId = response.tool_calls?.[0]?.id;
+  if (!tripPlan || !toolCallId) {
     throw new Error("No trip plan found");
   }
 
   if (tripPlan.listAccommodations) {
-    ui.write(
-      "accommodations-list",
-      getAccommodationsListProps(state.tripDetails),
-    );
+    ui.write("accommodations-list", {
+      toolCallId,
+      ...getAccommodationsListProps(state.tripDetails),
+    });
   }
   if (tripPlan.bookAccommodation && tripPlan.accommodationName) {
     ui.write("book-accommodation", {
