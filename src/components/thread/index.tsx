@@ -162,16 +162,18 @@ export function Thread() {
     });
   };
 
+  const chatStarted = !!threadId || !!messages.length
+
   return (
     <div className="flex w-full h-screen overflow-hidden">
       <ThreadHistory />
       <div
         className={cn(
           "flex-1 flex flex-col min-w-0 overflow-hidden",
-          !threadId && "grid-rows-[1fr]",
+          !chatStarted && "grid-rows-[1fr]",
         )}
       >
-        {threadId && (
+        {chatStarted && (
           <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
             <div className="flex gap-2 items-center justify-start">
               <button
@@ -210,8 +212,8 @@ export function Thread() {
           <StickyToBottomContent
             className={cn(
               "absolute inset-0 overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent",
-              !threadId && "flex flex-col items-stretch mt-[25vh]",
-              threadId && "grid grid-rows-[1fr_auto]",
+              !chatStarted && "flex flex-col items-stretch mt-[25vh]",
+              chatStarted && "grid grid-rows-[1fr_auto]",
             )}
             contentClassName="pt-8 pb-16 px-4 max-w-4xl mx-auto flex flex-col gap-4 w-full"
             content={
@@ -241,7 +243,7 @@ export function Thread() {
             }
             footer={
               <div className="sticky flex flex-col items-center gap-8 bottom-8 px-4">
-                {!threadId && (
+                {!chatStarted && (
                   <div className="flex gap-3 items-center">
                     <LangGraphLogoSVG className="flex-shrink-0 h-8" />
                     <h1 className="text-2xl font-semibold tracking-tight">
