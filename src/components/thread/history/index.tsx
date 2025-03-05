@@ -10,6 +10,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function ThreadList({
   threads,
@@ -55,8 +56,19 @@ function ThreadList({
   );
 }
 
+function ThreadHistoryLoading() {
+  return (
+    <div className="h-full flex flex-col gap-2 items-start justify-start overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+      {Array.from({ length: 30 }).map((_, i) => (
+        <Skeleton key={`skeleton-${i}`} className="w-[264px] h-10" />
+      ))}
+    </div>
+  );
+}
+
 export default function ThreadHistory() {
   const [threads, setThreads] = useState<Thread[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [chatHistoryOpen, setChatHistoryOpen] = useQueryParam(
     "chatHistoryOpen",
     BooleanParam,
@@ -65,14 +77,19 @@ export default function ThreadHistory() {
   const { getThreads } = useThreads();
 
   useEffect(() => {
-    getThreads().then(setThreads).catch(console.error);
+    if (typeof window === "undefined") return;
+    setLoading(true);
+    getThreads()
+      .then(setThreads)
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
   return (
     <>
       <div className="hidden lg:flex flex-col border-r-[1px] border-slate-300 items-start justify-start gap-6 h-screen w-[300px] shrink-0 px-2 py-4 shadow-inner-right">
         <h1 className="text-2xl font-medium pl-4">Thread History</h1>
-        <ThreadList threads={threads} />
+        {loading ? <ThreadHistoryLoading /> : <ThreadList threads={threads} />}
       </div>
       <Sheet open={!!chatHistoryOpen} onOpenChange={setChatHistoryOpen}>
         <SheetContent side="left" className="lg:hidden flex">
