@@ -46,10 +46,13 @@ If they do NOT change their request details (or they never specified them), plea
 
   const humanMessage = `Here is the entire conversation so far:\n${formatMessages(state.messages)}`;
 
-  const response = await model.invoke([
-    { role: "system", content: prompt },
-    { role: "human", content: humanMessage },
-  ]);
+  const response = await model.invoke(
+    [
+      { role: "system", content: prompt },
+      { role: "human", content: humanMessage },
+    ],
+    { tags: ["langsmith:nostream"] },
+  );
 
   const classificationDetails = response.tool_calls?.[0]?.args as
     | z.infer<typeof schema>
