@@ -1,4 +1,7 @@
 import "./index.css";
+import React, { useEffect } from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { TripDetails } from "../../../trip-planner/types";
 import {
   Carousel,
@@ -8,6 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { faker } from "@faker-js/faker";
+import { format } from "date-fns";
 
 const IMAGE_URLS = [
   "https://a0.muscache.com/im/pictures/c88d4356-9e33-4277-83fd-3053e5695333.jpg?im_w=1200&im_format=avif",
@@ -27,26 +31,31 @@ const IMAGE_URLS = [
 export type Accommodation = {
   id: string;
   name: string;
-  price: string;
+  price: number;
   rating: number;
   city: string;
   image: string;
 };
 
 function getAccommodations(city: string): Accommodation[] {
-  return Array.from({ length: 6 }, () => ({
+  // Shuffle the image URLs array and take the first 6
+  const shuffledImages = [...IMAGE_URLS]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 6);
+
+  return Array.from({ length: 6 }, (_, index) => ({
     id: faker.string.uuid(),
     name: faker.location.streetAddress(),
-    price: `$${faker.number.int({ min: 100, max: 1000 })}`,
+    price: faker.number.int({ min: 100, max: 1000 }),
     rating: Number(
       faker.number.float({ min: 4.0, max: 5.0, fractionDigits: 2 }).toFixed(2),
     ),
     city: city,
-    image: IMAGE_URLS[Math.floor(Math.random() * IMAGE_URLS.length)],
+    image: shuffledImages[index],
   }));
 }
 
-const StarSVG = () => (
+const StarSVG = ({ fill = "white" }: { fill?: string }) => (
   <svg
     width="10"
     height="10"
@@ -56,7 +65,7 @@ const StarSVG = () => (
   >
     <path
       d="M4.73158 0.80127L6.26121 3.40923L9.23158 4.04798L7.20658 6.29854L7.51273 9.30127L4.73158 8.08423L1.95043 9.30127L2.25658 6.29854L0.23158 4.04798L3.20195 3.40923L4.73158 0.80127Z"
-      fill="white"
+      fill={fill}
     />
   </svg>
 );
@@ -91,32 +100,133 @@ function AccommodationCard({
   );
 }
 
+function SelectedAccommodation({
+  accommodation,
+  onHide,
+  tripDetails,
+}: {
+  accommodation: Accommodation;
+  onHide: () => void;
+  tripDetails: TripDetails;
+}) {
+  const startDate = new Date(tripDetails.startDate);
+  const endDate = new Date(tripDetails.endDate);
+  const totalTripDurationDays = Math.max(
+    startDate.getDate() - endDate.getDate(),
+    1,
+  );
+  const totalPrice = totalTripDurationDays * accommodation.price;
+
+  return (
+    <div className="w-full flex gap-6 rounded-2xl overflow-hidden bg-white shadow-lg">
+      <div className="w-2/3 h-[400px]">
+        <img
+          src={accommodation.image}
+          alt={accommodation.name}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="w-1/3 p-4 flex flex-col">
+        <div className="flex justify-between items-center mb-4 gap-3">
+          <h3 className="text-xl font-semibold">{accommodation.name}</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onHide}
+            className="cursor-pointer hover:bg-gray-50 transition-colors ease-in-out duration-200 text-gray-500 w-5 h-5"
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+        <div className="flex-1 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-1">
+              <StarSVG fill="black" />
+              {accommodation.rating}
+            </span>
+            <p className="text-gray-600">{accommodation.city}</p>
+          </div>
+          <div className="space-y-2 text-sm text-gray-600">
+            <div className="flex justify-between">
+              <span>Check-in</span>
+              <span>{format(startDate, "MMM d, yyyy")}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Check-out</span>
+              <span>{format(endDate, "MMM d, yyyy")}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Guests</span>
+              <span>{tripDetails.numberOfGuests}</span>
+            </div>
+            <div className="flex justify-between font-semibold text-black">
+              <span>Total Price</span>
+              <span>${totalPrice.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+        <Button
+          onClick={() => console.log("Booked")}
+          variant="secondary"
+          className="w-full bg-gray-800 text-white hover:bg-gray-900 cursor-pointer transition-colors ease-in-out duration-200"
+        >
+          Book
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function AccommodationsList({
   tripDetails,
 }: {
   tripDetails: TripDetails;
 }) {
-  const places = getAccommodations(tripDetails.location);
+  const [places, setPlaces] = React.useState<Accommodation[]>([]);
+
+  useEffect(() => {
+    const accommodations = getAccommodations(tripDetails.location);
+    setPlaces(accommodations);
+    setSelectedAccommodation(accommodations[0]);
+  }, []);
+
+  const [selectedAccommodation, setSelectedAccommodation] = React.useState<
+    Accommodation | undefined
+  >(places[0]);
+
+  if (selectedAccommodation) {
+    return (
+      <SelectedAccommodation
+        tripDetails={tripDetails}
+        onHide={() => setSelectedAccommodation(undefined)}
+        accommodation={selectedAccommodation}
+      />
+    );
+  }
+
   return (
-    <Carousel
-      opts={{
-        align: "start",
-        loop: true,
-      }}
-      className="w-full sm:max-w-sm md:max-w-2xl lg:max-w-3xl"
-    >
-      <CarouselContent>
-        {places.map((accommodation) => (
-          <CarouselItem
-            key={accommodation.id}
-            className="basis-1/2 md:basis-1/4"
-          >
-            <AccommodationCard accommodation={accommodation} />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      <CarouselPrevious />
-      <CarouselNext />
-    </Carousel>
+    <div className="space-y-8">
+      <Carousel
+        opts={{
+          align: "start",
+          loop: true,
+        }}
+        className="w-full sm:max-w-sm md:max-w-2xl lg:max-w-3xl"
+      >
+        <CarouselContent>
+          {places.map((accommodation) => (
+            <CarouselItem
+              key={accommodation.id}
+              className="basis-1/2 md:basis-1/4"
+              onClick={() => setSelectedAccommodation(accommodation)}
+            >
+              <AccommodationCard accommodation={accommodation} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
+    </div>
   );
 }

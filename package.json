@@ -14,8 +14,8 @@
   "dependencies": {
     "@assistant-ui/react": "^0.8.0",
     "@assistant-ui/react-markdown": "^0.8.0",
-    "@faker-js/faker": "^9.5.1",
     "@assistant-ui/react-syntax-highlighter": "^0.7.2",
+    "@faker-js/faker": "^9.5.1",
     "@langchain/core": "^0.3.41",
     "@langchain/google-genai": "^0.1.10",
     "@langchain/langgraph": "^0.2.49",
@@ -32,6 +32,7 @@
     "@tailwindcss/vite": "^4.0.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.5.2",
     "esbuild": "^0.25.0",
     "esbuild-plugin-tailwindcss": "^2.0.1",
