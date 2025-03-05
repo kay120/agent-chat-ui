@@ -187,12 +187,11 @@ export default function AccommodationsList({
   useEffect(() => {
     const accommodations = getAccommodations(tripDetails.location);
     setPlaces(accommodations);
-    setSelectedAccommodation(accommodations[0]);
   }, []);
 
   const [selectedAccommodation, setSelectedAccommodation] = React.useState<
     Accommodation | undefined
-  >(places[0]);
+  >();
 
   if (selectedAccommodation) {
     return (
