@@ -9,15 +9,24 @@ import {
 } from "@assistant-ui/react-markdown";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import { FC, memo, useState } from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
+import { SyntaxHighlighter } from "@/components/thread/syntax-highlighter";
 
 import { TooltipIconButton } from "@/components/thread/tooltip-icon-button";
 import { cn } from "@/lib/utils";
 
+import "katex/dist/katex.min.css";
+
 const MarkdownTextImpl = ({ children }: { children: string }) => {
   return (
-    <ReactMarkdown remarkPlugins={[remarkGfm]} components={defaultComponents}>
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={defaultComponents}
+    >
       {children}
     </ReactMarkdown>
   );
@@ -26,6 +35,7 @@ const MarkdownTextImpl = ({ children }: { children: string }) => {
 export const MarkdownText = memo(MarkdownTextImpl);
 
 const CodeHeader: FC<CodeHeaderProps> = ({ language, code }) => {
+  console.log("CodeHeader", { language, code });
   const { isCopied, copyToClipboard } = useCopyToClipboard();
   const onCopy = () => {
     if (!code || isCopied) return;
@@ -195,7 +205,7 @@ const defaultComponents = memoizeMarkdownComponents({
   pre: ({ className, ...props }) => (
     <pre
       className={cn(
-        "overflow-x-auto rounded-b-lg bg-black p-4 text-white",
+        "overflow-x-auto rounded-b-lg bg-black p-4 text-white max-w-4xl",
         className,
       )}
       {...props}
@@ -211,4 +221,5 @@ const defaultComponents = memoizeMarkdownComponents({
     );
   },
   CodeHeader,
+  SyntaxHighlighter,
 });
