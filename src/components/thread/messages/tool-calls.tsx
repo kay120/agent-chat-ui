@@ -18,8 +18,7 @@ export function ToolCalls({
     <div className="space-y-4">
       {toolCalls.map((tc, idx) => {
         const args = tc.args as Record<string, any>;
-        if (!tc.args || Object.keys(args).length === 0) return null;
-
+        const hasArgs = Object.keys(args).length > 0;
         return (
           <div
             key={idx}
@@ -35,26 +34,30 @@ export function ToolCalls({
                 )}
               </h3>
             </div>
-            <table className="min-w-full divide-y divide-gray-200">
-              <tbody className="divide-y divide-gray-200">
-                {Object.entries(args).map(([key, value], argIdx) => (
-                  <tr key={argIdx}>
-                    <td className="px-4 py-2 text-sm font-medium text-gray-900 whitespace-nowrap">
-                      {key}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-500">
-                      {isComplexValue(value) ? (
-                        <code className="bg-gray-50 rounded px-2 py-1 font-mono text-sm">
-                          {JSON.stringify(value, null, 2)}
-                        </code>
-                      ) : (
-                        String(value)
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {hasArgs ? (
+              <table className="min-w-full divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200">
+                  {Object.entries(args).map(([key, value], argIdx) => (
+                    <tr key={argIdx}>
+                      <td className="px-4 py-2 text-sm font-medium text-gray-900 whitespace-nowrap">
+                        {key}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-500">
+                        {isComplexValue(value) ? (
+                          <code className="bg-gray-50 rounded px-2 py-1 font-mono text-sm">
+                            {JSON.stringify(value, null, 2)}
+                          </code>
+                        ) : (
+                          String(value)
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <code className="text-sm block p-3">{"{}"}</code>
+            )}
           </div>
         );
       })}
