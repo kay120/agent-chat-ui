@@ -1,4 +1,4 @@
-import { TripPlannerState } from "../types";
+import { TripPlannerState, TripPlannerUpdate } from "../types";
 import { ChatOpenAI } from "@langchain/openai";
 import { typedUi } from "@langchain/langgraph-sdk/react-ui/server";
 import type ComponentMap from "../../uis/index";
@@ -48,7 +48,7 @@ const schema = z.object({
 export async function callTools(
   state: TripPlannerState,
   config: LangGraphRunnableConfig,
-): Promise<Partial<TripPlannerState>> {
+): Promise<TripPlannerUpdate> {
   if (!state.tripDetails) {
     throw new Error("No trip details found");
   }
@@ -111,8 +111,7 @@ export async function callTools(
 
   return {
     messages: [response],
-    // TODO: Fix the ui return type.
-    ui: ui.collect as any[],
+    ui: ui.collect as TripPlannerUpdate["ui"],
     timestamp: Date.now(),
   };
 }

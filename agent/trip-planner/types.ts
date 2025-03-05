@@ -16,3 +16,4 @@ export const TripPlannerAnnotation = Annotation.Root({
 });
 
 export type TripPlannerState = typeof TripPlannerAnnotation.State;
+export type TripPlannerUpdate = typeof TripPlannerAnnotation.Update;

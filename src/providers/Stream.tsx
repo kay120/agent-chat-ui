@@ -4,7 +4,7 @@ import { type Message } from "@langchain/langgraph-sdk";
 import type {
   UIMessage,
   RemoveUIMessage,
-} from "@langchain/langgraph-sdk/react-ui/types";
+} from "@langchain/langgraph-sdk/react-ui";
 import { useQueryParam, StringParam } from "use-query-params";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

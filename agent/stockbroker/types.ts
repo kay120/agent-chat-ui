@@ -8,3 +8,4 @@ export const StockbrokerAnnotation = Annotation.Root({
 });
 
 export type StockbrokerState = typeof StockbrokerAnnotation.State;
+export type StockbrokerUpdate = typeof StockbrokerAnnotation.Update;
