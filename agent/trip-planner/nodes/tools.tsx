@@ -86,7 +86,10 @@ export async function callTools(
   }
 
   if (tripPlan.listAccommodations) {
-    ui.write("accommodations-list", getAccommodationsListProps(state.tripDetails));
+    ui.write(
+      "accommodations-list",
+      getAccommodationsListProps(state.tripDetails),
+    );
   }
   if (tripPlan.bookAccommodation && tripPlan.accommodationName) {
     ui.write("book-accommodation", {

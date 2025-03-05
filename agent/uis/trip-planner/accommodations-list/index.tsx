@@ -103,7 +103,9 @@ function SelectedAccommodation({
               <StarSVG fill="black" />
               {accommodation.rating}
             </span>
-            <p className="text-gray-600">{capitalizeSentence(accommodation.city)}</p>
+            <p className="text-gray-600">
+              {capitalizeSentence(accommodation.city)}
+            </p>
           </div>
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex justify-between">
