@@ -35,3 +35,12 @@ export type Price = {
   volume: number;
   time: string;
 };
+
+export type Snapshot = {
+  price: number;
+  ticker: string;
+  day_change: number;
+  day_change_percent: number;
+  market_cap: number;
+  time: string;
+};

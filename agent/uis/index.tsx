@@ -4,6 +4,7 @@ import AccommodationsList from "./trip-planner/accommodations-list";
 import BookAccommodation from "./trip-planner/book-accommodation";
 import RestaurantsList from "./trip-planner/restaurants-list";
 import BookRestaurant from "./trip-planner/book-restaurant";
+import BuyStock from "./stockbroker/buy-stock";
 
 const ComponentMap = {
   "stock-price": StockPrice,
@@ -12,5 +13,6 @@ const ComponentMap = {
   "book-accommodation": BookAccommodation,
   "restaurants-list": RestaurantsList,
   "book-restaurant": BookRestaurant,
+  "buy-stock": BuyStock,
 } as const;
 export default ComponentMap;

@@ -1,9 +1,4 @@
 import "./index.css";
-import {
-  useStreamContext,
-  type UIMessage,
-} from "@langchain/langgraph-sdk/react-ui";
-import type { Message } from "@langchain/langgraph-sdk";
 import { useState, useMemo } from "react";
 import {
   ChartConfig,
@@ -65,42 +60,26 @@ function DisplayRangeSelector({
   );
 }
 
-function getPropsForDisplayRange(displayRange: DisplayRange, prices: Price[]) {
-  // Start by filtering prices by display range. use the `time` field on `price` which is a string date. compare it to the current date
-  const actualPrices: Price[] = [];
+function getPropsForDisplayRange(
+  displayRange: DisplayRange,
+  oneDayPrices: Price[],
+  thirtyDayPrices: Price[],
+) {
   const now = new Date();
-  const oneDay = 24 * 60 * 60 * 1000;
-  const fiveDays = 5 * oneDay;
-  const oneMonth = 30 * oneDay;
+  const fiveDays = 5 * 24 * 60 * 60 * 1000; // 5 days in milliseconds
 
   switch (displayRange) {
     case "1d":
-      console.log("Calculating for 1d", prices.length);
-      console.log(prices[prices.length - 1]);
-      actualPrices.push(
-        ...prices.filter(
-          (p) => new Date(p.time).getTime() >= now.getTime() - oneDay,
-        ),
-      );
-      break;
+      return oneDayPrices;
     case "5d":
-      console.log("Calculating for 5d", prices.length);
-      actualPrices.push(
-        ...prices.filter(
-          (p) => new Date(p.time).getTime() >= now.getTime() - fiveDays,
-        ),
+      return thirtyDayPrices.filter(
+        (p) => new Date(p.time).getTime() >= now.getTime() - fiveDays,
       );
-      break;
     case "1m":
-      console.log("Calculating for 1m", prices.length);
-      actualPrices.push(
-        ...prices.filter(
-          (p) => new Date(p.time).getTime() >= now.getTime() - oneMonth,
-        ),
-      );
-      break;
+      return thirtyDayPrices;
+    default:
+      return [];
   }
-  return actualPrices;
 }
 // TODO: UPDATE TO SUPPORT ONE DAY AND THIRTY DAY PRICES AS DIFFERENT PROPS
 export default function StockPrice(props: {
@@ -109,12 +88,8 @@ export default function StockPrice(props: {
   thirtyDayPrices: Price[];
 }) {
   const { ticker } = props;
-  console.log(props.prices[0], props.prices[props.prices.length - 1]);
+  const { oneDayPrices, thirtyDayPrices } = props;
   const [displayRange, setDisplayRange] = useState<DisplayRange>("1d");
-  const thread = useStreamContext<
-    { messages: Message[]; ui: UIMessage[] },
-    { MetaType: { ui: UIMessage | undefined } }
-  >();
 
   const {
     currentPrice,
@@ -126,8 +101,12 @@ export default function StockPrice(props: {
     chartData,
     change,
   } = useMemo(() => {
-    const prices = getPropsForDisplayRange(displayRange, props.prices);
-    console.log("prices", prices.length);
+    const prices = getPropsForDisplayRange(
+      displayRange,
+      oneDayPrices,
+      thirtyDayPrices,
+    );
+
     const firstPrice = prices[0];
     const lastPrice = prices[prices.length - 1];
 
@@ -158,7 +137,7 @@ export default function StockPrice(props: {
       chartData,
       change,
     };
-  }, [props.prices, displayRange]);
+  }, [oneDayPrices, thirtyDayPrices, displayRange]);
 
   return (
     <div className="w-full max-w-4xl rounded-xl shadow-md overflow-hidden border border-gray-200 flex flex-col gap-4 p-3">
