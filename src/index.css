@@ -118,9 +118,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   :root {
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
