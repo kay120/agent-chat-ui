@@ -81,7 +81,6 @@ function getPropsForDisplayRange(
       return [];
   }
 }
-// TODO: UPDATE TO SUPPORT ONE DAY AND THIRTY DAY PRICES AS DIFFERENT PROPS
 export default function StockPrice(props: {
   ticker: string;
   oneDayPrices: Price[];
