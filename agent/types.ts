@@ -25,3 +25,13 @@ export type Accommodation = {
   city: string;
   image: string;
 };
+
+export type Price = {
+  ticker: string;
+  open: number;
+  close: number;
+  high: number;
+  low: number;
+  volume: number;
+  time: string;
+};
