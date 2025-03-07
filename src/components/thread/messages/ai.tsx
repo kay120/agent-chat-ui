@@ -7,6 +7,7 @@ import { MarkdownText } from "../markdown-text";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
 import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
+import { StringParam, useQueryParam } from "use-query-params";
 
 function CustomComponent({
   message,
@@ -15,6 +16,7 @@ function CustomComponent({
   message: Message;
   thread: ReturnType<typeof useStreamContext>;
 }) {
+  const [apiUrl] = useQueryParam("apiUrl", StringParam);
   const meta = thread.getMessagesMetadata(message);
   const seenState = meta?.firstSeenState;
   const customComponent = seenState?.values.ui
@@ -33,6 +35,7 @@ function CustomComponent({
     <div key={message.id}>
       {customComponent && (
         <LoadExternalComponent
+          apiUrl={apiUrl ?? undefined}
           assistantId="agent"
           stream={thread}
           message={customComponent}
