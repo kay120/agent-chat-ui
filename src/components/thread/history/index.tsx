@@ -12,7 +12,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { PanelRightOpen } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 

@@ -211,7 +211,7 @@ export function Thread() {
         }
       >
         {!chatStarted && (
-          <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
+          <div className="absolute top-0 left-0 w-full flex items-center justify-between gap-3 p-2 pl-4 z-10">
             {(!chatHistoryOpen || !isLargeScreen) && (
               <Button
                 className="hover:bg-gray-100"
@@ -225,25 +225,35 @@ export function Thread() {
         )}
         {chatStarted && (
           <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
-            <div className="flex items-center justify-start gap-2">
-              {(!chatHistoryOpen || !isLargeScreen) && (
-                <Button
-                  className="hover:bg-gray-100"
-                  variant="ghost"
-                  onClick={() => setChatHistoryOpen((p) => !p)}
-                >
-                  <PanelRightOpen />
-                </Button>
-              )}
-              <button
+            <div className="flex items-center justify-start gap-2 relative">
+              <div className="absolute left-0 z-10">
+                {(!chatHistoryOpen || !isLargeScreen) && (
+                  <Button
+                    className="hover:bg-gray-100"
+                    variant="ghost"
+                    onClick={() => setChatHistoryOpen((p) => !p)}
+                  >
+                    <PanelRightOpen />
+                  </Button>
+                )}
+              </div>
+              <motion.button
                 className="flex gap-2 items-center cursor-pointer"
                 onClick={() => setThreadId(null)}
+                animate={{
+                  marginLeft: !chatHistoryOpen ? 48 : 0,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                }}
               >
                 <LangGraphLogoSVG width={32} height={32} />
                 <span className="text-xl font-semibold tracking-tight">
                   LangGraph Chat
                 </span>
-              </button>
+              </motion.button>
             </div>
 
             <TooltipIconButton
