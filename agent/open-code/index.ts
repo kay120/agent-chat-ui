@@ -4,7 +4,10 @@ import { planner } from "./nodes/planner";
 import { interrupt } from "./nodes/interrupt";
 import { executor } from "./nodes/executor";
 
-function handleRoutingFromExecutor(state: OpenCodeState): "executor" | "interrupt" {}
+function handleRoutingFromExecutor(state: OpenCodeState): "executor" | "interrupt" {
+  const lastAIMessage = state.messages.findLast((m) => m.getType() === "ai");
+  if (lastAIMessage)
+}
 
 function handleRoutingFromInterrupt(state: OpenCodeState): "executor" | typeof END {}
 
