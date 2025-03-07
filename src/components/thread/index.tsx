@@ -218,7 +218,7 @@ export function Thread() {
                 variant="ghost"
                 onClick={() => setChatHistoryOpen((p) => !p)}
               >
-                <PanelRightOpen />
+                <PanelRightOpen className="size-5" />
               </Button>
             )}
           </div>
@@ -233,7 +233,7 @@ export function Thread() {
                     variant="ghost"
                     onClick={() => setChatHistoryOpen((p) => !p)}
                   >
-                    <PanelRightOpen />
+                    <PanelRightOpen className="size-5" />
                   </Button>
                 )}
               </div>
@@ -251,7 +251,7 @@ export function Thread() {
               >
                 <LangGraphLogoSVG width={32} height={32} />
                 <span className="text-xl font-semibold tracking-tight">
-                  LangGraph Chat
+                  Chat LangGraph
                 </span>
               </motion.button>
             </div>
@@ -309,7 +309,7 @@ export function Thread() {
                   <div className="flex gap-3 items-center">
                     <LangGraphLogoSVG className="flex-shrink-0 h-8" />
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      LangGraph Chat
+                      Chat LangGraph
                     </h1>
                   </div>
                 )}
