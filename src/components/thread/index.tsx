@@ -304,7 +304,7 @@ export function Thread() {
               </>
             }
             footer={
-              <div className="sticky flex flex-col items-center gap-8 bottom-8 px-4">
+              <div className="sticky flex flex-col items-center gap-8 bottom-0 px-4 bg-white">
                 {!chatStarted && (
                   <div className="flex gap-3 items-center">
                     <LangGraphLogoSVG className="flex-shrink-0 h-8" />
@@ -316,7 +316,7 @@ export function Thread() {
 
                 <ScrollToBottom className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 animate-in fade-in-0 zoom-in-95" />
 
-                <div className="bg-background rounded-2xl border shadow-md mx-auto w-full max-w-4xl relative z-10">
+                <div className="bg-background rounded-2xl border shadow-md mx-auto mb-8 w-full max-w-4xl relative z-10">
                   <form
                     onSubmit={handleSubmit}
                     className="grid grid-rows-[1fr_auto] gap-2 max-w-4xl mx-auto"
