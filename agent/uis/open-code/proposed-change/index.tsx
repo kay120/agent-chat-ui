@@ -177,7 +177,7 @@ export default function ProposedChange(props: ProposedChangeProps) {
             Accept
           </Button>
           <Button
-            className="cursor-pointer w-full bg-blue-500 hover:bg-blue-600"
+            className="cursor-pointer w-full bg-blue-500 hover:bg-blue-500/90"
             onClick={() => handleAccept(true)}
           >
             Accept, don&apos;t ask again
