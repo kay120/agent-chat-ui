@@ -6,6 +6,9 @@ import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import ComponentMap from "../../uis";
 import { typedUi } from "@langchain/langgraph-sdk/react-ui/server";
 
+export const SUCCESSFULLY_COMPLETED_STEPS_CONTENT =
+  "Successfully completed all the steps in the plan. Please let me know if you need anything else!";
+
 export async function executor(
   state: OpenCodeState,
   config: LangGraphRunnableConfig,
@@ -24,21 +27,24 @@ export async function executor(
   const nextPlanItem = planToolCallArgs?.remainingPlans?.[0] as
     | string
     | undefined;
-  const numOfExecutedPlanItems = planToolCallArgs?.executedPlans?.length ?? 0;
+  const numSeenPlans =
+    [
+      ...(planToolCallArgs?.executedPlans ?? []),
+      ...(planToolCallArgs?.rejectedPlans ?? []),
+    ]?.length ?? 0;
 
   if (!nextPlanItem) {
     // All plans have been executed
     const successfullyFinishedMsg: AIMessage = {
       type: "ai",
       id: uuidv4(),
-      content:
-        "Successfully completed all the steps in the plan. Please let me know if you need anything else!",
+      content: SUCCESSFULLY_COMPLETED_STEPS_CONTENT,
     };
     return { messages: [successfullyFinishedMsg] };
   }
 
   let updateFileContents = "";
-  switch (numOfExecutedPlanItems) {
+  switch (numSeenPlans) {
     case 0:
       updateFileContents = await fs.readFile(
         "agent/open-code/nodes/plan-code/step-1.txt",
@@ -101,10 +107,13 @@ export async function executor(
     ],
   };
 
+  const fullWriteAccess = !!config.configurable?.permissions?.full_write_access;
+
   const msg = ui.create("proposed-change", {
     toolCallId,
     change: updateFileContents,
     planItem: nextPlanItem,
+    fullWriteAccess,
   });
   msg.additional_kwargs["message_id"] = aiMessage.id;
 

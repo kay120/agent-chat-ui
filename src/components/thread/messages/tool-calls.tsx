@@ -15,7 +15,7 @@ export function ToolCalls({
   if (!toolCalls || toolCalls.length === 0) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-4xl">
       {toolCalls.map((tc, idx) => {
         const args = tc.args as Record<string, any>;
         const hasArgs = Object.keys(args).length > 0;

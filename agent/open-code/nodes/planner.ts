@@ -28,28 +28,46 @@ export async function planner(
         (tc) => tc.name === "update_file",
       ),
   ) as AIMessage | undefined;
+  const lastUpdateToolCallResponse = state.messages.findLast(
+    (m) =>
+      m.getType() === "tool" &&
+      (m as unknown as ToolMessage).tool_call_id ===
+        lastUpdateCodeToolCall?.tool_calls?.[0]?.id,
+  ) as ToolMessage | undefined;
   const lastPlanToolCall = state.messages.findLast(
     (m) =>
       m.getType() === "ai" &&
       (m as unknown as AIMessage).tool_calls?.some((tc) => tc.name === "plan"),
   ) as AIMessage | undefined;
 
+  const wasPlanRejected = (
+    lastUpdateToolCallResponse?.content as string | undefined
+  )
+    ?.toLowerCase()
+    .includes("rejected");
+
   const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args as Record<
     string,
     any
   >;
   const executedPlans: string[] = planToolCallArgs?.executedPlans ?? [];
+  const rejectedPlans: string[] = planToolCallArgs?.rejectedPlans ?? [];
   let remainingPlans: string[] = planToolCallArgs?.remainingPlans ?? PLAN;
 
-  const executedPlanItem = lastUpdateCodeToolCall?.tool_calls?.[0]?.args
+  const proposedChangePlanItem = lastUpdateCodeToolCall?.tool_calls?.[0]?.args
     ?.executed_plan_item as string | undefined;
-  if (executedPlanItem) {
-    executedPlans.push(executedPlanItem);
-    remainingPlans = remainingPlans.filter((p) => p !== executedPlanItem);
+  if (proposedChangePlanItem) {
+    if (wasPlanRejected) {
+      rejectedPlans.push(proposedChangePlanItem);
+    } else {
+      executedPlans.push(proposedChangePlanItem);
+    }
+
+    remainingPlans = remainingPlans.filter((p) => p !== proposedChangePlanItem);
   }
 
-  const content = executedPlanItem
-    ? `I've updated the plan list based on the executed plans.`
+  const content = proposedChangePlanItem
+    ? `I've updated the plan list based on the last proposed change.`
     : `I've come up with a detailed plan for building the todo app.`;
 
   const toolCallId = uuidv4();
@@ -62,6 +80,7 @@ export async function planner(
         name: "plan",
         args: {
           executedPlans,
+          rejectedPlans,
           remainingPlans,
         },
         id: toolCallId,
@@ -73,6 +92,7 @@ export async function planner(
   const msg = ui.create("code-plan", {
     toolCallId,
     executedPlans,
+    rejectedPlans,
     remainingPlans,
   });
   msg.additional_kwargs["message_id"] = aiMessage.id;

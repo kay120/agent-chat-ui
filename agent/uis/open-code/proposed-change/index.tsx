@@ -9,18 +9,28 @@ import { Message } from "@langchain/langgraph-sdk";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/lib/ensure-tool-responses";
 import { useEffect, useState } from "react";
 import { getToolResponse } from "../../utils/get-tool-response";
+import { cn } from "@/lib/utils";
 
 interface ProposedChangeProps {
   toolCallId: string;
   change: string;
   planItem: string;
+  /**
+   * Whether or not to show the "Accept"/"Reject" buttons
+   * If true, this means the user selected the "Accept, don't ask again"
+   * button for this session.
+   */
+  fullWriteAccess: boolean;
 }
 
 const ACCEPTED_CHANGE_CONTENT =
   "User accepted the proposed change. Please continue.";
+const REJECTED_CHANGE_CONTENT =
+  "User rejected the proposed change. Please continue.";
 
 export default function ProposedChange(props: ProposedChangeProps) {
   const [isAccepted, setIsAccepted] = useState(false);
+  const [isRejected, setIsRejected] = useState(false);
 
   const thread = useStreamContext<
     { messages: Message[]; ui: UIMessage[] },
@@ -28,24 +38,53 @@ export default function ProposedChange(props: ProposedChangeProps) {
   >();
 
   const handleReject = () => {
-    alert("Rejected. (just kidding, you can't reject me silly!)");
-  };
-  const handleAccept = () => {
     thread.submit({
       messages: [
         {
           type: "tool",
           tool_call_id: props.toolCallId,
           id: `${DO_NOT_RENDER_ID_PREFIX}${uuidv4()}`,
-          name: "buy-stock",
-          content: ACCEPTED_CHANGE_CONTENT,
+          name: "update_file",
+          content: REJECTED_CHANGE_CONTENT,
         },
         {
           type: "human",
-          content: `Accepted change.`,
+          content: `Rejected change.`,
         },
       ],
     });
+
+    setIsRejected(true);
+  };
+
+  const handleAccept = (shouldGrantFullWriteAccess = false) => {
+    const humanMessageContent = `Accepted change. ${shouldGrantFullWriteAccess ? "Granted full write access." : ""}`;
+    thread.submit(
+      {
+        messages: [
+          {
+            type: "tool",
+            tool_call_id: props.toolCallId,
+            id: `${DO_NOT_RENDER_ID_PREFIX}${uuidv4()}`,
+            name: "update_file",
+            content: ACCEPTED_CHANGE_CONTENT,
+          },
+          {
+            type: "human",
+            content: humanMessageContent,
+          },
+        ],
+      },
+      {
+        config: {
+          configurable: {
+            permissions: {
+              full_write_access: shouldGrantFullWriteAccess,
+            },
+          },
+        },
+      },
+    );
 
     setIsAccepted(true);
   };
@@ -53,16 +92,27 @@ export default function ProposedChange(props: ProposedChangeProps) {
   useEffect(() => {
     if (typeof window === "undefined" || isAccepted) return;
     const toolResponse = getToolResponse(props.toolCallId, thread);
-    if (toolResponse && toolResponse.content === ACCEPTED_CHANGE_CONTENT) {
-      setIsAccepted(true);
+    if (toolResponse) {
+      if (toolResponse.content === ACCEPTED_CHANGE_CONTENT) {
+        setIsAccepted(true);
+      } else if (toolResponse.content === REJECTED_CHANGE_CONTENT) {
+        setIsRejected(true);
+      }
     }
   }, []);
 
-  if (isAccepted) {
+  if (isAccepted || isRejected) {
     return (
-      <div className="flex flex-col gap-4 w-full max-w-4xl p-4 border-[1px] rounded-xl border-green-300">
+      <div
+        className={cn(
+          "flex flex-col gap-4 w-full max-w-4xl p-4 border-[1px] rounded-xl",
+          isAccepted ? "border-green-300" : "border-red-300",
+        )}
+      >
         <div className="flex flex-col items-start justify-start gap-2">
-          <p className="text-lg font-medium">Accepted Change</p>
+          <p className="text-lg font-medium">
+            {isAccepted ? "Accepted" : "Rejected"} Change
+          </p>
           <p className="text-sm font-mono">{props.planItem}</p>
         </div>
         <ReactMarkdown
@@ -111,18 +161,29 @@ export default function ProposedChange(props: ProposedChangeProps) {
           },
         }}
       />
-      <div className="flex gap-2 items-center w-full">
-        <Button
-          className="cursor-pointer"
-          variant="destructive"
-          onClick={handleReject}
-        >
-          Reject
-        </Button>
-        <Button className="cursor-pointer" onClick={handleAccept}>
-          Accept
-        </Button>
-      </div>
+      {!props.fullWriteAccess && (
+        <div className="flex gap-2 items-center w-full">
+          <Button
+            className="cursor-pointer w-full"
+            variant="destructive"
+            onClick={handleReject}
+          >
+            Reject
+          </Button>
+          <Button
+            className="cursor-pointer w-full"
+            onClick={() => handleAccept()}
+          >
+            Accept
+          </Button>
+          <Button
+            className="cursor-pointer w-full bg-blue-500 hover:bg-blue-600"
+            onClick={() => handleAccept(true)}
+          >
+            Accept, don&apos;t ask again
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
