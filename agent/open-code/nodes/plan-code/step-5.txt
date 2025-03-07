@@ -1,0 +1,22 @@
+```tsx
+// src/components/TodoFilters.tsx
+import React from 'react';
+
+type FilterType = 'all' | 'active' | 'completed';
+
+export const TodoFilters: React.FC<{
+  currentFilter: FilterType;
+  onFilterChange: (filter: FilterType) => void;
+  onSortChange: (ascending: boolean) => void;
+}> = ({ currentFilter, onFilterChange, onSortChange }) => (
+  <div>
+    <select value={currentFilter} onChange={(e) => onFilterChange(e.target.value as FilterType)}>
+      <option value='all'>All</option>
+      <option value='active'>Active</option>
+      <option value='completed'>Completed</option>
+    </select>
+    <button onClick={() => onSortChange(true)}>Sort A-Z</button>
+    <button onClick={() => onSortChange(false)}>Sort Z-A</button>
+  </div>
+);
+```
