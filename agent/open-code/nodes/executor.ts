@@ -13,17 +13,19 @@ export async function executor(
 ): Promise<OpenCodeUpdate> {
   const ui = typedUi<typeof ComponentMap>(config);
 
-  const numOfUpdateFileCalls = state.messages.filter(
+  const lastPlanToolCall = state.messages.findLast(
     (m) =>
       m.getType() === "ai" &&
-      (m as unknown as AIMessage).tool_calls?.some(
-        (tc) => tc.name === "update_file",
-      ),
-  ).length;
-  const planItem = PLAN[numOfUpdateFileCalls - 1];
+      (m as unknown as AIMessage).tool_calls?.some((tc) => tc.name === "plan"),
+  ) as AIMessage | undefined;
+  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args?.args;
+  const numOfExecutedPlanItems: number =
+    planToolCallArgs?.executedPlans?.length ?? 0;
+
+  const planItem = PLAN[numOfExecutedPlanItems - 1];
 
   let updateFileContents = "";
-  switch (numOfUpdateFileCalls) {
+  switch (numOfExecutedPlanItems) {
     case 0:
       updateFileContents = await fs.readFile(
         "agent/open-code/nodes/plan-code/step-1.txt",

@@ -16,22 +16,37 @@ export const PLAN = [
 ];
 
 export async function planner(
-  _state: OpenCodeState,
+  state: OpenCodeState,
   config: LangGraphRunnableConfig,
 ): Promise<OpenCodeUpdate> {
   const ui = typedUi<typeof ComponentMap>(config);
+
+  const lastPlanToolCall = state.messages.findLast(
+    (m) =>
+      m.getType() === "ai" &&
+      (m as unknown as AIMessage).tool_calls?.some((tc) => tc.name === "plan"),
+  ) as AIMessage | undefined;
+  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args?.args;
+  const executedPlans = planToolCallArgs?.executedPlans ?? [];
+  const remainingPlans = planToolCallArgs?.remainingPlans ?? PLAN;
+
+  const content =
+    executedPlans.length > 0
+      ? `I've updated the plan list based on the executed plans.`
+      : `I've come up with a detailed plan for building the todo app.`;
 
   const toolCallId = uuidv4();
   const aiMessage: AIMessage = {
     type: "ai",
     id: uuidv4(),
-    content: "I've come up with a detailed plan for building the todo app.",
+    content,
     tool_calls: [
       {
         name: "plan",
         args: {
           args: {
-            plan: PLAN,
+            executedPlans,
+            remainingPlans,
           },
         },
         id: toolCallId,
@@ -42,7 +57,8 @@ export async function planner(
 
   ui.write("code-plan", {
     toolCallId,
-    plan: PLAN,
+    executedPlans,
+    remainingPlans,
   });
 
   const toolMessage: ToolMessage = {
