@@ -5,7 +5,6 @@ export const OpenCodeAnnotation = Annotation.Root({
   messages: GenerativeUIAnnotation.spec.messages,
   ui: GenerativeUIAnnotation.spec.ui,
   timestamp: GenerativeUIAnnotation.spec.timestamp,
-  next: Annotation<"executor" | "interrupt">
 });
 
 export type OpenCodeState = typeof OpenCodeAnnotation.State;
