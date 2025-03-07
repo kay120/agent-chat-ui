@@ -18,29 +18,28 @@ function CustomComponent({
   const [apiUrl] = useQueryParam("apiUrl", StringParam);
   const meta = thread.getMessagesMetadata(message);
   const seenState = meta?.firstSeenState;
-  const customComponent = seenState?.values.ui
+  const customComponents = seenState?.values.ui
     ?.slice()
-    .reverse()
-    .find(
+    .filter(
       ({ additional_kwargs }) =>
-        additional_kwargs.run_id === seenState.metadata?.run_id,
+        additional_kwargs.run_id === seenState.metadata?.run_id &&
+        (!additional_kwargs.message_id ||
+          additional_kwargs.message_id === message.id),
     );
 
-  if (!customComponent) {
-    return null;
-  }
-
+  if (!customComponents?.length) return null;
   return (
     <div key={message.id}>
-      {customComponent && (
+      {customComponents.map((customComponent) => (
         <LoadExternalComponent
+          key={customComponent.id}
           apiUrl={apiUrl ?? undefined}
           assistantId="agent"
           stream={thread}
           message={customComponent}
           meta={{ ui: customComponent }}
         />
-      )}
+      ))}
     </div>
   );
 }

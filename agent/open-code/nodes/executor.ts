@@ -101,15 +101,16 @@ export async function executor(
     ],
   };
 
-  ui.write("proposed-change", {
+  const msg = ui.create("proposed-change", {
     toolCallId,
     change: updateFileContents,
     planItem: nextPlanItem,
   });
+  msg.additional_kwargs["message_id"] = aiMessage.id;
 
   return {
     messages: [aiMessage],
-    ui: ui.collect as OpenCodeUpdate["ui"],
+    ui: [msg],
     timestamp: Date.now(),
   };
 }

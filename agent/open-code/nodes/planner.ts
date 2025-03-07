@@ -70,11 +70,12 @@ export async function planner(
     ],
   };
 
-  ui.write("code-plan", {
+  const msg = ui.create("code-plan", {
     toolCallId,
     executedPlans,
     remainingPlans,
   });
+  msg.additional_kwargs["message_id"] = aiMessage.id;
 
   const toolMessage: ToolMessage = {
     type: "tool",
@@ -85,7 +86,7 @@ export async function planner(
 
   return {
     messages: [aiMessage, toolMessage],
-    ui: ui.collect as OpenCodeUpdate["ui"],
+    ui: [msg],
     timestamp: Date.now(),
   };
 }
