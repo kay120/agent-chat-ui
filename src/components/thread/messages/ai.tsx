@@ -73,13 +73,13 @@ export function AssistantMessage({
         <ToolResult message={message} />
       ) : (
         <div className="flex flex-col gap-2">
-          {hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />}
-          <CustomComponent message={message} thread={thread} />
           {contentString.length > 0 && (
             <div className="rounded-2xl bg-muted px-4 py-2">
               <MarkdownText>{contentString}</MarkdownText>
             </div>
           )}
+          {hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />}
+          <CustomComponent message={message} thread={thread} />
           <div
             className={cn(
               "flex gap-2 items-center mr-auto transition-opacity",
