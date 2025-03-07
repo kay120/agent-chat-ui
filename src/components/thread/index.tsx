@@ -276,7 +276,7 @@ export function Thread() {
               !chatStarted && "flex flex-col items-stretch mt-[25vh]",
               chatStarted && "grid grid-rows-[1fr_auto]",
             )}
-            contentClassName="pt-8 pb-16 px-4 max-w-4xl mx-auto flex flex-col gap-4 w-full"
+            contentClassName="pt-8 pb-16 px-4 max-w-3xl mx-auto flex flex-col gap-4 w-full"
             content={
               <>
                 {messages
@@ -315,10 +315,10 @@ export function Thread() {
 
                 <ScrollToBottom className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 animate-in fade-in-0 zoom-in-95" />
 
-                <div className="bg-muted rounded-2xl border shadow-xs mx-auto mb-8 w-full max-w-4xl relative z-10">
+                <div className="bg-muted rounded-2xl border shadow-xs mx-auto mb-8 w-full max-w-3xl relative z-10">
                   <form
                     onSubmit={handleSubmit}
-                    className="grid grid-rows-[1fr_auto] gap-2 max-w-4xl mx-auto"
+                    className="grid grid-rows-[1fr_auto] gap-2 max-w-3xl mx-auto"
                   >
                     <textarea
                       value={input}
