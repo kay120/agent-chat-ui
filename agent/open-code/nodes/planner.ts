@@ -6,7 +6,7 @@ import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import ComponentMap from "../../uis";
 import { typedUi } from "@langchain/langgraph-sdk/react-ui/server";
 
-export const PLAN = [
+const PLAN = [
   "Set up project scaffolding using Create React App and implement basic folder structure for components, styles, and utilities.",
   "Create reusable UI components for TodoItem, including styling with CSS modules.",
   "Implement state management using React Context to handle todo items, including actions for adding, updating, and deleting todos.",
@@ -21,19 +21,36 @@ export async function planner(
 ): Promise<OpenCodeUpdate> {
   const ui = typedUi<typeof ComponentMap>(config);
 
+  const lastUpdateCodeToolCall = state.messages.findLast(
+    (m) =>
+      m.getType() === "ai" &&
+      (m as unknown as AIMessage).tool_calls?.some(
+        (tc) => tc.name === "update_file",
+      ),
+  ) as AIMessage | undefined;
   const lastPlanToolCall = state.messages.findLast(
     (m) =>
       m.getType() === "ai" &&
       (m as unknown as AIMessage).tool_calls?.some((tc) => tc.name === "plan"),
   ) as AIMessage | undefined;
-  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args?.args;
-  const executedPlans = planToolCallArgs?.executedPlans ?? [];
-  const remainingPlans = planToolCallArgs?.remainingPlans ?? PLAN;
 
-  const content =
-    executedPlans.length > 0
-      ? `I've updated the plan list based on the executed plans.`
-      : `I've come up with a detailed plan for building the todo app.`;
+  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args as Record<
+    string,
+    any
+  >;
+  const executedPlans: string[] = planToolCallArgs?.executedPlans ?? [];
+  let remainingPlans: string[] = planToolCallArgs?.remainingPlans ?? PLAN;
+
+  const executedPlanItem = lastUpdateCodeToolCall?.tool_calls?.[0]?.args
+    ?.executed_plan_item as string | undefined;
+  if (executedPlanItem) {
+    executedPlans.push(executedPlanItem);
+    remainingPlans = remainingPlans.filter((p) => p !== executedPlanItem);
+  }
+
+  const content = executedPlanItem
+    ? `I've updated the plan list based on the executed plans.`
+    : `I've come up with a detailed plan for building the todo app.`;
 
   const toolCallId = uuidv4();
   const aiMessage: AIMessage = {
@@ -44,10 +61,8 @@ export async function planner(
       {
         name: "plan",
         args: {
-          args: {
-            executedPlans,
-            remainingPlans,
-          },
+          executedPlans,
+          remainingPlans,
         },
         id: toolCallId,
         type: "tool_call",

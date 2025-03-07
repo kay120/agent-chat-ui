@@ -7,13 +7,17 @@ import { coldarkDark } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { UIMessage, useStreamContext } from "@langchain/langgraph-sdk/react-ui";
 import { Message } from "@langchain/langgraph-sdk";
 import { DO_NOT_RENDER_ID_PREFIX } from "@/lib/ensure-tool-responses";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getToolResponse } from "../../utils/get-tool-response";
 
 interface ProposedChangeProps {
   toolCallId: string;
   change: string;
   planItem: string;
 }
+
+const ACCEPTED_CHANGE_CONTENT =
+  "User accepted the proposed change. Please continue.";
 
 export default function ProposedChange(props: ProposedChangeProps) {
   const [isAccepted, setIsAccepted] = useState(false);
@@ -27,7 +31,6 @@ export default function ProposedChange(props: ProposedChangeProps) {
     alert("Rejected. (just kidding, you can't reject me silly!)");
   };
   const handleAccept = () => {
-    const content = "User accepted the proposed change. Please continue.";
     thread.submit({
       messages: [
         {
@@ -35,7 +38,7 @@ export default function ProposedChange(props: ProposedChangeProps) {
           tool_call_id: props.toolCallId,
           id: `${DO_NOT_RENDER_ID_PREFIX}${uuidv4()}`,
           name: "buy-stock",
-          content,
+          content: ACCEPTED_CHANGE_CONTENT,
         },
         {
           type: "human",
@@ -47,9 +50,17 @@ export default function ProposedChange(props: ProposedChangeProps) {
     setIsAccepted(true);
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined" || isAccepted) return;
+    const toolResponse = getToolResponse(props.toolCallId, thread);
+    if (toolResponse && toolResponse.content === ACCEPTED_CHANGE_CONTENT) {
+      setIsAccepted(true);
+    }
+  }, []);
+
   if (isAccepted) {
     return (
-      <div className="flex flex-col gap-4 w-full max-w-xl p-4 border-[1px] rounded-xl border-green-300">
+      <div className="flex flex-col gap-4 w-full max-w-4xl p-4 border-[1px] rounded-xl border-green-300">
         <div className="flex flex-col items-start justify-start gap-2">
           <p className="text-lg font-medium">Accepted Change</p>
           <p className="text-sm font-mono">{props.planItem}</p>

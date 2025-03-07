@@ -5,7 +5,6 @@ import { OpenCodeState, OpenCodeUpdate } from "../types";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import ComponentMap from "../../uis";
 import { typedUi } from "@langchain/langgraph-sdk/react-ui/server";
-import { PLAN } from "./planner";
 
 export async function executor(
   state: OpenCodeState,
@@ -18,11 +17,25 @@ export async function executor(
       m.getType() === "ai" &&
       (m as unknown as AIMessage).tool_calls?.some((tc) => tc.name === "plan"),
   ) as AIMessage | undefined;
-  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args?.args;
-  const numOfExecutedPlanItems: number =
-    planToolCallArgs?.executedPlans?.length ?? 0;
+  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args as Record<
+    string,
+    any
+  >;
+  const nextPlanItem = planToolCallArgs?.remainingPlans?.[0] as
+    | string
+    | undefined;
+  const numOfExecutedPlanItems = planToolCallArgs?.executedPlans?.length ?? 0;
 
-  const planItem = PLAN[numOfExecutedPlanItems - 1];
+  if (!nextPlanItem) {
+    // All plans have been executed
+    const successfullyFinishedMsg: AIMessage = {
+      type: "ai",
+      id: uuidv4(),
+      content:
+        "Successfully completed all the steps in the plan. Please let me know if you need anything else!",
+    };
+    return { messages: [successfullyFinishedMsg] };
+  }
 
   let updateFileContents = "";
   switch (numOfExecutedPlanItems) {
@@ -79,9 +92,8 @@ export async function executor(
       {
         name: "update_file",
         args: {
-          args: {
-            new_file_content: updateFileContents,
-          },
+          new_file_content: updateFileContents as any,
+          executed_plan_item: nextPlanItem as any,
         },
         id: toolCallId,
         type: "tool_call",
@@ -92,7 +104,7 @@ export async function executor(
   ui.write("proposed-change", {
     toolCallId,
     change: updateFileContents,
-    planItem,
+    planItem: nextPlanItem,
   });
 
   return {

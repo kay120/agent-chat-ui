@@ -8,9 +8,9 @@ interface PlanProps {
 
 export default function Plan(props: PlanProps) {
   return (
-    <div className="flex flex-col gap-4 w-full max-w-xl p-6 border-[1px] rounded-xl border-slate-500">
+    <div className="flex flex-col gap-4 w-full max-w-4xl p-6 border-[1px] rounded-xl border-slate-500">
       <h2 className="text-2xl font-semibold text-center mb-2">Code Plan</h2>
-      <div className="grid grid-cols-2 divide-x divide-slate-300">
+      <div className="grid grid-cols-2 divide-x divide-slate-300 w-full">
         <div className="flex flex-col gap-2 pr-6">
           <h3 className="text-lg font-medium mb-4 text-slate-700">
             Executed Plans
