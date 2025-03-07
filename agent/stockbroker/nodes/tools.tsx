@@ -8,6 +8,23 @@ import { findToolCall } from "../../find-tool-call";
 import { format, subDays } from "date-fns";
 import { Price, Snapshot } from "../../types";
 
+async function getNextPageData(url: string) {
+  if (!process.env.FINANCIAL_DATASETS_API_KEY) {
+    throw new Error("Financial datasets API key not set");
+  }
+
+  const options = {
+    method: "GET",
+    headers: { "X-API-KEY": process.env.FINANCIAL_DATASETS_API_KEY },
+  };
+
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error("Failed to fetch prices");
+  }
+  return await response.json();
+}
+
 async function getPricesForTicker(ticker: string): Promise<{
   oneDayPrices: Price[];
   thirtyDayPrices: Price[];
@@ -54,7 +71,21 @@ async function getPricesForTicker(ticker: string): Promise<{
   }
 
   const { prices: pricesOneDay } = await resOneDay.json();
-  const { prices: pricesThirtyDays } = await resThirtyDays.json();
+  const { prices: pricesThirtyDays, next_page_url } =
+    await resThirtyDays.json();
+
+  let nextPageUrlThirtyDays = next_page_url;
+
+  let iters = 0;
+  while (nextPageUrlThirtyDays) {
+    if (iters > 10) {
+      throw new Error("MAX ITERS REACHED");
+    }
+    const nextPageData = await getNextPageData(nextPageUrlThirtyDays);
+    pricesThirtyDays.push(...nextPageData.prices);
+    nextPageUrlThirtyDays = nextPageData.next_page_url;
+    iters += 1;
+  }
 
   return {
     oneDayPrices: pricesOneDay,
