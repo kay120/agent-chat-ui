@@ -1,7 +1,7 @@
 {
   "node_version": "20",
   "graphs": {
-    "agent": "./agent/agent.tsx:graph"
+    "agent": "./agent/agent.ts:graph"
   },
   "ui": {
     "agent": "./agent/uis/index.tsx"
