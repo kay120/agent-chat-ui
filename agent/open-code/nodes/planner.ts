@@ -46,16 +46,13 @@ export async function planner(
     ?.toLowerCase()
     .includes("rejected");
 
-  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args as Record<
-    string,
-    any
-  >;
+  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args;
   const executedPlans: string[] = planToolCallArgs?.executedPlans ?? [];
   const rejectedPlans: string[] = planToolCallArgs?.rejectedPlans ?? [];
   let remainingPlans: string[] = planToolCallArgs?.remainingPlans ?? PLAN;
 
-  const proposedChangePlanItem = lastUpdateCodeToolCall?.tool_calls?.[0]?.args
-    ?.executed_plan_item as string | undefined;
+  const proposedChangePlanItem: string | undefined =
+    lastUpdateCodeToolCall?.tool_calls?.[0]?.args?.executed_plan_item;
   if (proposedChangePlanItem) {
     if (wasPlanRejected) {
       rejectedPlans.push(proposedChangePlanItem);

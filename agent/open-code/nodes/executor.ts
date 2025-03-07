@@ -20,10 +20,7 @@ export async function executor(
       m.getType() === "ai" &&
       (m as unknown as AIMessage).tool_calls?.some((tc) => tc.name === "plan"),
   ) as AIMessage | undefined;
-  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args as Record<
-    string,
-    any
-  >;
+  const planToolCallArgs = lastPlanToolCall?.tool_calls?.[0]?.args;
   const nextPlanItem = planToolCallArgs?.remainingPlans?.[0] as
     | string
     | undefined;
@@ -98,8 +95,8 @@ export async function executor(
       {
         name: "update_file",
         args: {
-          new_file_content: updateFileContents as any,
-          executed_plan_item: nextPlanItem as any,
+          new_file_content: updateFileContents,
+          executed_plan_item: nextPlanItem,
         },
         id: toolCallId,
         type: "tool_call",
