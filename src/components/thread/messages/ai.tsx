@@ -69,15 +69,12 @@ export function AssistantMessage({
 
   return (
     <div className="flex items-start mr-auto gap-2 group">
-      <Avatar>
-        <AvatarFallback>A</AvatarFallback>
-      </Avatar>
       {isToolResult ? (
         <ToolResult message={message} />
       ) : (
         <div className="flex flex-col gap-2">
           {contentString.length > 0 && (
-            <div className="rounded-2xl bg-muted px-4 py-2">
+            <div className="py-1">
               <MarkdownText>{contentString}</MarkdownText>
             </div>
           )}
