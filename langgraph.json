@@ -6,7 +6,6 @@
   "ui": {
     "agent": "./agent/uis/index.tsx"
   },
-  "_INTERNAL_docker_tag": "20",
   "env": ".env",
   "dependencies": ["."]
 }
