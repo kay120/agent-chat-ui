@@ -97,7 +97,7 @@ export default function ThreadHistory() {
             variant="ghost"
             onClick={() => setChatHistoryOpen((p) => !p)}
           >
-            <PanelRightOpen />
+            <PanelRightOpen className="size-5" />
           </Button>
           <h1 className="text-xl font-semibold tracking-tight">
             Thread History

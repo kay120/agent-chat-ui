@@ -149,7 +149,7 @@ export default function StockPrice(props: {
   };
 
   return (
-    <div className="w-full max-w-4xl rounded-xl shadow-md overflow-hidden border border-gray-200 flex flex-col gap-4 p-3">
+    <div className="w-full max-w-3xl rounded-xl shadow-md overflow-hidden border border-gray-200 flex flex-col gap-4 p-3">
       <div className="flex items-center justify-start gap-4 mb-2 text-lg font-medium text-gray-700">
         <p>{ticker}</p>
         <p>${currentPrice}</p>
