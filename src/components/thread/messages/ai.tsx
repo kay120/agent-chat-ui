@@ -1,5 +1,6 @@
+import { parsePartialJson } from "@langchain/core/output_parsers";
 import { useStreamContext } from "@/providers/Stream";
-import { Checkpoint, Message } from "@langchain/langgraph-sdk";
+import { AIMessage, Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { getContentString } from "../utils";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { MarkdownText } from "../markdown-text";
@@ -7,6 +8,7 @@ import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
 import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
 import { StringParam, useQueryParam } from "use-query-params";
+import { MessageContentComplex } from "@langchain/core/messages";
 
 function CustomComponent({
   message,
@@ -44,6 +46,28 @@ function CustomComponent({
   );
 }
 
+function parseAnthropicStreamedToolCalls(content: MessageContentComplex[]): AIMessage["tool_calls"] {
+  const toolCallContents = content.filter((c) => c.type === "tool_use" && c.id);
+
+  return toolCallContents.map((tc) => {
+    const toolCall = tc as Record<string, any>
+    let json: Record<string, any> = {};
+    if (toolCall?.input) {
+      try {
+        json = parsePartialJson(toolCall.input) ?? {}
+      } catch {
+        // Pass
+      }
+    }
+    return {
+      name: toolCall.name ?? "",
+      id: toolCall.id ?? "",
+      args: json,
+      type: "tool_call",
+    }
+  })
+}
+
 export function AssistantMessage({
   message,
   isLoading,
@@ -58,11 +82,14 @@ export function AssistantMessage({
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
+  const anthropicStreamedToolCalls = Array.isArray(message.content) ? parseAnthropicStreamedToolCalls(message.content) : undefined;
 
   const hasToolCalls =
-    "tool_calls" in message &&
-    message.tool_calls &&
-    message.tool_calls.length > 0;
+    ("tool_calls" in message &&
+      message.tool_calls &&
+      message.tool_calls.length > 0);
+  const toolCallsHaveContents = hasToolCalls && message.tool_calls?.some((tc) => tc.args && Object.keys(tc.args).length > 0);
+  const hasAnthropicToolCalls = !!anthropicStreamedToolCalls?.length;
   const isToolResult = message.type === "tool";
 
   return (
@@ -76,7 +103,9 @@ export function AssistantMessage({
               <MarkdownText>{contentString}</MarkdownText>
             </div>
           )}
-          {hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />}
+          {(hasToolCalls && toolCallsHaveContents && <ToolCalls toolCalls={message.tool_calls} />) ||
+           (hasAnthropicToolCalls && <ToolCalls toolCalls={anthropicStreamedToolCalls} />) ||
+           (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
           <CustomComponent message={message} thread={thread} />
           <div
             className={cn(

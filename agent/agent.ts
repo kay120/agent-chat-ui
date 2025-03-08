@@ -7,10 +7,12 @@ import { ChatOpenAI } from "@langchain/openai";
 import { tripPlannerGraph } from "./trip-planner";
 import { formatMessages } from "./utils/format-messages";
 import { graph as openCodeGraph } from "./open-code";
+import { graph as orderPizzaGraph } from "./pizza-orderer";
 
 const allToolDescriptions = `- stockbroker: can fetch the price of a ticker, purchase/sell a ticker, or get the user's portfolio
 - tripPlanner: helps the user plan their trip. it can suggest restaurants, and places to stay in any given location.
-- openCode: can write code for the user. call this tool when the user asks you to write code`;
+- openCode: can write code for the user. call this tool when the user asks you to write code
+- orderPizza: can order a pizza for the user`;
 
 async function router(
   state: GenerativeUIState,
@@ -21,7 +23,7 @@ ${allToolDescriptions}
 `;
   const routerSchema = z.object({
     route: z
-      .enum(["stockbroker", "tripPlanner", "openCode", "generalInput"])
+      .enum(["stockbroker", "tripPlanner", "openCode", "orderPizza", "generalInput"])
       .describe(routerDescription),
   });
   const routerTool = {
@@ -75,7 +77,7 @@ Please pick the proper route based on the most recent message, in the context of
 
 function handleRoute(
   state: GenerativeUIState,
-): "stockbroker" | "tripPlanner" | "openCode" | "generalInput" {
+): "stockbroker" | "tripPlanner" | "openCode" | "orderPizza" | "generalInput" {
   return state.next;
 }
 
@@ -107,18 +109,21 @@ const builder = new StateGraph(GenerativeUIAnnotation)
   .addNode("stockbroker", stockbrokerGraph)
   .addNode("tripPlanner", tripPlannerGraph)
   .addNode("openCode", openCodeGraph)
+  .addNode("orderPizza", orderPizzaGraph)
   .addNode("generalInput", handleGeneralInput)
 
   .addConditionalEdges("router", handleRoute, [
     "stockbroker",
     "tripPlanner",
     "openCode",
+    "orderPizza",
     "generalInput",
   ])
   .addEdge(START, "router")
   .addEdge("stockbroker", END)
   .addEdge("tripPlanner", END)
   .addEdge("openCode", END)
+  .addEdge("orderPizza", END)
   .addEdge("generalInput", END);
 
 export const graph = builder.compile();
