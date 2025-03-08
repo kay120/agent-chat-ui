@@ -23,7 +23,13 @@ ${allToolDescriptions}
 `;
   const routerSchema = z.object({
     route: z
-      .enum(["stockbroker", "tripPlanner", "openCode", "orderPizza", "generalInput"])
+      .enum([
+        "stockbroker",
+        "tripPlanner",
+        "openCode",
+        "orderPizza",
+        "generalInput",
+      ])
       .describe(routerDescription),
   });
   const routerTool = {
