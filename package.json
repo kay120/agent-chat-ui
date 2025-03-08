@@ -16,6 +16,7 @@
     "@assistant-ui/react-markdown": "^0.8.0",
     "@assistant-ui/react-syntax-highlighter": "^0.7.2",
     "@faker-js/faker": "^9.5.1",
+    "@langchain/anthropic": "^0.3.15",
     "@langchain/core": "^0.3.41",
     "@langchain/google-genai": "^0.1.10",
     "@langchain/langgraph": "^0.2.49",
