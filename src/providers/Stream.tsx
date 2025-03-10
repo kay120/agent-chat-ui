@@ -1,9 +1,10 @@
 import React, { createContext, useContext, ReactNode, useState } from "react";
 import { useStream } from "@langchain/langgraph-sdk/react";
 import { type Message } from "@langchain/langgraph-sdk";
-import type {
-  UIMessage,
-  RemoveUIMessage,
+import {
+  uiMessageReducer,
+  type UIMessage,
+  type RemoveUIMessage,
 } from "@langchain/langgraph-sdk/react-ui";
 import { useQueryParam, StringParam } from "use-query-params";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,7 @@ const useTypedStream = useStream<
       messages?: Message[] | Message | string;
       ui?: (UIMessage | RemoveUIMessage)[] | UIMessage | RemoveUIMessage;
     };
-    CustomUpdateType: UIMessage | RemoveUIMessage;
+    CustomEventType: UIMessage | RemoveUIMessage;
   }
 >;
 
@@ -53,6 +54,12 @@ const StreamSession = ({
     apiKey: apiKey ?? undefined,
     assistantId,
     threadId: threadId ?? null,
+    onCustomEvent: (event, options) => {
+      options.mutate((prev) => {
+        const ui = uiMessageReducer(prev.ui ?? [], event);
+        return { ...prev, ui };
+      });
+    },
     onThreadId: (id) => {
       setThreadId(id);
       // Refetch threads list when thread ID changes.

@@ -7,8 +7,8 @@ import { MarkdownText } from "../markdown-text";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
 import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
-import { StringParam, useQueryParam } from "use-query-params";
 import { MessageContentComplex } from "@langchain/core/messages";
+import { Fragment } from "react/jsx-runtime";
 
 function CustomComponent({
   message,
@@ -17,32 +17,28 @@ function CustomComponent({
   message: Message;
   thread: ReturnType<typeof useStreamContext>;
 }) {
-  const [apiUrl] = useQueryParam("apiUrl", StringParam);
   const meta = thread.getMessagesMetadata(message);
   const seenState = meta?.firstSeenState;
   const customComponents = seenState?.values.ui
     ?.slice()
-    .filter(
-      ({ additional_kwargs }) =>
-        additional_kwargs.run_id === seenState.metadata?.run_id &&
-        (!additional_kwargs.message_id ||
-          additional_kwargs.message_id === message.id),
+    .filter(({ additional_kwargs }) =>
+      !additional_kwargs.message_id
+        ? additional_kwargs.run_id === seenState.metadata?.run_id
+        : additional_kwargs.message_id === message.id,
     );
 
   if (!customComponents?.length) return null;
   return (
-    <div key={message.id}>
+    <Fragment key={message.id}>
       {customComponents.map((customComponent) => (
         <LoadExternalComponent
           key={customComponent.id}
-          apiUrl={apiUrl ?? undefined}
-          assistantId="agent"
           stream={thread}
           message={customComponent}
           meta={{ ui: customComponent }}
         />
       ))}
-    </div>
+    </Fragment>
   );
 }
 

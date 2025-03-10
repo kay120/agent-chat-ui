@@ -87,32 +87,56 @@ export async function callTools(
   }
 
   if (tripPlan.listAccommodations) {
-    ui.write("accommodations-list", {
-      toolCallId,
-      ...getAccommodationsListProps(state.tripDetails),
-    });
+    ui.push(
+      {
+        name: "accommodations-list",
+        content: {
+          toolCallId,
+          ...getAccommodationsListProps(state.tripDetails),
+        },
+      },
+      { message: response },
+    );
   }
   if (tripPlan.bookAccommodation && tripPlan.accommodationName) {
-    ui.write("book-accommodation", {
-      tripDetails: state.tripDetails,
-      accommodationName: tripPlan.accommodationName,
-    });
+    ui.push(
+      {
+        name: "book-accommodation",
+        content: {
+          tripDetails: state.tripDetails,
+          accommodationName: tripPlan.accommodationName,
+        },
+      },
+      { message: response },
+    );
   }
 
   if (tripPlan.listRestaurants) {
-    ui.write("restaurants-list", { tripDetails: state.tripDetails });
+    ui.push(
+      {
+        name: "restaurants-list",
+        content: { tripDetails: state.tripDetails },
+      },
+      { message: response },
+    );
   }
 
   if (tripPlan.bookRestaurant && tripPlan.restaurantName) {
-    ui.write("book-restaurant", {
-      tripDetails: state.tripDetails,
-      restaurantName: tripPlan.restaurantName,
-    });
+    ui.push(
+      {
+        name: "book-restaurant",
+        content: {
+          tripDetails: state.tripDetails,
+          restaurantName: tripPlan.restaurantName,
+        },
+      },
+      { message: response },
+    );
   }
 
   return {
     messages: [response],
-    ui: ui.collect as TripPlannerUpdate["ui"],
+    ui: ui.items,
     timestamp: Date.now(),
   };
 }

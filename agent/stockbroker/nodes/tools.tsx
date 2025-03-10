@@ -176,29 +176,38 @@ export async function callTools(
 
   if (stockbrokerToolCall) {
     const prices = await getPricesForTicker(stockbrokerToolCall.args.ticker);
-    ui.write("stock-price", {
-      ticker: stockbrokerToolCall.args.ticker,
-      ...prices,
-    });
+    ui.push(
+      {
+        name: "stock-price",
+        content: { ticker: stockbrokerToolCall.args.ticker, ...prices },
+      },
+      { message },
+    );
   }
   if (portfolioToolCall) {
-    ui.write("portfolio", {});
+    ui.push({ name: "portfolio", content: {} }, { message });
   }
   if (buyStockToolCall) {
     const snapshot = await getPriceSnapshotForTicker(
       buyStockToolCall.args.ticker,
     );
-    ui.write("buy-stock", {
-      toolCallId:
-        message.tool_calls?.find((tc) => tc.name === "buy-stock")?.id ?? "",
-      snapshot,
-      quantity: buyStockToolCall.args.quantity,
-    });
+    ui.push(
+      {
+        name: "buy-stock",
+        content: {
+          toolCallId:
+            message.tool_calls?.find((tc) => tc.name === "buy-stock")?.id ?? "",
+          snapshot,
+          quantity: buyStockToolCall.args.quantity,
+        },
+      },
+      { message },
+    );
   }
 
   return {
     messages: [message],
-    ui: ui.collect as StockbrokerUpdate["ui"],
+    ui: ui.items,
     timestamp: Date.now(),
   };
 }
