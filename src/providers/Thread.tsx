@@ -1,6 +1,6 @@
 import { validate } from "uuid";
 import { getApiKey } from "@/lib/api-key";
-import { Client, Thread } from "@langchain/langgraph-sdk";
+import { Thread } from "@langchain/langgraph-sdk";
 import { useQueryParam, StringParam } from "use-query-params";
 import {
   createContext,
@@ -11,6 +11,7 @@ import {
   Dispatch,
   SetStateAction,
 } from "react";
+import { createClient } from "./client";
 
 interface ThreadContextType {
   getThreads: () => Promise<Thread[]>;
@@ -21,13 +22,6 @@ interface ThreadContextType {
 }
 
 const ThreadContext = createContext<ThreadContextType | undefined>(undefined);
-
-function createClient(apiUrl: string, apiKey: string | undefined) {
-  return new Client({
-    apiKey,
-    apiUrl,
-  });
-}
 
 function getThreadSearchMetadata(
   assistantId: string,
@@ -47,7 +41,6 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
   const getThreads = useCallback(async (): Promise<Thread[]> => {
     if (!apiUrl || !assistantId) return [];
-
     const client = createClient(apiUrl, getApiKey() ?? undefined);
 
     const threads = await client.threads.search({
