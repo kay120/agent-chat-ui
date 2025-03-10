@@ -480,9 +480,7 @@ export function InboxItemInput({
   };
 
   return (
-    <div
-      className="w-full flex flex-col items-start justify-start gap-2"
-    >
+    <div className="w-full flex flex-col items-start justify-start gap-2">
       {showArgsOutsideActionCards && (
         <ArgsRenderer args={interruptValue.action_request.args} />
       )}
