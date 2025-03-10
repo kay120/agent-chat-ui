@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
 import { MessageContentComplex } from "@langchain/core/messages";
 import { Fragment } from "react/jsx-runtime";
-import { isAgentInboxInterrupt } from "@/lib/is-hitl";
+import { isAgentInboxInterruptSchema } from "@/lib/agent-inbox-interrupt";
 import { ThreadView } from "../agent-inbox";
 
 function CustomComponent({
@@ -118,7 +118,7 @@ export function AssistantMessage({
             )) ||
             (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
           <CustomComponent message={message} thread={thread} />
-          {isAgentInboxInterrupt(interrupt?.value) && (
+          {isAgentInboxInterruptSchema(interrupt?.value) && (
             <ThreadView interrupt={interrupt.value[0]} />
           )}
           <div

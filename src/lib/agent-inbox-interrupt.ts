@@ -1,6 +1,6 @@
 import { HumanInterrupt } from "@langchain/langgraph/prebuilt";
 
-export function isAgentInboxInterrupt(
+export function isAgentInboxInterruptSchema(
   value: unknown,
 ): value is HumanInterrupt[] {
   return (
