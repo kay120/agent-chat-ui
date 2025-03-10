@@ -86,13 +86,18 @@ export async function planner(
     ],
   };
 
-  const msg = ui.create("code-plan", {
-    toolCallId,
-    executedPlans,
-    rejectedPlans,
-    remainingPlans,
-  });
-  msg.additional_kwargs["message_id"] = aiMessage.id;
+  ui.push(
+    {
+      name: "code-plan",
+      content: {
+        toolCallId,
+        executedPlans,
+        rejectedPlans,
+        remainingPlans,
+      },
+    },
+    { message: aiMessage },
+  );
 
   const toolMessage: ToolMessage = {
     type: "tool",
@@ -103,7 +108,7 @@ export async function planner(
 
   return {
     messages: [aiMessage, toolMessage],
-    ui: [msg],
+    ui: ui.items,
     timestamp: Date.now(),
   };
 }

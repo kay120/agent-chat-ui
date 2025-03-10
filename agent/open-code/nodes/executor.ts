@@ -106,17 +106,22 @@ export async function executor(
 
   const fullWriteAccess = !!config.configurable?.permissions?.full_write_access;
 
-  const msg = ui.create("proposed-change", {
-    toolCallId,
-    change: updateFileContents,
-    planItem: nextPlanItem,
-    fullWriteAccess,
-  });
-  msg.additional_kwargs["message_id"] = aiMessage.id;
+  ui.push(
+    {
+      name: "proposed-change",
+      content: {
+        toolCallId,
+        change: updateFileContents,
+        planItem: nextPlanItem,
+        fullWriteAccess,
+      },
+    },
+    { message: aiMessage },
+  );
 
   return {
     messages: [aiMessage],
-    ui: [msg],
+    ui: ui.items,
     timestamp: Date.now(),
   };
 }
