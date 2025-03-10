@@ -1,12 +1,14 @@
+import { parsePartialJson } from "@langchain/core/output_parsers";
 import { useStreamContext } from "@/providers/Stream";
-import { Checkpoint, Message } from "@langchain/langgraph-sdk";
+import { AIMessage, Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { getContentString } from "../utils";
 import { BranchSwitcher, CommandBar } from "./shared";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MarkdownText } from "../markdown-text";
 import { LoadExternalComponent } from "@langchain/langgraph-sdk/react-ui";
 import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
+import { MessageContentComplex } from "@langchain/core/messages";
+import { Fragment } from "react/jsx-runtime";
 
 function CustomComponent({
   message,
@@ -17,30 +19,51 @@ function CustomComponent({
 }) {
   const meta = thread.getMessagesMetadata(message);
   const seenState = meta?.firstSeenState;
-  const customComponent = seenState?.values.ui
+  const customComponents = seenState?.values.ui
     ?.slice()
-    .reverse()
-    .find(
-      ({ additional_kwargs }) =>
-        additional_kwargs.run_id === seenState.metadata?.run_id,
+    .filter(({ additional_kwargs }) =>
+      !additional_kwargs.message_id
+        ? additional_kwargs.run_id === seenState.metadata?.run_id
+        : additional_kwargs.message_id === message.id,
     );
 
-  if (!customComponent) {
-    return null;
-  }
-
+  if (!customComponents?.length) return null;
   return (
-    <div key={message.id}>
-      {customComponent && (
+    <Fragment key={message.id}>
+      {customComponents.map((customComponent) => (
         <LoadExternalComponent
-          assistantId="agent"
+          key={customComponent.id}
           stream={thread}
           message={customComponent}
           meta={{ ui: customComponent }}
         />
-      )}
-    </div>
+      ))}
+    </Fragment>
   );
+}
+
+function parseAnthropicStreamedToolCalls(
+  content: MessageContentComplex[],
+): AIMessage["tool_calls"] {
+  const toolCallContents = content.filter((c) => c.type === "tool_use" && c.id);
+
+  return toolCallContents.map((tc) => {
+    const toolCall = tc as Record<string, any>;
+    let json: Record<string, any> = {};
+    if (toolCall?.input) {
+      try {
+        json = parsePartialJson(toolCall.input) ?? {};
+      } catch {
+        // Pass
+      }
+    }
+    return {
+      name: toolCall.name ?? "",
+      id: toolCall.id ?? "",
+      args: json,
+      type: "tool_call",
+    };
+  });
 }
 
 export function AssistantMessage({
@@ -57,29 +80,41 @@ export function AssistantMessage({
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
+  const anthropicStreamedToolCalls = Array.isArray(message.content)
+    ? parseAnthropicStreamedToolCalls(message.content)
+    : undefined;
 
   const hasToolCalls =
     "tool_calls" in message &&
     message.tool_calls &&
     message.tool_calls.length > 0;
+  const toolCallsHaveContents =
+    hasToolCalls &&
+    message.tool_calls?.some(
+      (tc) => tc.args && Object.keys(tc.args).length > 0,
+    );
+  const hasAnthropicToolCalls = !!anthropicStreamedToolCalls?.length;
   const isToolResult = message.type === "tool";
 
   return (
     <div className="flex items-start mr-auto gap-2 group">
-      <Avatar>
-        <AvatarFallback>A</AvatarFallback>
-      </Avatar>
       {isToolResult ? (
         <ToolResult message={message} />
       ) : (
         <div className="flex flex-col gap-2">
-          {hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />}
-          <CustomComponent message={message} thread={thread} />
           {contentString.length > 0 && (
-            <div className="rounded-2xl bg-muted px-4 py-2">
+            <div className="py-1">
               <MarkdownText>{contentString}</MarkdownText>
             </div>
           )}
+          {(hasToolCalls && toolCallsHaveContents && (
+            <ToolCalls toolCalls={message.tool_calls} />
+          )) ||
+            (hasAnthropicToolCalls && (
+              <ToolCalls toolCalls={anthropicStreamedToolCalls} />
+            )) ||
+            (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
+          <CustomComponent message={message} thread={thread} />
           <div
             className={cn(
               "flex gap-2 items-center mr-auto transition-opacity",
@@ -108,9 +143,6 @@ export function AssistantMessage({
 export function AssistantMessageLoading() {
   return (
     <div className="flex items-start mr-auto gap-2">
-      <Avatar>
-        <AvatarFallback>A</AvatarFallback>
-      </Avatar>
       <div className="flex items-center gap-1 rounded-2xl bg-muted px-4 py-2 h-8">
         <div className="w-1.5 h-1.5 rounded-full bg-foreground/50 animate-[pulse_1.5s_ease-in-out_infinite]"></div>
         <div className="w-1.5 h-1.5 rounded-full bg-foreground/50 animate-[pulse_1.5s_ease-in-out_0.5s_infinite]"></div>

@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
 import { ReactNode, useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/providers/Stream";
 import { useState, FormEvent } from "react";
-import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
 import { AssistantMessage, AssistantMessageLoading } from "./messages/ai";
@@ -24,6 +24,7 @@ import { BooleanParam, StringParam, useQueryParam } from "use-query-params";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import ThreadHistory from "./history";
 import { toast } from "sonner";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -65,12 +66,13 @@ function ScrollToBottom(props: { className?: string }) {
 
 export function Thread() {
   const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
-  const [_, setChatHistoryOpen] = useQueryParam(
+  const [chatHistoryOpen, setChatHistoryOpen] = useQueryParam(
     "chatHistoryOpen",
     BooleanParam,
   );
   const [input, setInput] = useState("");
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
+  const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
   const stream = useStreamContext();
   const messages = stream.messages;
@@ -166,32 +168,91 @@ export function Thread() {
 
   return (
     <div className="flex w-full h-screen overflow-hidden">
-      <ThreadHistory />
-      <div
+      <div className="relative lg:flex hidden">
+        <motion.div
+          className="absolute h-full border-r bg-white overflow-hidden z-20"
+          style={{ width: 300 }}
+          animate={
+            isLargeScreen
+              ? { x: chatHistoryOpen ? 0 : -300 }
+              : { x: chatHistoryOpen ? 0 : -300 }
+          }
+          initial={{ x: -300 }}
+          transition={
+            isLargeScreen
+              ? { type: "spring", stiffness: 300, damping: 30 }
+              : { duration: 0 }
+          }
+        >
+          <div className="relative h-full" style={{ width: 300 }}>
+            <ThreadHistory />
+          </div>
+        </motion.div>
+      </div>
+      <motion.div
         className={cn(
-          "flex-1 flex flex-col min-w-0 overflow-hidden",
+          "flex-1 flex flex-col min-w-0 overflow-hidden relative",
           !chatStarted && "grid-rows-[1fr]",
         )}
+        layout={isLargeScreen}
+        animate={{
+          marginLeft: chatHistoryOpen ? (isLargeScreen ? 300 : 0) : 0,
+          width: chatHistoryOpen
+            ? isLargeScreen
+              ? "calc(100% - 300px)"
+              : "100%"
+            : "100%",
+        }}
+        transition={
+          isLargeScreen
+            ? { type: "spring", stiffness: 300, damping: 30 }
+            : { duration: 0 }
+        }
       >
-        {chatStarted && (
-          <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
-            <div className="flex gap-2 items-center justify-start">
-              <button
-                className="flex gap-2 items-center cursor-pointer"
-                onClick={() => setThreadId(null)}
-              >
-                <LangGraphLogoSVG width={32} height={32} />
-                <span className="text-xl font-semibold tracking-tight">
-                  LangGraph Chat
-                </span>
-              </button>
+        {!chatStarted && (
+          <div className="absolute top-0 left-0 w-full flex items-center justify-between gap-3 p-2 pl-4 z-10">
+            {(!chatHistoryOpen || !isLargeScreen) && (
               <Button
-                className="flex lg:hidden"
+                className="hover:bg-gray-100"
                 variant="ghost"
                 onClick={() => setChatHistoryOpen((p) => !p)}
               >
-                <PanelRightOpen />
+                <PanelRightOpen className="size-5" />
               </Button>
+            )}
+          </div>
+        )}
+        {chatStarted && (
+          <div className="flex items-center justify-between gap-3 p-2 pl-4 z-10 relative">
+            <div className="flex items-center justify-start gap-2 relative">
+              <div className="absolute left-0 z-10">
+                {(!chatHistoryOpen || !isLargeScreen) && (
+                  <Button
+                    className="hover:bg-gray-100"
+                    variant="ghost"
+                    onClick={() => setChatHistoryOpen((p) => !p)}
+                  >
+                    <PanelRightOpen className="size-5" />
+                  </Button>
+                )}
+              </div>
+              <motion.button
+                className="flex gap-2 items-center cursor-pointer"
+                onClick={() => setThreadId(null)}
+                animate={{
+                  marginLeft: !chatHistoryOpen ? 48 : 0,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30,
+                }}
+              >
+                <LangGraphLogoSVG width={32} height={32} />
+                <span className="text-xl font-semibold tracking-tight">
+                  Chat LangGraph
+                </span>
+              </motion.button>
             </div>
 
             <TooltipIconButton
@@ -215,7 +276,7 @@ export function Thread() {
               !chatStarted && "flex flex-col items-stretch mt-[25vh]",
               chatStarted && "grid grid-rows-[1fr_auto]",
             )}
-            contentClassName="pt-8 pb-16 px-4 max-w-4xl mx-auto flex flex-col gap-4 w-full"
+            contentClassName="pt-8 pb-16  max-w-3xl mx-auto flex flex-col gap-4 w-full"
             content={
               <>
                 {messages
@@ -242,29 +303,36 @@ export function Thread() {
               </>
             }
             footer={
-              <div className="sticky flex flex-col items-center gap-8 bottom-8 px-4">
+              <div className="sticky flex flex-col items-center gap-8 bottom-0 px-4 bg-white">
                 {!chatStarted && (
                   <div className="flex gap-3 items-center">
                     <LangGraphLogoSVG className="flex-shrink-0 h-8" />
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      LangGraph Chat
+                      Chat LangGraph
                     </h1>
                   </div>
                 )}
 
                 <ScrollToBottom className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 animate-in fade-in-0 zoom-in-95" />
 
-                <div className="bg-background rounded-2xl border shadow-md mx-auto w-full max-w-4xl">
+                <div className="bg-muted rounded-2xl border shadow-xs mx-auto mb-8 w-full max-w-3xl relative z-10">
                   <form
                     onSubmit={handleSubmit}
-                    className="grid grid-rows-[1fr_auto] gap-2 max-w-4xl mx-auto"
+                    className="grid grid-rows-[1fr_auto] gap-2 max-w-3xl mx-auto"
                   >
-                    <Input
-                      type="text"
+                    <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey && !e.metaKey) {
+                          e.preventDefault();
+                          const el = e.target as HTMLElement | undefined;
+                          const form = el?.closest("form");
+                          form?.requestSubmit();
+                        }
+                      }}
                       placeholder="Type your message..."
-                      className="px-4 py-6 border-none bg-transparent shadow-none ring-0 outline-none focus:outline-none focus:ring-0"
+                      className="p-3.5 pb-0 border-none bg-transparent field-sizing-content shadow-none ring-0 outline-none focus:outline-none focus:ring-0 resize-none"
                     />
 
                     <div className="flex items-center justify-end p-2 pt-0">
@@ -276,6 +344,7 @@ export function Thread() {
                       ) : (
                         <Button
                           type="submit"
+                          className="transition-all shadow-md"
                           disabled={isLoading || !input.trim()}
                         >
                           Send
@@ -288,7 +357,7 @@ export function Thread() {
             }
           />
         </StickToBottom>
-      </div>
+      </motion.div>
     </div>
   );
 }

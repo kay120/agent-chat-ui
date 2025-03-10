@@ -12,7 +12,9 @@ export const GenerativeUIAnnotation = Annotation.Root({
     UIMessage | RemoveUIMessage | (UIMessage | RemoveUIMessage)[]
   >({ default: () => [], reducer: uiMessageReducer }),
   timestamp: Annotation<number>,
-  next: Annotation<"stockbroker" | "tripPlanner" | "generalInput">(),
+  next: Annotation<
+    "stockbroker" | "tripPlanner" | "openCode" | "orderPizza" | "generalInput"
+  >(),
 });
 
 export type GenerativeUIState = typeof GenerativeUIAnnotation.State;

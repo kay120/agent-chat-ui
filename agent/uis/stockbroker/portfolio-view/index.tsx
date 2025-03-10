@@ -160,7 +160,7 @@ export default function PortfolioView() {
   const chartData = selectedHolding ? generateChartData(selectedHolding) : [];
 
   return (
-    <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
+    <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
       <div className="bg-gradient-to-r from-indigo-700 to-indigo-500 px-6 py-4">
         <div className="flex justify-between items-center">
           <h2 className="text-white font-bold text-xl tracking-tight flex items-center">

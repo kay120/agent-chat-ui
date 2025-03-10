@@ -320,7 +320,7 @@ export default function AccommodationsList({
           align: "start",
           loop: true,
         }}
-        className="w-full sm:max-w-sm md:max-w-2xl lg:max-w-3xl"
+        className="w-full sm:max-w-sm md:max-w-3xl lg:max-w-3xl"
       >
         <CarouselContent>
           {accommodations.map((accommodation) => (

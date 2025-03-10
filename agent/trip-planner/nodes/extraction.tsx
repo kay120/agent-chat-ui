@@ -63,7 +63,9 @@ export async function extraction(
       .describe("The end date of the trip. Should be in YYYY-MM-DD format"),
     numberOfGuests: z
       .number()
-      .describe("The number of guests for the trip. Should default to 2 if not specified"),
+      .describe(
+        "The number of guests for the trip. Should default to 2 if not specified",
+      ),
   });
 
   const model = new ChatOpenAI({ model: "gpt-4o", temperature: 0 }).bindTools([
@@ -126,6 +128,6 @@ Extract only what is specified by the user. It is okay to leave fields blank if 
 
   return {
     tripDetails: extractionDetailsWithDefaults,
-    messages: [response, extractToolResponse]
+    messages: [response, extractToolResponse],
   };
 }

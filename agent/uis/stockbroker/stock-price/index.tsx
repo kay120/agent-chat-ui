@@ -138,8 +138,18 @@ export default function StockPrice(props: {
     };
   }, [oneDayPrices, thirtyDayPrices, displayRange]);
 
+  const formatDateByDisplayRange = (value: string, isTooltip?: boolean) => {
+    if (displayRange === "1d") {
+      return format(value, "h:mm a");
+    }
+    if (isTooltip) {
+      return format(value, "LLL do h:mm a");
+    }
+    return format(value, "LLL do");
+  };
+
   return (
-    <div className="w-full max-w-4xl rounded-xl shadow-md overflow-hidden border border-gray-200 flex flex-col gap-4 p-3">
+    <div className="w-full max-w-3xl rounded-xl shadow-md overflow-hidden border border-gray-200 flex flex-col gap-4 p-3">
       <div className="flex items-center justify-start gap-4 mb-2 text-lg font-medium text-gray-700">
         <p>{ticker}</p>
         <p>${currentPrice}</p>
@@ -180,7 +190,7 @@ export default function StockPrice(props: {
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            tickFormatter={(value) => format(value, "h:mm a")}
+            tickFormatter={(v) => formatDateByDisplayRange(v)}
           />
           <YAxis
             domain={[lowPrice - 2, highPrice + 2]}
@@ -191,10 +201,11 @@ export default function StockPrice(props: {
           />
           <ChartTooltip
             cursor={false}
+            wrapperStyle={{ backgroundColor: "white" }}
             content={
               <ChartTooltipContent
                 hideLabel={false}
-                labelFormatter={(value) => format(value, "h:mm a")}
+                labelFormatter={(v) => formatDateByDisplayRange(v, true)}
               />
             }
           />
