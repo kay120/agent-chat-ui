@@ -80,21 +80,24 @@ export default function useInterruptedActions({
     }
   }, [interrupt]);
 
-  const resumeRun = (
-    response: HumanResponse[],
-  ): boolean => {
+  const resumeRun = (response: HumanResponse[]): boolean => {
     try {
-      thread.submit({}, {
-        command: {
-          resume: response,
-          update: {
-            messages: [{
-              type: "human",
-              content: `Sending type '${response[0].type}' to interrupt...`
-            }]
-          }
+      thread.submit(
+        {},
+        {
+          command: {
+            resume: response,
+            update: {
+              messages: [
+                {
+                  type: "human",
+                  content: `Sending type '${response[0].type}' to interrupt...`,
+                },
+              ],
+            },
+          },
         },
-      })
+      );
       return true;
     } catch (e: any) {
       console.error("Error sending human response", e);
@@ -258,17 +261,22 @@ export default function useInterruptedActions({
     initialHumanInterruptEditValue.current = {};
 
     try {
-      thread.submit({}, {
-        command: {
-          goto: END,
-          update: {
-            messages: [{
-              type: "human",
-              content: "Marking thread as resolved."
-            }]
-          }
-        }
-      })
+      thread.submit(
+        {},
+        {
+          command: {
+            goto: END,
+            update: {
+              messages: [
+                {
+                  type: "human",
+                  content: "Marking thread as resolved.",
+                },
+              ],
+            },
+          },
+        },
+      );
 
       toast("Success", {
         description: "Marked thread as resolved.",
