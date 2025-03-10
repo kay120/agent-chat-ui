@@ -105,8 +105,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
               </h1>
             </div>
             <p className="text-muted-foreground">
-              Welcome to Agent Chat! Before you get started, you need to
-              enter the URL of the deployment and the assistant / graph ID.
+              Welcome to Agent Chat! Before you get started, you need to enter
+              the URL of the deployment and the assistant / graph ID.
             </p>
           </div>
           <form
