@@ -1,18 +1,18 @@
-# Chat LangGraph
+# Agent Chat UI
 
-Chat LangGraph is a Vite + React application which enables chatting with any LangGraph server with a `messages` key through a chat interface.
+Agent Chat UI is a Vite + React application which enables chatting with any LangGraph server with a `messages` key through a chat interface.
 
 ## Setup
 
 > [!TIP]
-> Don't want to run the app locally? Use the deployed site here: [chat-langgraph.vercel.app](https://chat-langgraph.vercel.app)!
+> Don't want to run the app locally? Use the deployed site here: [agent-chat-ui.vercel.app](https://agentchat.vercel.app)!
 
 First, clone the repository:
 
 ```bash
-git clone https://github.com/langchain-ai/chat-langgraph.git
+git clone https://github.com/langchain-ai/agent-chat-ui.git
 
-cd chat-langgraph
+cd agent-chat-ui
 ```
 
 Install dependencies:
