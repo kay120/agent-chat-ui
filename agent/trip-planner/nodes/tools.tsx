@@ -5,46 +5,27 @@ import type ComponentMap from "../../uis/index";
 import { z } from "zod";
 import { LangGraphRunnableConfig } from "@langchain/langgraph";
 import { getAccommodationsListProps } from "../utils/get-accommodations";
+import { findToolCall } from "../../find-tool-call";
 
-const schema = z.object({
-  listAccommodations: z
-    .boolean()
-    .optional()
-    .describe(
-      "Whether or not the user has requested a list of accommodations for their trip.",
-    ),
-  bookAccommodation: z
-    .boolean()
-    .optional()
-    .describe(
-      "Whether or not the user has requested to book a reservation for an accommodation. If true, you MUST also set the 'accommodationName' field",
-    ),
-  accommodationName: z
-    .string()
-    .optional()
-    .describe(
-      "The name of the accommodation to book a reservation for. Only required if the 'bookAccommodation' field is true.",
-    ),
+const listAccommodationsSchema = z
+  .object({})
+  .describe("A tool to list accommodations for the user");
+const listRestaurantsSchema = z
+  .object({})
+  .describe("A tool to list restaurants for the user");
 
-  listRestaurants: z
-    .boolean()
-    .optional()
-    .describe(
-      "Whether or not the user has requested a list of restaurants for their trip.",
-    ),
-  bookRestaurant: z
-    .boolean()
-    .optional()
-    .describe(
-      "Whether or not the user has requested to book a reservation for a restaurant. If true, you MUST also set the 'restaurantName' field",
-    ),
-  restaurantName: z
-    .string()
-    .optional()
-    .describe(
-      "The name of the restaurant to book a reservation for. Only required if the 'bookRestaurant' field is true.",
-    ),
-});
+const ACCOMMODATIONS_TOOLS = [
+  {
+    name: "list-accommodations",
+    description: "A tool to list accommodations for the user",
+    schema: listAccommodationsSchema,
+  },
+  {
+    name: "list-restaurants",
+    description: "A tool to list restaurants for the user",
+    schema: listRestaurantsSchema,
+  },
+];
 
 export async function callTools(
   state: TripPlannerState,
@@ -57,16 +38,7 @@ export async function callTools(
   const ui = typedUi<typeof ComponentMap>(config);
 
   const llm = new ChatOpenAI({ model: "gpt-4o", temperature: 0 }).bindTools(
-    [
-      {
-        name: "trip-planner",
-        description: "A series of actions to take for planning a trip",
-        schema,
-      },
-    ],
-    {
-      tool_choice: "trip-planner",
-    },
+    ACCOMMODATIONS_TOOLS,
   );
 
   const response = await llm.invoke([
@@ -78,57 +50,35 @@ export async function callTools(
     ...state.messages,
   ]);
 
-  const tripPlan = response.tool_calls?.[0]?.args as
-    | z.infer<typeof schema>
-    | undefined;
-  const toolCallId = response.tool_calls?.[0]?.id;
-  if (!tripPlan || !toolCallId) {
-    throw new Error("No trip plan found");
+  const listAccommodationsToolCall = response.tool_calls?.find(
+    findToolCall("list-accommodations")<typeof listAccommodationsSchema>,
+  );
+  const listRestaurantsToolCall = response.tool_calls?.find(
+    findToolCall("list-restaurants")<typeof listRestaurantsSchema>,
+  );
+
+  if (!listAccommodationsToolCall && !listRestaurantsToolCall) {
+    throw new Error("No tool calls found");
   }
 
-  if (tripPlan.listAccommodations) {
+  if (listAccommodationsToolCall) {
     ui.push(
       {
         name: "accommodations-list",
         content: {
-          toolCallId,
+          toolCallId: listAccommodationsToolCall.id ?? "",
           ...getAccommodationsListProps(state.tripDetails),
         },
       },
       { message: response },
     );
   }
-  if (tripPlan.bookAccommodation && tripPlan.accommodationName) {
-    ui.push(
-      {
-        name: "book-accommodation",
-        content: {
-          tripDetails: state.tripDetails,
-          accommodationName: tripPlan.accommodationName,
-        },
-      },
-      { message: response },
-    );
-  }
 
-  if (tripPlan.listRestaurants) {
+  if (listRestaurantsToolCall) {
     ui.push(
       {
         name: "restaurants-list",
         content: { tripDetails: state.tripDetails },
-      },
-      { message: response },
-    );
-  }
-
-  if (tripPlan.bookRestaurant && tripPlan.restaurantName) {
-    ui.push(
-      {
-        name: "book-restaurant",
-        content: {
-          tripDetails: state.tripDetails,
-          restaurantName: tripPlan.restaurantName,
-        },
       },
       { message: response },
     );

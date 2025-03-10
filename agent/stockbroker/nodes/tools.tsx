@@ -195,8 +195,7 @@ export async function callTools(
       {
         name: "buy-stock",
         content: {
-          toolCallId:
-            message.tool_calls?.find((tc) => tc.name === "buy-stock")?.id ?? "",
+          toolCallId: buyStockToolCall.id ?? "",
           snapshot,
           quantity: buyStockToolCall.args.quantity,
         },
