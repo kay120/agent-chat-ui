@@ -250,7 +250,7 @@ export function Thread() {
               >
                 <LangGraphLogoSVG width={32} height={32} />
                 <span className="text-xl font-semibold tracking-tight">
-                  Chat LangGraph
+                  Agent Chat
                 </span>
               </motion.button>
             </div>
@@ -308,7 +308,7 @@ export function Thread() {
                   <div className="flex gap-3 items-center">
                     <LangGraphLogoSVG className="flex-shrink-0 h-8" />
                     <h1 className="text-2xl font-semibold tracking-tight">
-                      Chat LangGraph
+                      Agent Chat
                     </h1>
                   </div>
                 )}
