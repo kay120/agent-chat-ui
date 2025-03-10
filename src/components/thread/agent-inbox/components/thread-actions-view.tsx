@@ -102,7 +102,7 @@ export function ThreadActionsView({
   const actionsDisabled = loading || streaming;
 
   return (
-    <div className="flex flex-col min-h-full w-full p-12 gap-9">
+    <div className="flex flex-col min-h-full w-full gap-9">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between w-full gap-3">
         <div className="flex items-center justify-start gap-3">

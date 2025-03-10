@@ -244,7 +244,13 @@ export function StateView({
   }
 
   return (
-    <div className="overflow-y-auto pl-6 border-t-[1px] lg:border-t-[0px] lg:border-l-[1px] border-gray-100 flex flex-row gap-0 w-full">
+    <div
+      className={cn(
+        "flex flex-row gap-0 w-full",
+        view === "state" &&
+          "border-t-[1px] lg:border-t-[0px] lg:border-l-[1px] border-gray-100 ",
+      )}
+    >
       {view === "description" && (
         <div className="pt-6 pb-2">
           <MarkdownText>
@@ -253,7 +259,7 @@ export function StateView({
         </div>
       )}
       {view === "state" && (
-        <div className="flex flex-col items-start justify-start gap-1 pt-6 pb-2">
+        <div className="flex flex-col items-start justify-start gap-1">
           {Object.entries(values).map(([k, v], idx) => (
             <StateViewObject
               expanded={expanded}
@@ -264,7 +270,7 @@ export function StateView({
           ))}
         </div>
       )}
-      <div className="flex gap-2 items-start justify-end pt-6 pr-6">
+      <div className="flex gap-2 items-start justify-end">
         {view === "state" && (
           <Button
             onClick={() => setExpanded((prev) => !prev)}

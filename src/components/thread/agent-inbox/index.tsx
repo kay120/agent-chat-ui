@@ -1,7 +1,6 @@
 import { StateView } from "./components/state-view";
 import { ThreadActionsView } from "./components/thread-actions-view";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { HumanInterrupt } from "@langchain/langgraph/prebuilt";
 import { useStreamContext } from "@/providers/Stream";
 
@@ -11,7 +10,7 @@ interface ThreadViewProps {
 
 export function ThreadView({ interrupt }: ThreadViewProps) {
   const thread = useStreamContext();
-  const [showDescription, setShowDescription] = useState(true);
+  const [showDescription, setShowDescription] = useState(false);
   const [showState, setShowState] = useState(false);
   const showSidePanel = showDescription || showState;
 
@@ -36,33 +35,22 @@ export function ThreadView({ interrupt }: ThreadViewProps) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full h-[750px] border-[1px] border-slate-200 rounded-2xl pb-4">
-      <div
-        className={cn(
-          "flex overflow-y-auto",
-          showSidePanel ? "lg:min-w-1/2 w-full" : "w-full",
-        )}
-      >
-        <ThreadActionsView
-          interrupt={interrupt}
-          handleShowSidePanel={handleShowSidePanel}
-          showState={showState}
-          showDescription={showDescription}
-        />
-      </div>
-      <div
-        className={cn(
-          showSidePanel ? "flex" : "hidden",
-          "overflow-y-auto lg:max-w-1/2 w-full",
-        )}
-      >
+    <div className="flex flex-col lg:flex-row w-full h-[80vh] p-8 bg-gray-50/50 rounded-2xl overflow-y-scroll [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-track]:bg-transparent">
+      {showSidePanel ? (
         <StateView
           handleShowSidePanel={handleShowSidePanel}
           description={interrupt.description}
           values={thread.values}
           view={showState ? "state" : "description"}
         />
-      </div>
+      ) : (
+        <ThreadActionsView
+          interrupt={interrupt}
+          handleShowSidePanel={handleShowSidePanel}
+          showState={showState}
+          showDescription={showDescription}
+        />
+      )}
     </div>
   );
 }
