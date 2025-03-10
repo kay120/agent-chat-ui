@@ -11,8 +11,8 @@ import {
 import { createDefaultHumanResponse } from "../utils";
 import { toast } from "sonner";
 import { HumanInterrupt, HumanResponse } from "@langchain/langgraph/prebuilt";
-import { useThreads } from "@/providers/Thread";
-import { StringParam, useQueryParam } from "use-query-params";
+import { END } from "@langchain/langgraph/web";
+import { useStreamContext } from "@/providers/Stream";
 
 interface UseInterruptedActionsInput {
   interrupt: HumanInterrupt;
@@ -53,9 +53,7 @@ interface UseInterruptedActionsValue {
 export default function useInterruptedActions({
   interrupt,
 }: UseInterruptedActionsInput): UseInterruptedActionsValue {
-  const { resumeRun, ignoreRun } = useThreads();
-  const [threadId] = useQueryParam("threadId", StringParam);
-
+  const thread = useStreamContext();
   const [humanResponse, setHumanResponse] = useState<HumanResponseWithEdits[]>(
     [],
   );
@@ -82,6 +80,28 @@ export default function useInterruptedActions({
     }
   }, [interrupt]);
 
+  const resumeRun = (
+    response: HumanResponse[],
+  ): boolean => {
+    try {
+      thread.submit({}, {
+        command: {
+          resume: response,
+          update: {
+            messages: [{
+              type: "human",
+              content: `Sending type '${response[0].type}' to interrupt...`
+            }]
+          }
+        },
+      })
+      return true;
+    } catch (e: any) {
+      console.error("Error sending human response", e);
+      return false;
+    }
+  };
+
   const handleSubmit = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent> | KeyboardEvent,
   ) => {
@@ -89,15 +109,6 @@ export default function useInterruptedActions({
     if (!humanResponse) {
       toast("Error", {
         description: "Please enter a response.",
-        duration: 5000,
-        richColors: true,
-        closeButton: true,
-      });
-      return;
-    }
-    if (!threadId) {
-      toast("Error", {
-        description: "Please select a thread.",
         duration: 5000,
         richColors: true,
         closeButton: true,
@@ -156,10 +167,8 @@ export default function useInterruptedActions({
 
         setLoading(true);
         setStreaming(true);
-        const response = resumeRun(threadId, [input], {
-          stream: true,
-        });
-        if (!response) {
+        const resumedSuccessfully = resumeRun([input]);
+        if (!resumedSuccessfully) {
           // This will only be undefined if the graph ID is not found
           // in this case, the method will trigger a toast for us.
           return;
@@ -204,7 +213,7 @@ export default function useInterruptedActions({
       }
     } else {
       setLoading(true);
-      await resumeRun(threadId, humanResponse);
+      resumeRun(humanResponse);
 
       toast("Success", {
         description: "Response submitted successfully.",
@@ -219,15 +228,6 @@ export default function useInterruptedActions({
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
-    if (!threadId) {
-      toast("Error", {
-        description: "Please select a thread.",
-        duration: 5000,
-        richColors: true,
-        closeButton: true,
-      });
-      return;
-    }
 
     const ignoreResponse = humanResponse.find((r) => r.type === "ignore");
     if (!ignoreResponse) {
@@ -241,7 +241,7 @@ export default function useInterruptedActions({
     setLoading(true);
     initialHumanInterruptEditValue.current = {};
 
-    await resumeRun(threadId, [ignoreResponse]);
+    resumeRun([ignoreResponse]);
 
     setLoading(false);
     toast("Successfully ignored thread", {
@@ -253,20 +253,36 @@ export default function useInterruptedActions({
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
-    if (!threadId) {
-      toast("Error", {
-        description: "Please select a thread.",
-        duration: 5000,
-        richColors: true,
-        closeButton: true,
-      });
-      return;
-    }
 
     setLoading(true);
     initialHumanInterruptEditValue.current = {};
 
-    await ignoreRun(threadId);
+    try {
+      thread.submit({}, {
+        command: {
+          goto: END,
+          update: {
+            messages: [{
+              type: "human",
+              content: "Marking thread as resolved."
+            }]
+          }
+        }
+      })
+
+      toast("Success", {
+        description: "Marked thread as resolved.",
+        duration: 3000,
+      });
+    } catch (e) {
+      console.error("Error marking thread as resolved", e);
+      toast("Error", {
+        description: "Failed to mark thread as resolved.",
+        richColors: true,
+        closeButton: true,
+        duration: 3000,
+      });
+    }
 
     setLoading(false);
   };

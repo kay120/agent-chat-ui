@@ -80,6 +80,7 @@ export function AssistantMessage({
   const contentString = getContentString(message.content);
 
   const thread = useStreamContext();
+  const isLastMessage = thread.messages[thread.messages.length - 1].id === message.id;
   const meta = thread.getMessagesMetadata(message);
   const interrupt = thread.interrupt;
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
@@ -118,7 +119,7 @@ export function AssistantMessage({
             )) ||
             (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
           <CustomComponent message={message} thread={thread} />
-          {isAgentInboxInterruptSchema(interrupt?.value) && (
+          {isAgentInboxInterruptSchema(interrupt?.value) && isLastMessage && (
             <ThreadView interrupt={interrupt.value[0]} />
           )}
           <div
