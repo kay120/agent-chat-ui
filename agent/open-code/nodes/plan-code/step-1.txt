@@ -1,5 +1,0 @@
-```bash
-npx create-react-app todo-app --template typescript
-cd todo-app
-mkdir -p src/{components,styles,utils}
-```
