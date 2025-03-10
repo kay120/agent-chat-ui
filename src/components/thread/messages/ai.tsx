@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { ToolCalls, ToolResult } from "./tool-calls";
 import { MessageContentComplex } from "@langchain/core/messages";
 import { Fragment } from "react/jsx-runtime";
+import { isAgentInboxInterrupt } from "@/lib/is-hitl";
+import { ThreadView } from "../agent-inbox";
 
 function CustomComponent({
   message,
@@ -79,6 +81,7 @@ export function AssistantMessage({
 
   const thread = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
+  const interrupt = thread.interrupt;
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
   const anthropicStreamedToolCalls = Array.isArray(message.content)
     ? parseAnthropicStreamedToolCalls(message.content)
@@ -115,6 +118,9 @@ export function AssistantMessage({
             )) ||
             (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
           <CustomComponent message={message} thread={thread} />
+          {isAgentInboxInterrupt(interrupt?.value) && (
+            <ThreadView interrupt={interrupt.value[0]} />
+          )}
           <div
             className={cn(
               "flex gap-2 items-center mr-auto transition-opacity",

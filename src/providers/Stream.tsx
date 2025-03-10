@@ -68,6 +68,8 @@ const StreamSession = ({
     },
   });
 
+  console.log("streamValue.interrupt", streamValue.interrupt);
+
   return (
     <StreamContext.Provider value={streamValue}>
       {children}
