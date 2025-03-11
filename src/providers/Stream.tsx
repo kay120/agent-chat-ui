@@ -48,7 +48,7 @@ async function checkGraphStatus(
   apiKey: string | null,
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${apiUrl}/ok`, {
+    const res = await fetch(`${apiUrl}/info`, {
       ...(apiKey && {
         headers: {
           "X-Api-Key": apiKey,
