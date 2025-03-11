@@ -110,7 +110,7 @@ export default function useInterruptedActions({
   ) => {
     e.preventDefault();
     if (!humanResponse) {
-      toast("Error", {
+      toast.error("Error", {
         description: "Please enter a response.",
         duration: 5000,
         richColors: true,
@@ -159,7 +159,7 @@ export default function useInterruptedActions({
           (r) => r.type === selectedSubmitType,
         );
         if (!input) {
-          toast("Error", {
+          toast.error("Error", {
             description: "No response found.",
             richColors: true,
             closeButton: true,
@@ -197,7 +197,7 @@ export default function useInterruptedActions({
             duration: 5000,
           });
         } else {
-          toast("Error", {
+          toast.error("Error", {
             description: "Failed to submit response.",
             richColors: true,
             closeButton: true,
@@ -234,7 +234,7 @@ export default function useInterruptedActions({
 
     const ignoreResponse = humanResponse.find((r) => r.type === "ignore");
     if (!ignoreResponse) {
-      toast("Error", {
+      toast.error("Error", {
         description: "The selected thread does not support ignoring.",
         duration: 5000,
       });
@@ -284,7 +284,7 @@ export default function useInterruptedActions({
       });
     } catch (e) {
       console.error("Error marking thread as resolved", e);
-      toast("Error", {
+      toast.error("Error", {
         description: "Failed to mark thread as resolved.",
         richColors: true,
         closeButton: true,

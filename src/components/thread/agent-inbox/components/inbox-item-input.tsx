@@ -337,7 +337,7 @@ export function InboxItemInput({
       (Array.isArray(change) && !Array.isArray(key)) ||
       (!Array.isArray(change) && Array.isArray(key))
     ) {
-      toast("Error", {
+      toast.error("Error", {
         description: "Something went wrong",
         richColors: true,
         closeButton: true,
@@ -394,13 +394,13 @@ export function InboxItemInput({
           args:
             Array.isArray(change) && Array.isArray(key)
               ? {
-                  ...response.args.args,
-                  ...Object.fromEntries(key.map((k, i) => [k, change[i]])),
-                }
+                ...response.args.args,
+                ...Object.fromEntries(key.map((k, i) => [k, change[i]])),
+              }
               : {
-                  ...response.args.args,
-                  [key as string]: change as string,
-                },
+                ...response.args.args,
+                [key as string]: change as string,
+              },
         },
       };
       if (
