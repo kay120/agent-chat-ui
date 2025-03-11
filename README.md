@@ -15,9 +15,7 @@ First, clone the repository, or run the [`npx` command](https://www.npmjs.com/pa
 ```bash
 npx create-agent-chat-app
 ```
-
 or
-
 ```bash
 git clone https://github.com/langchain-ai/agent-chat-ui.git
 

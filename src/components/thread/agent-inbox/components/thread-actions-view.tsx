@@ -85,7 +85,7 @@ export function ThreadActionsView({
 
   const handleOpenInStudio = () => {
     if (!apiUrl) {
-      toast.error("Error", {
+      toast("Error", {
         description: "Please set the LangGraph deployment URL in settings.",
         duration: 5000,
         richColors: true,
