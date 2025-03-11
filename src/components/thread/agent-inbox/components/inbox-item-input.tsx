@@ -337,7 +337,7 @@ export function InboxItemInput({
       (Array.isArray(change) && !Array.isArray(key)) ||
       (!Array.isArray(change) && Array.isArray(key))
     ) {
-      toast.error("Error", {
+      toast("Error", {
         description: "Something went wrong",
         richColors: true,
         closeButton: true,

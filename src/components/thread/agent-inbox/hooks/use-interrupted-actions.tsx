@@ -110,7 +110,7 @@ export default function useInterruptedActions({
   ) => {
     e.preventDefault();
     if (!humanResponse) {
-      toast.error("Error", {
+      toast("Error", {
         description: "Please enter a response.",
         duration: 5000,
         richColors: true,
@@ -159,7 +159,7 @@ export default function useInterruptedActions({
           (r) => r.type === selectedSubmitType,
         );
         if (!input) {
-          toast.error("Error", {
+          toast("Error", {
             description: "No response found.",
             richColors: true,
             closeButton: true,
@@ -189,7 +189,7 @@ export default function useInterruptedActions({
         console.error("Error sending human response", e);
 
         if ("message" in e && e.message.includes("Invalid assistant ID")) {
-          toast.error("Error: Invalid assistant ID", {
+          toast("Error: Invalid assistant ID", {
             description:
               "The provided assistant ID was not found in this graph. Please update the assistant ID in the settings and try again.",
             richColors: true,
@@ -197,7 +197,7 @@ export default function useInterruptedActions({
             duration: 5000,
           });
         } else {
-          toast.error("Error", {
+          toast("Error", {
             description: "Failed to submit response.",
             richColors: true,
             closeButton: true,
@@ -234,7 +234,7 @@ export default function useInterruptedActions({
 
     const ignoreResponse = humanResponse.find((r) => r.type === "ignore");
     if (!ignoreResponse) {
-      toast.error("Error", {
+      toast("Error", {
         description: "The selected thread does not support ignoring.",
         duration: 5000,
       });
@@ -284,7 +284,7 @@ export default function useInterruptedActions({
       });
     } catch (e) {
       console.error("Error marking thread as resolved", e);
-      toast.error("Error", {
+      toast("Error", {
         description: "Failed to mark thread as resolved.",
         richColors: true,
         closeButton: true,
