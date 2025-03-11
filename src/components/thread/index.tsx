@@ -18,6 +18,7 @@ import {
   ArrowDown,
   LoaderCircle,
   PanelRightOpen,
+  PanelRightClose,
   SquarePen,
 } from "lucide-react";
 import { BooleanParam, StringParam, useQueryParam } from "use-query-params";
@@ -217,7 +218,11 @@ export function Thread() {
                 variant="ghost"
                 onClick={() => setChatHistoryOpen((p) => !p)}
               >
-                <PanelRightOpen className="size-5" />
+                {chatHistoryOpen ? (
+                  <PanelRightOpen className="size-5" />
+                ) : (
+                  <PanelRightClose className="size-5" />
+                )}
               </Button>
             )}
           </div>
@@ -232,7 +237,11 @@ export function Thread() {
                     variant="ghost"
                     onClick={() => setChatHistoryOpen((p) => !p)}
                   >
-                    <PanelRightOpen className="size-5" />
+                    {chatHistoryOpen ? (
+                      <PanelRightOpen className="size-5" />
+                    ) : (
+                      <PanelRightClose className="size-5" />
+                    )}
                   </Button>
                 )}
               </div>
