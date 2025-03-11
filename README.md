@@ -2,6 +2,9 @@
 
 Agent Chat UI is a Vite + React application which enables chatting with any LangGraph server with a `messages` key through a chat interface.
 
+> [!NOTE]
+> 🎥 Watch the video setup guide [here](https://youtu.be/lInrwVnZ83o).
+
 ## Setup
 
 > [!TIP]
