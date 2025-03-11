@@ -25,6 +25,8 @@ import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import ThreadHistory from "./history";
 import { toast } from "sonner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { Label } from "../ui/label";
+import { Switch } from "../ui/switch";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -68,6 +70,10 @@ export function Thread() {
   const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
   const [chatHistoryOpen, setChatHistoryOpen] = useQueryParam(
     "chatHistoryOpen",
+    BooleanParam,
+  );
+  const [hideToolCalls, setHideToolCalls] = useQueryParam(
+    "hideToolCalls",
     BooleanParam,
   );
   const [input, setInput] = useState("");
@@ -335,7 +341,22 @@ export function Thread() {
                       className="p-3.5 pb-0 border-none bg-transparent field-sizing-content shadow-none ring-0 outline-none focus:outline-none focus:ring-0 resize-none"
                     />
 
-                    <div className="flex items-center justify-end p-2 pt-0">
+                    <div className="flex items-center justify-between p-2 pt-4">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="render-tool-calls"
+                            checked={hideToolCalls ?? false}
+                            onCheckedChange={setHideToolCalls}
+                          />
+                          <Label
+                            htmlFor="render-tool-calls"
+                            className="text-sm text-gray-600"
+                          >
+                            Hide Tool Calls
+                          </Label>
+                        </div>
+                      </div>
                       {stream.isLoading ? (
                         <Button key="stop" onClick={() => stream.stop()}>
                           <LoaderCircle className="w-4 h-4 animate-spin" />
