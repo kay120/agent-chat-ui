@@ -11,6 +11,7 @@ import { MessageContentComplex } from "@langchain/core/messages";
 import { Fragment } from "react/jsx-runtime";
 import { isAgentInboxInterruptSchema } from "@/lib/agent-inbox-interrupt";
 import { ThreadView } from "../agent-inbox";
+import { BooleanParam, useQueryParam } from "use-query-params";
 
 function CustomComponent({
   message,
@@ -78,6 +79,7 @@ export function AssistantMessage({
   handleRegenerate: (parentCheckpoint: Checkpoint | null | undefined) => void;
 }) {
   const contentString = getContentString(message.content);
+  const [hideToolCalls] = useQueryParam("hideToolCalls", BooleanParam);
 
   const thread = useStreamContext();
   const isLastMessage =
@@ -101,6 +103,10 @@ export function AssistantMessage({
   const hasAnthropicToolCalls = !!anthropicStreamedToolCalls?.length;
   const isToolResult = message.type === "tool";
 
+  if (isToolResult && hideToolCalls) {
+    return null;
+  }
+
   return (
     <div className="flex items-start mr-auto gap-2 group">
       {isToolResult ? (
@@ -112,13 +118,19 @@ export function AssistantMessage({
               <MarkdownText>{contentString}</MarkdownText>
             </div>
           )}
-          {(hasToolCalls && toolCallsHaveContents && (
-            <ToolCalls toolCalls={message.tool_calls} />
-          )) ||
-            (hasAnthropicToolCalls && (
-              <ToolCalls toolCalls={anthropicStreamedToolCalls} />
-            )) ||
-            (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
+
+          {!hideToolCalls && (
+            <>
+              {(hasToolCalls && toolCallsHaveContents && (
+                <ToolCalls toolCalls={message.tool_calls} />
+              )) ||
+                (hasAnthropicToolCalls && (
+                  <ToolCalls toolCalls={anthropicStreamedToolCalls} />
+                )) ||
+                (hasToolCalls && <ToolCalls toolCalls={message.tool_calls} />)}
+            </>
+          )}
+
           <CustomComponent message={message} thread={thread} />
           {isAgentInboxInterruptSchema(interrupt?.value) && isLastMessage && (
             <ThreadView interrupt={interrupt.value[0]} />
