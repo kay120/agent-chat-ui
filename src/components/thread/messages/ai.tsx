@@ -20,15 +20,12 @@ function CustomComponent({
   message: Message;
   thread: ReturnType<typeof useStreamContext>;
 }) {
+  const { values } = useStreamContext();
   const meta = thread.getMessagesMetadata(message);
   const seenState = meta?.firstSeenState;
-  const customComponents = seenState?.values.ui
-    ?.slice()
-    .filter(({ additional_kwargs }) =>
-      !additional_kwargs.message_id
-        ? additional_kwargs.run_id === seenState.metadata?.run_id
-        : additional_kwargs.message_id === message.id,
-    );
+  console.log("seenState?.values.ui", seenState?.values.ui)
+  const customComponents = values.ui
+  ?.filter((ui) => ui.metadata?.message_id === message.id)
 
   if (!customComponents?.length) return null;
   return (
