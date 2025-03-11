@@ -12,7 +12,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PanelRightOpen } from "lucide-react";
+import { PanelRightOpen, PanelRightClose } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 function ThreadList({
@@ -97,7 +97,11 @@ export default function ThreadHistory() {
             variant="ghost"
             onClick={() => setChatHistoryOpen((p) => !p)}
           >
-            <PanelRightOpen className="size-5" />
+            {chatHistoryOpen ? (
+              <PanelRightOpen className="size-5" />
+            ) : (
+              <PanelRightClose className="size-5" />
+            )}
           </Button>
           <h1 className="text-xl font-semibold tracking-tight">
             Thread History
