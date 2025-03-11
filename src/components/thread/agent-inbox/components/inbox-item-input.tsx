@@ -394,13 +394,13 @@ export function InboxItemInput({
           args:
             Array.isArray(change) && Array.isArray(key)
               ? {
-                ...response.args.args,
-                ...Object.fromEntries(key.map((k, i) => [k, change[i]])),
-              }
+                  ...response.args.args,
+                  ...Object.fromEntries(key.map((k, i) => [k, change[i]])),
+                }
               : {
-                ...response.args.args,
-                [key as string]: change as string,
-              },
+                  ...response.args.args,
+                  [key as string]: change as string,
+                },
         },
       };
       if (
