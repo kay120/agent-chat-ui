@@ -131,7 +131,7 @@ export function AssistantMessage({
 
           <CustomComponent message={message} thread={thread} />
           {isAgentInboxInterruptSchema(interrupt?.value) && isLastMessage && (
-            <ThreadView interrupt={interrupt.value[0]} />
+            <ThreadView interrupt={interrupt.value} />
           )}
           <div
             className={cn(
