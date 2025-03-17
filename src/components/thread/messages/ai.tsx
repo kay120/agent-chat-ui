@@ -12,6 +12,7 @@ import { Fragment } from "react/jsx-runtime";
 import { isAgentInboxInterruptSchema } from "@/lib/agent-inbox-interrupt";
 import { ThreadView } from "../agent-inbox";
 import { useQueryState, parseAsBoolean } from "nuqs";
+import { GenericInterruptView } from "./generic-interrupt";
 
 function CustomComponent({
   message,
@@ -133,6 +134,11 @@ export function AssistantMessage({
           {isAgentInboxInterruptSchema(interrupt?.value) && isLastMessage && (
             <ThreadView interrupt={interrupt.value} />
           )}
+          {interrupt?.value &&
+          !isAgentInboxInterruptSchema(interrupt.value) &&
+          isLastMessage ? (
+            <GenericInterruptView interrupt={interrupt.value} />
+          ) : null}
           <div
             className={cn(
               "flex gap-2 items-center mr-auto transition-opacity",
