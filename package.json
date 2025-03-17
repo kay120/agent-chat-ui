@@ -1,8 +1,11 @@
 {
-  "name": "chat-langgraph",
-  "readme": "https://github.com/langchain-ai/chat-langgraph/blob/main/README.md",
-  "homepage": "https://chat-langgraph.vercel.app",
-  "repository": "https://github.com/langchain-ai/chat-langgraph",
+  "name": "agent-chat-ui",
+  "readme": "https://github.com/langchain-ai/agent-chat-ui/blob/main/README.md",
+  "homepage": "https://agentchat.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/langchain-ai/agent-chat-ui.git"
+  },
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -15,9 +18,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@assistant-ui/react": "^0.8.0",
-    "@assistant-ui/react-markdown": "^0.8.0",
-    "@assistant-ui/react-syntax-highlighter": "^0.7.2",
     "@langchain/core": "^0.3.41",
     "@langchain/langgraph": "^0.2.54",
     "@langchain/langgraph-api": "^0.0.15",
