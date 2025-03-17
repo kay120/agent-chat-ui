@@ -4,7 +4,7 @@ import { Thread } from "@langchain/langgraph-sdk";
 import { useEffect } from "react";
 
 import { getContentString } from "../utils";
-import { useQueryState, parseAsBoolean } from 'nuqs'
+import { useQueryState, parseAsBoolean } from "nuqs";
 import {
   Sheet,
   SheetContent,

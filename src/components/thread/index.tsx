@@ -21,7 +21,7 @@ import {
   PanelRightClose,
   SquarePen,
 } from "lucide-react";
-import { useQueryState, parseAsBoolean } from 'nuqs'
+import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import ThreadHistory from "./history";
 import { toast } from "sonner";

@@ -12,7 +12,7 @@ import {
   type UIMessage,
   type RemoveUIMessage,
 } from "@langchain/langgraph-sdk/react-ui";
-import { useQueryState } from 'nuqs'
+import { useQueryState } from "nuqs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
@@ -133,9 +133,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     _setApiKey(key);
   };
 
-  const [assistantId, setAssistantId] = useQueryState(
-    "assistantId",
-  );
+  const [assistantId, setAssistantId] = useQueryState("assistantId");
 
   if (!apiUrl || !assistantId) {
     return (
