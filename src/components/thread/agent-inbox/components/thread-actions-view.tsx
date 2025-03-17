@@ -4,7 +4,7 @@ import { InboxItemInput } from "./inbox-item-input";
 import useInterruptedActions from "../hooks/use-interrupted-actions";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { StringParam, useQueryParam } from "use-query-params";
+import { useQueryState } from 'nuqs'
 import { constructOpenInStudioURL } from "../utils";
 import { HumanInterrupt } from "@langchain/langgraph/prebuilt";
 
@@ -60,7 +60,7 @@ export function ThreadActionsView({
   showDescription,
   showState,
 }: ThreadActionsViewProps) {
-  const [threadId] = useQueryParam("threadId", StringParam);
+  const [threadId] = useQueryState("threadId");
   const {
     acceptAllowed,
     hasEdited,
@@ -81,7 +81,7 @@ export function ThreadActionsView({
   } = useInterruptedActions({
     interrupt,
   });
-  const [apiUrl] = useQueryParam("apiUrl", StringParam);
+  const [apiUrl] = useQueryState("apiUrl");
 
   const handleOpenInStudio = () => {
     if (!apiUrl) {

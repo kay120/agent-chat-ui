@@ -12,7 +12,7 @@ import {
   type UIMessage,
   type RemoveUIMessage,
 } from "@langchain/langgraph-sdk/react-ui";
-import { useQueryParam, StringParam } from "use-query-params";
+import { useQueryState } from 'nuqs'
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LangGraphLogoSVG } from "@/components/icons/langgraph";
@@ -74,7 +74,7 @@ const StreamSession = ({
   apiUrl: string;
   assistantId: string;
 }) => {
-  const [threadId, setThreadId] = useQueryParam("threadId", StringParam);
+  const [threadId, setThreadId] = useQueryState("threadId");
   const { getThreads, setThreads } = useThreads();
   const streamValue = useTypedStream({
     apiUrl,
@@ -123,7 +123,7 @@ const StreamSession = ({
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [apiUrl, setApiUrl] = useQueryParam("apiUrl", StringParam);
+  const [apiUrl, setApiUrl] = useQueryState("apiUrl");
   const [apiKey, _setApiKey] = useState(() => {
     return getApiKey();
   });
@@ -133,9 +133,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
     _setApiKey(key);
   };
 
-  const [assistantId, setAssistantId] = useQueryParam(
+  const [assistantId, setAssistantId] = useQueryState(
     "assistantId",
-    StringParam,
   );
 
   if (!apiUrl || !assistantId) {
