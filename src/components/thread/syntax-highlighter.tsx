@@ -17,7 +17,11 @@ interface SyntaxHighlighterProps {
   className?: string;
 }
 
-export const SyntaxHighlighter: FC<SyntaxHighlighterProps> = ({ children, language, className }) => {
+export const SyntaxHighlighter: FC<SyntaxHighlighterProps> = ({
+  children,
+  language,
+  className,
+}) => {
   return (
     <SyntaxHighlighterPrism
       language={language}

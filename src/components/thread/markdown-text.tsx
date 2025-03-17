@@ -196,13 +196,20 @@ const defaultComponents: any = {
       {...props}
     />
   ),
-  code: ({ className, children, ...props }: { className?: string; children: React.ReactNode }) => {
-    const match = /language-(\w+)/.exec(className || '');
-    
+  code: ({
+    className,
+    children,
+    ...props
+  }: {
+    className?: string;
+    children: React.ReactNode;
+  }) => {
+    const match = /language-(\w+)/.exec(className || "");
+
     if (match) {
       const language = match[1];
-      const code = String(children).replace(/\n$/, '');
-      
+      const code = String(children).replace(/\n$/, "");
+
       return (
         <>
           <CodeHeader language={language} code={code} />
@@ -212,13 +219,13 @@ const defaultComponents: any = {
         </>
       );
     }
-    
+
     return (
       <code className={cn("rounded font-semibold", className)} {...props}>
         {children}
       </code>
     );
-  }
+  },
 };
 
 const MarkdownTextImpl: FC<{ children: string }> = ({ children }) => {
