@@ -120,6 +120,10 @@ const StreamSession = ({
   );
 };
 
+// Default values for the form
+const DEFAULT_API_URL = "http://localhost:2024";
+const DEFAULT_ASSISTANT_ID = "agent";
+
 export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -194,7 +198,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
                 id="apiUrl"
                 name="apiUrl"
                 className="bg-background"
-                defaultValue={apiUrl ?? "http://localhost:2024"}
+                defaultValue={apiUrl || DEFAULT_API_URL}
                 required
               />
             </div>
@@ -212,7 +216,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
                 id="assistantId"
                 name="assistantId"
                 className="bg-background"
-                defaultValue={assistantId ?? "agent"}
+                defaultValue={assistantId || DEFAULT_ASSISTANT_ID}
                 required
               />
             </div>
