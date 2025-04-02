@@ -128,9 +128,9 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   // Get environment variables
-  const envApiUrl = import.meta.env.VITE_API_URL as string;
-  const envAssistantId = import.meta.env.VITE_ASSISTANT_ID as string;
-  const envApiKey = import.meta.env.VITE_LANGSMITH_API_KEY as string;
+  const envApiUrl: string | undefined = import.meta.env.VITE_API_URL;
+  const envAssistantId: string | undefined = import.meta.env.VITE_ASSISTANT_ID;
+  const envApiKey: string | undefined = import.meta.env.VITE_LANGSMITH_API_KEY;
 
   // Use URL params with env var fallbacks
   const [apiUrl, setApiUrl] = useQueryState("apiUrl", {
