@@ -65,3 +65,60 @@ To use these variables:
 3. Restart the application
 
 When these environment variables are set, the application will use them instead of showing the setup form.
+
+
+## Hiding Messages in the Chat
+
+You can control the visibility of messages within the Agent Chat UI in two main ways:
+
+**1. Prevent Live Streaming:**
+
+To stop messages from being displayed _as they stream_ from an LLM call, add the `langsmith:nostream` tag to the chat model's configuration. The UI normally uses `on_chat_model_stream` events to render streaming messages; this tag prevents those events from being emitted for the tagged model.
+
+_Python Example:_
+
+```python
+from langchain_anthropic import ChatAnthropic
+
+# Add tags via the .with_config method
+model = ChatAnthropic().with_config(
+    config={"tags": ["langsmith:nostream"]}
+)
+```
+
+_TypeScript Example:_
+
+```typescript
+import { ChatAnthropic } from "@langchain/anthropic";
+
+const model = new ChatAnthropic()
+  // Add tags via the .withConfig method
+  .withConfig({ tags: ["langsmith:nostream"] });
+```
+
+**Note:** Even if streaming is hidden this way, the message will still appear after the LLM call completes if it's saved to the graph's state without further modification.
+
+**2. Hide Messages Permanently:**
+
+To ensure a message is _never_ displayed in the chat UI (neither during streaming nor after being saved to state), prefix its `id` field with `do-not-render-` _before_ adding it to the graph's state, along with adding the `langsmith:do-not-render` tag to the chat model's configuration. The UI explicitly filters out any message whose `id` starts with this prefix.
+
+_Python Example:_
+
+```python
+result = model.invoke([messages])
+# Prefix the ID before saving to state
+result.id = f"do-not-render-{result.id}"
+return {"messages": [result]}
+```
+
+_TypeScript Example:_
+
+```typescript
+const result = await model.invoke([messages]);
+// Prefix the ID before saving to state
+result.id = `do-not-render-${result.id}`;
+return { messages: [result] };
+```
+
+This approach guarantees the message remains completely hidden from the user interface.
+
