@@ -133,9 +133,13 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   const envApiKey = import.meta.env.VITE_LANGSMITH_API_KEY as string;
 
   // Use URL params with env var fallbacks
-  const [apiUrl, setApiUrl] = useQueryState("apiUrl", { defaultValue: envApiUrl || "" });
-  const [assistantId, setAssistantId] = useQueryState("assistantId", { defaultValue: envAssistantId || "" });
-  
+  const [apiUrl, setApiUrl] = useQueryState("apiUrl", {
+    defaultValue: envApiUrl || "",
+  });
+  const [assistantId, setAssistantId] = useQueryState("assistantId", {
+    defaultValue: envAssistantId || "",
+  });
+
   // For API key, use localStorage with env var fallback
   const [apiKey, _setApiKey] = useState(() => {
     const storedKey = getApiKey();
@@ -150,7 +154,7 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   // Determine final values to use, prioritizing URL params then env vars
   const finalApiUrl = apiUrl || envApiUrl;
   const finalAssistantId = assistantId || envAssistantId;
-  
+
   // If we're missing any required values, show the form
   if (!finalApiUrl || !finalAssistantId) {
     return (

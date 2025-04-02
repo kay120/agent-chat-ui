@@ -66,7 +66,6 @@ To use these variables:
 
 When these environment variables are set, the application will use them instead of showing the setup form.
 
-
 ## Hiding Messages in the Chat
 
 You can control the visibility of messages within the Agent Chat UI in two main ways:
@@ -121,4 +120,3 @@ return { messages: [result] };
 ```
 
 This approach guarantees the message remains completely hidden from the user interface.
-
