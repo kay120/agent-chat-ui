@@ -20,6 +20,7 @@ import {
   PanelRightOpen,
   PanelRightClose,
   SquarePen,
+  Github,
 } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
@@ -28,6 +29,13 @@ import { toast } from "sonner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Label } from "../ui/label";
 import { Switch } from "../ui/switch";
+import { GitHubSVG } from "../icons/github";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -64,6 +72,27 @@ function ScrollToBottom(props: { className?: string }) {
       <ArrowDown className="w-4 h-4" />
       <span>Scroll to bottom</span>
     </Button>
+  );
+}
+
+function OpenGitHubRepo() {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <a
+            href="https://github.com/langchain-ai/agent-chat-ui"
+            target="_blank"
+            className="flex items-center justify-center"
+          >
+            <GitHubSVG width="24" height="24" />
+          </a>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p>Open GitHub repo</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -218,19 +247,24 @@ export function Thread() {
       >
         {!chatStarted && (
           <div className="absolute top-0 left-0 w-full flex items-center justify-between gap-3 p-2 pl-4 z-10">
-            {(!chatHistoryOpen || !isLargeScreen) && (
-              <Button
-                className="hover:bg-gray-100"
-                variant="ghost"
-                onClick={() => setChatHistoryOpen((p) => !p)}
-              >
-                {chatHistoryOpen ? (
-                  <PanelRightOpen className="size-5" />
-                ) : (
-                  <PanelRightClose className="size-5" />
-                )}
-              </Button>
-            )}
+            <div>
+              {(!chatHistoryOpen || !isLargeScreen) && (
+                <Button
+                  className="hover:bg-gray-100"
+                  variant="ghost"
+                  onClick={() => setChatHistoryOpen((p) => !p)}
+                >
+                  {chatHistoryOpen ? (
+                    <PanelRightOpen className="size-5" />
+                  ) : (
+                    <PanelRightClose className="size-5" />
+                  )}
+                </Button>
+              )}
+            </div>
+            <div className="absolute top-2 right-4 flex items-center">
+              <OpenGitHubRepo />
+            </div>
           </div>
         )}
         {chatStarted && (
@@ -270,15 +304,20 @@ export function Thread() {
               </motion.button>
             </div>
 
-            <TooltipIconButton
-              size="lg"
-              className="p-4"
-              tooltip="New thread"
-              variant="ghost"
-              onClick={() => setThreadId(null)}
-            >
-              <SquarePen className="size-5" />
-            </TooltipIconButton>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center">
+                <OpenGitHubRepo />
+              </div>
+              <TooltipIconButton
+                size="lg"
+                className="p-4"
+                tooltip="New thread"
+                variant="ghost"
+                onClick={() => setThreadId(null)}
+              >
+                <SquarePen className="size-5" />
+              </TooltipIconButton>
+            </div>
 
             <div className="absolute inset-x-0 top-full h-5 bg-gradient-to-b from-background to-background/0" />
           </div>
