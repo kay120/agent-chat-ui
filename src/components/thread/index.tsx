@@ -20,7 +20,6 @@ import {
   PanelRightOpen,
   PanelRightClose,
   SquarePen,
-  Github,
 } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
