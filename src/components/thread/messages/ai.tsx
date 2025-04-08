@@ -70,11 +70,12 @@ export function AssistantMessage({
   isLoading,
   handleRegenerate,
 }: {
-  message: Message;
+  message: Message | undefined;
   isLoading: boolean;
   handleRegenerate: (parentCheckpoint: Checkpoint | null | undefined) => void;
 }) {
-  const contentString = getContentString(message.content);
+  const content = message?.content ?? [];
+  const contentString = getContentString(content);
   const [hideToolCalls] = useQueryState(
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
@@ -82,15 +83,20 @@ export function AssistantMessage({
 
   const thread = useStreamContext();
   const isLastMessage =
-    thread.messages[thread.messages.length - 1].id === message.id;
-  const meta = thread.getMessagesMetadata(message);
-  const interrupt = thread.interrupt;
+    thread.messages[thread.messages.length - 1].id === message?.id;
+  const hasNoAIOrToolMessages = !thread.messages.find(
+    (m) => m.type === "ai" || m.type === "tool",
+  );
+  const meta = message ? thread.getMessagesMetadata(message) : undefined;
+  const threadInterrupt = thread.interrupt;
+
   const parentCheckpoint = meta?.firstSeenState?.parent_checkpoint;
-  const anthropicStreamedToolCalls = Array.isArray(message.content)
-    ? parseAnthropicStreamedToolCalls(message.content)
+  const anthropicStreamedToolCalls = Array.isArray(content)
+    ? parseAnthropicStreamedToolCalls(content)
     : undefined;
 
   const hasToolCalls =
+    message &&
     "tool_calls" in message &&
     message.tool_calls &&
     message.tool_calls.length > 0;
@@ -100,7 +106,7 @@ export function AssistantMessage({
       (tc) => tc.args && Object.keys(tc.args).length > 0,
     );
   const hasAnthropicToolCalls = !!anthropicStreamedToolCalls?.length;
-  const isToolResult = message.type === "tool";
+  const isToolResult = message?.type === "tool";
 
   if (isToolResult && hideToolCalls) {
     return null;
@@ -130,14 +136,15 @@ export function AssistantMessage({
             </>
           )}
 
-          <CustomComponent message={message} thread={thread} />
-          {isAgentInboxInterruptSchema(interrupt?.value) && isLastMessage && (
-            <ThreadView interrupt={interrupt.value} />
-          )}
-          {interrupt?.value &&
-          !isAgentInboxInterruptSchema(interrupt.value) &&
+          {message && <CustomComponent message={message} thread={thread} />}
+          {isAgentInboxInterruptSchema(threadInterrupt?.value) &&
+            (isLastMessage || hasNoAIOrToolMessages) && (
+              <ThreadView interrupt={threadInterrupt.value} />
+            )}
+          {threadInterrupt?.value &&
+          !isAgentInboxInterruptSchema(threadInterrupt.value) &&
           isLastMessage ? (
-            <GenericInterruptView interrupt={interrupt.value} />
+            <GenericInterruptView interrupt={threadInterrupt.value} />
           ) : null}
           <div
             className={cn(

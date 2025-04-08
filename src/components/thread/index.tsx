@@ -200,6 +200,9 @@ export function Thread() {
   };
 
   const chatStarted = !!threadId || !!messages.length;
+  const hasNoAIOrToolMessages = !messages.find(
+    (m) => m.type === "ai" || m.type === "tool",
+  );
 
   return (
     <div className="flex w-full h-screen overflow-hidden">
@@ -350,6 +353,16 @@ export function Thread() {
                       />
                     ),
                   )}
+                {/* Special rendering case where there are no AI/tool messages, but there is an interrupt.
+                    We need to render it outside of the messages list, since there are no messages to render */}
+                {hasNoAIOrToolMessages && !!stream.interrupt && (
+                  <AssistantMessage
+                    key="interrupt-msg"
+                    message={undefined}
+                    isLoading={isLoading}
+                    handleRegenerate={handleRegenerate}
+                  />
+                )}
                 {isLoading && !firstTokenReceived && (
                   <AssistantMessageLoading />
                 )}
