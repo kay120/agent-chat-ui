@@ -74,7 +74,7 @@ export function ToolResult({ message }: { message: ToolMessage }) {
   try {
     if (typeof message.content === "string") {
       parsedContent = JSON.parse(message.content);
-      isJsonContent = true;
+      isJsonContent = isComplexValue(parsedContent);
     }
   } catch {
     // Content is not JSON, use as is
