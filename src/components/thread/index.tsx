@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, ChangeEvent } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/providers/Stream";
@@ -20,6 +20,8 @@ import {
   PanelRightOpen,
   PanelRightClose,
   SquarePen,
+  Plus,
+  CircleX,
 } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
@@ -35,6 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { MessageContentImageUrl } from "@langchain/core/messages";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -112,6 +115,9 @@ export function Thread() {
     parseAsBoolean.withDefault(false),
   );
   const [input, setInput] = useState("");
+  const [imageUrlList, setImageUrlList] = useState<MessageContentImageUrl[]>(
+    [],
+  );
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
@@ -171,7 +177,13 @@ export function Thread() {
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
-      content: input,
+      content: [
+        {
+          type: "text",
+          text: input,
+        },
+        ...imageUrlList,
+      ],
     };
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
@@ -191,6 +203,31 @@ export function Thread() {
     );
 
     setInput("");
+    setImageUrlList([]);
+  };
+
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const imageUrls = await Promise.all(
+        Array.from(files).map((file) => {
+          return new Promise<MessageContentImageUrl>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve({
+                type: "image_url",
+                image_url: {
+                  url: reader.result as string,
+                },
+              });
+            };
+            reader.readAsDataURL(file);
+          });
+        }),
+      );
+      setImageUrlList([...imageUrlList, ...imageUrls]);
+    }
+    e.target.value = "";
   };
 
   const handleRegenerate = (
@@ -398,6 +435,38 @@ export function Thread() {
                     onSubmit={handleSubmit}
                     className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
                   >
+                    {imageUrlList.length > 0 && (
+                      <div className="flex flex-wrap gap-2 p-3.5 pb-0">
+                        {imageUrlList.map((imageUrl) => {
+                          const imageUrlString =
+                            typeof imageUrl.image_url === "string"
+                              ? imageUrl.image_url
+                              : imageUrl.image_url.url;
+                          return (
+                            <div
+                              className="relative"
+                              key={imageUrlString}
+                            >
+                              <img
+                                src={imageUrlString}
+                                alt="uploaded"
+                                className="h-16 w-16 rounded-md object-cover"
+                              />
+                              <CircleX
+                                className="absolute top-[2px] right-[2px] size-4 cursor-pointer rounded-full bg-gray-500 text-white"
+                                onClick={() =>
+                                  setImageUrlList(
+                                    imageUrlList.filter(
+                                      (url) => url !== imageUrl,
+                                    ),
+                                  )
+                                }
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
@@ -419,7 +488,24 @@ export function Thread() {
                     />
 
                     <div className="flex items-center justify-between p-2 pt-4">
-                      <div>
+                      <div className="flex items-center gap-2">
+                        <Label
+                          htmlFor="file-input"
+                          className="flex cursor-pointer items-center gap-2"
+                        >
+                          <Plus className="size-5 text-gray-600" />
+                          <span className="text-sm text-gray-600">
+                            Upload Images
+                          </span>
+                        </Label>
+                        <input
+                          id="file-input"
+                          type="file"
+                          onChange={handleImageUpload}
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                        />
                         <div className="flex items-center space-x-2">
                           <Switch
                             id="render-tool-calls"

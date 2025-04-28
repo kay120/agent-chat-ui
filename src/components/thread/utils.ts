@@ -7,3 +7,13 @@ export function getContentString(content: Message["content"]): string {
     .map((c) => c.text);
   return texts.join(" ");
 }
+
+export function getContentImageUrls(content: Message["content"]): string[] {
+  if (typeof content === "string") return [];
+  return content
+    .filter((c) => c.type === "image_url")
+    .map((c) => {
+      if (typeof c.image_url === "string") return c.image_url;
+      return c.image_url.url;
+    });
+}
