@@ -36,7 +36,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { Artifact } from "./artifact-slot";
+import {
+  useAnyArtifactOpen,
+  ArtifactContent,
+  ArtifactContext,
+  ArtifactTitle,
+} from "./artifact";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -104,7 +109,7 @@ function OpenGitHubRepo() {
 }
 
 function ArtifactLayout(props: { children: ReactNode }) {
-  const [open, onClose] = Artifact.useAnyArtifactOpen();
+  const [open, onClose] = useAnyArtifactOpen();
 
   return (
     <div
@@ -118,7 +123,7 @@ function ArtifactLayout(props: { children: ReactNode }) {
       <div className="relative flex flex-col border-l">
         <div className="absolute inset-0 flex min-w-[30vw] flex-col">
           <div className="grid grid-cols-[1fr_auto] border-b p-4">
-            <Artifact.Title className="truncate overflow-hidden" />
+            <ArtifactTitle className="truncate overflow-hidden" />
             <button
               onClick={onClose}
               className="cursor-pointer"
@@ -126,7 +131,7 @@ function ArtifactLayout(props: { children: ReactNode }) {
               <XIcon className="size-5" />
             </button>
           </div>
-          <Artifact.Content className="relative flex-grow" />
+          <ArtifactContent className="relative flex-grow" />
         </div>
       </div>
     </div>
@@ -269,7 +274,7 @@ export function Thread() {
         </motion.div>
       </div>
 
-      <Artifact.Context>
+      <ArtifactContext>
         <ArtifactLayout>
           <motion.div
             className={cn(
@@ -495,7 +500,7 @@ export function Thread() {
             </StickToBottom>
           </motion.div>
         </ArtifactLayout>
-      </Artifact.Context>
+      </ArtifactContext>
     </div>
   );
 }
