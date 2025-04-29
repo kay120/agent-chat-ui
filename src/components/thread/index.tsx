@@ -39,6 +39,11 @@ import {
 } from "../ui/tooltip";
 import { MessageContentImageUrl } from "@langchain/core/messages";
 
+interface MessageContentImageUrlWrapper {
+  id: string;
+  image: MessageContentImageUrl;
+}
+
 function StickyToBottomContent(props: {
   content: ReactNode;
   footer?: ReactNode;
@@ -115,7 +120,7 @@ export function Thread() {
     parseAsBoolean.withDefault(false),
   );
   const [input, setInput] = useState("");
-  const [imageUrlList, setImageUrlList] = useState<MessageContentImageUrl[]>(
+  const [imageUrlList, setImageUrlList] = useState<MessageContentImageUrlWrapper[]>(
     [],
   );
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
@@ -126,6 +131,8 @@ export function Thread() {
   const isLoading = stream.isLoading;
 
   const lastError = useRef<string | undefined>(undefined);
+
+  const dropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!stream.error) {
@@ -182,7 +189,7 @@ export function Thread() {
           type: "text",
           text: input,
         },
-        ...imageUrlList,
+        ...imageUrlList.map((item) => item.image),
       ],
     };
 
@@ -217,7 +224,7 @@ export function Thread() {
               resolve({
                 type: "image_url",
                 image_url: {
-                  url: reader.result as string,
+                  url: reader.result as string
                 },
               });
             };
@@ -225,7 +232,11 @@ export function Thread() {
           });
         }),
       );
-      setImageUrlList([...imageUrlList, ...imageUrls]);
+      const wrappedImages = imageUrls.map((image) => ({
+        id: uuidv4(),
+        image,
+      }));
+      setImageUrlList([...imageUrlList, ...wrappedImages]);
     }
     e.target.value = "";
   };
@@ -246,6 +257,79 @@ export function Thread() {
   const hasNoAIOrToolMessages = !messages.find(
     (m) => m.type === "ai" || m.type === "tool",
   );
+
+  useEffect(() => {
+    if (!dropRef.current) return;
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDrop = async (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!e.dataTransfer) return;
+
+      const files = Array.from(e.dataTransfer.files);
+      const imageFiles = files.filter((file) =>
+        file.type.startsWith("image/"),
+      );
+
+      if (files.some(file => !file.type.startsWith("image/"))) {
+        toast.error("You have uploaded invalid file type. Please upload an image.");
+      }
+  
+      if (imageFiles.length) {
+        const imageUrls = await Promise.all(
+          Array.from(imageFiles).map((file) => {
+            return new Promise<MessageContentImageUrl>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                resolve({
+                  type: "image_url",
+                  image_url: {
+                    url: reader.result as string,
+                  },
+                });
+              };
+              reader.readAsDataURL(file);
+            });
+          }),
+        );
+        const wrappedImages = imageUrls.map((image) => ({
+          id: uuidv4(),
+          image,
+        }));
+        setImageUrlList([...imageUrlList, ...wrappedImages]);
+      }
+    };
+
+    const handleDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const element = dropRef.current;
+    element.addEventListener("dragover", handleDragOver);
+    element.addEventListener("drop", handleDrop);
+    element.addEventListener("dragenter", handleDragEnter);
+    element.addEventListener("dragleave", handleDragLeave);
+
+    return () => {
+      element.removeEventListener("dragover", handleDragOver);
+      element.removeEventListener("drop", handleDrop);
+      element.removeEventListener("dragenter", handleDragEnter);
+      element.removeEventListener("dragleave", handleDragLeave);
+    };
+  });
+
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -430,22 +514,25 @@ export function Thread() {
 
                 <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full left-1/2 mb-4 -translate-x-1/2" />
 
-                <div className="bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl border shadow-xs">
+                <div
+                  ref={dropRef}
+                  className="bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl border shadow-xs"
+                >
                   <form
                     onSubmit={handleSubmit}
                     className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
                   >
                     {imageUrlList.length > 0 && (
                       <div className="flex flex-wrap gap-2 p-3.5 pb-0">
-                        {imageUrlList.map((imageUrl) => {
+                        {imageUrlList.map((imageItemWrapper) => {
                           const imageUrlString =
-                            typeof imageUrl.image_url === "string"
-                              ? imageUrl.image_url
-                              : imageUrl.image_url.url;
+                            typeof imageItemWrapper.image.image_url === "string"
+                              ? imageItemWrapper.image.image_url
+                              : imageItemWrapper.image.image_url.url;
                           return (
                             <div
                               className="relative"
-                              key={imageUrlString}
+                              key={imageItemWrapper.id}
                             >
                               <img
                                 src={imageUrlString}
@@ -457,7 +544,7 @@ export function Thread() {
                                 onClick={() =>
                                   setImageUrlList(
                                     imageUrlList.filter(
-                                      (url) => url !== imageUrl,
+                                      (url) => url.id !== imageItemWrapper.id,
                                     ),
                                   )
                                 }
