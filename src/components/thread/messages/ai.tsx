@@ -32,13 +32,12 @@ function CustomComponent({
   return (
     <Fragment key={message.id}>
       {customComponents.map((customComponent) => (
-        <Fragment key={customComponent.id}>
-          <LoadExternalComponent
-            stream={thread}
-            message={customComponent}
-            meta={{ ui: customComponent, artifact }}
-          />
-        </Fragment>
+        <LoadExternalComponent
+          key={customComponent.id}
+          stream={thread}
+          message={customComponent}
+          meta={{ ui: customComponent, artifact }}
+        />
       ))}
     </Fragment>
   );
