@@ -20,6 +20,8 @@ const ArtifactSlotContext = createContext<{
 
   title: [HTMLElement | null, Setter<HTMLElement | null>];
   content: [HTMLElement | null, Setter<HTMLElement | null>];
+
+  context: [Record<string, unknown>, Setter<Record<string, unknown>>];
 }>(null!);
 
 const ArtifactFill = (props: {
@@ -88,15 +90,18 @@ export function ArtifactTitle(props: HTMLAttributes<HTMLDivElement>) {
   );
 }
 
-export function ArtifactContext(props: { children?: ReactNode }) {
+export function ArtifactProvider(props: { children?: ReactNode }) {
   const content = useState<HTMLElement | null>(null);
   const title = useState<HTMLElement | null>(null);
 
   const open = useState<string | null>(null);
   const mounted = useState<string | null>(null);
+  const context = useState<Record<string, unknown>>({});
 
   return (
-    <ArtifactSlotContext.Provider value={{ open, mounted, title, content }}>
+    <ArtifactSlotContext.Provider
+      value={{ open, mounted, title, content, context }}
+    >
       {props.children}
     </ArtifactSlotContext.Provider>
   );
@@ -106,6 +111,7 @@ export function useArtifact() {
   const id = useId();
   const context = useContext(ArtifactSlotContext);
   const [ctxOpen, ctxSetOpen] = context.open;
+  const [ctxContext, ctxSetContext] = context.context;
   const [, ctxSetMounted] = context.mounted;
 
   const open = ctxOpen === id;
@@ -136,17 +142,26 @@ export function useArtifact() {
     [id],
   );
 
-  return { open, setOpen, content: ArtifactContent };
+  return {
+    open,
+    setOpen,
+    context: ctxContext,
+    setContext: ctxSetContext,
+    content: ArtifactContent,
+  };
 }
 
-export function useAnyArtifactOpen() {
+export function useArtifactOpen() {
   const context = useContext(ArtifactSlotContext);
   const [ctxOpen, setCtxOpen] = context.open;
 
   const open = ctxOpen !== null;
-  const onClose = useCallback(() => {
-    setCtxOpen(null);
-  }, [setCtxOpen]);
+  const onClose = useCallback(() => setCtxOpen(null), [setCtxOpen]);
 
   return [open, onClose] as const;
+}
+
+export function useArtifactContext() {
+  const context = useContext(ArtifactSlotContext);
+  return context.context;
 }

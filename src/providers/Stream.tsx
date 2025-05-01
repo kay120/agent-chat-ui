@@ -33,6 +33,7 @@ const useTypedStream = useStream<
     UpdateType: {
       messages?: Message[] | Message | string;
       ui?: (UIMessage | RemoveUIMessage)[] | UIMessage | RemoveUIMessage;
+      context?: Record<string, unknown>;
     };
     CustomEventType: UIMessage | RemoveUIMessage;
   }
