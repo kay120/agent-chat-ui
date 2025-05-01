@@ -123,6 +123,67 @@ return { messages: [result] };
 
 This approach guarantees the message remains completely hidden from the user interface.
 
+## Rendering Artifacts
+
+The Agent Chat UI supports rendering artifacts in the chat. Artifacts are rendered in a side panel to the right of the chat. To render an artifact, you can obtain the artifact context from the `thread.meta.artifact` field. Here's a sample utility hook for obtaining the artifact context:
+
+```tsx
+export function useArtifact<TContext = Record<string, unknown>>() {
+  type Component = (props: {
+    children: React.ReactNode;
+    title?: React.ReactNode;
+  }) => React.ReactNode;
+
+  type Context = TContext | undefined;
+
+  type Bag = {
+    open: boolean;
+    setOpen: (value: boolean | ((prev: boolean) => boolean)) => void;
+
+    context: Context;
+    setContext: (value: Context | ((prev: Context) => Context)) => void;
+  };
+
+  const thread = useStreamContext<
+    { messages: Message[]; ui: UIMessage[] },
+    { MetaType: { artifact: [Component, Bag] } }
+  >();
+
+  return thread.meta?.artifact;
+}
+```
+
+After which you can render additional content using the `Artifact` component from the `useArtifact` hook:
+
+```tsx
+import { useArtifact } from "../utils/use-artifact";
+import { LoaderIcon } from "lucide-react";
+
+export function Writer(props: {
+  title?: string;
+  content?: string;
+  description?: string;
+}) {
+  const [Artifact, { open, setOpen }] = useArtifact();
+
+  return (
+    <>
+      <div
+        onClick={() => setOpen(!open)}
+        className="cursor-pointer rounded-lg border p-4"
+      >
+        <p className="font-medium">{props.title}</p>
+        <p className="text-sm text-gray-500">{props.description}</p>
+      </div>
+
+      <Artifact title={props.title}>
+        <p className="p-4 whitespace-pre-wrap">{props.content}</p>
+      </Artifact>
+    </>
+  );
+}
+```
+
 ## Going to Production
 
 Once you're ready to go to production, you'll need to update how you connect, and authenticate requests to your deployment. By default, the Agent Chat UI is setup for local development, and connects to your LangGraph server directly from the client. This is not possible if you want to go to production, because it requires every user to have their own LangSmith API key, and set the LangGraph configuration themselves.

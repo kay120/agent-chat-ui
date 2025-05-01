@@ -24,7 +24,12 @@ const ArtifactSlotContext = createContext<{
   context: [Record<string, unknown>, Setter<Record<string, unknown>>];
 }>(null!);
 
-const ArtifactFill = (props: {
+/**
+ * Headless component that will obtain the title and content of the artifact
+ * and render them in place of the `ArtifactContent` and `ArtifactTitle` components via
+ * React Portals.
+ */
+const ArtifactSlot = (props: {
   id: string;
   children?: ReactNode;
   title?: ReactNode;
@@ -107,6 +112,11 @@ export function ArtifactProvider(props: { children?: ReactNode }) {
   );
 }
 
+/**
+ * Provides a value to be passed into `meta.artifact` field
+ * of the `LoadExternalComponent` component, to be consumed by the `useArtifact` hook
+ * on the generative UI side.
+ */
 export function useArtifact() {
   const id = useId();
   const context = useContext(ArtifactSlotContext);
@@ -131,26 +141,34 @@ export function useArtifact() {
   const ArtifactContent = useCallback(
     (props: { title?: React.ReactNode; children: React.ReactNode }) => {
       return (
-        <ArtifactFill
+        <ArtifactSlot
           id={id}
           title={props.title}
         >
           {props.children}
-        </ArtifactFill>
+        </ArtifactSlot>
       );
     },
     [id],
   );
 
-  return {
-    open,
-    setOpen,
-    context: ctxContext,
-    setContext: ctxSetContext,
-    content: ArtifactContent,
-  };
+  return [
+    ArtifactContent,
+    { open, setOpen, context: ctxContext, setContext: ctxSetContext },
+  ] as [
+    typeof ArtifactContent,
+    {
+      open: typeof open;
+      setOpen: typeof setOpen;
+      context: typeof ctxContext;
+      setContext: typeof ctxSetContext;
+    },
+  ];
 }
 
+/**
+ * General hook for detecting if any artifact is open.
+ */
 export function useArtifactOpen() {
   const context = useContext(ArtifactSlotContext);
   const [ctxOpen, setCtxOpen] = context.open;
@@ -161,6 +179,10 @@ export function useArtifactOpen() {
   return [open, onClose] as const;
 }
 
+/**
+ * Artifacts may at their discretion provide additional context
+ * that will be used when creating a new run.
+ */
 export function useArtifactContext() {
   const context = useContext(ArtifactSlotContext);
   return context.context;
