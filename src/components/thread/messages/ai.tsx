@@ -13,6 +13,7 @@ import { isAgentInboxInterruptSchema } from "@/lib/agent-inbox-interrupt";
 import { ThreadView } from "../agent-inbox";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { GenericInterruptView } from "./generic-interrupt";
+import { useArtifact } from "../artifact";
 
 function CustomComponent({
   message,
@@ -21,6 +22,7 @@ function CustomComponent({
   message: Message;
   thread: ReturnType<typeof useStreamContext>;
 }) {
+  const artifact = useArtifact();
   const { values } = useStreamContext();
   const customComponents = values.ui?.filter(
     (ui) => ui.metadata?.message_id === message.id,
@@ -34,7 +36,7 @@ function CustomComponent({
           key={customComponent.id}
           stream={thread}
           message={customComponent}
-          meta={{ ui: customComponent }}
+          meta={{ ui: customComponent, artifact }}
         />
       ))}
     </Fragment>
