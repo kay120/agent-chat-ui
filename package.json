@@ -19,6 +19,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@langchain/community": "^0.3.42",
     "@langchain/core": "^0.3.44",
     "@langchain/langgraph": "^0.2.63",
     "@langchain/langgraph-sdk": "^0.0.66",
@@ -41,6 +42,7 @@
     "lucide-react": "^0.476.0",
     "next-themes": "^0.4.4",
     "nuqs": "^2.4.1",
+    "pdfjs-dist": "^5.2.133",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.0.1",
@@ -61,6 +63,7 @@
     "@tailwindcss/postcss": "^4.0.13",
     "@types/lodash": "^4.17.16",
     "@types/node": "^22.13.5",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@types/react-syntax-highlighter": "^15.5.13",
@@ -72,6 +75,7 @@
     "eslint-plugin-react-refresh": "^0.4.18",
     "globals": "^15.14.0",
     "next": "^15.2.3",
+    "pdf-parse": "^1.1.1",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",

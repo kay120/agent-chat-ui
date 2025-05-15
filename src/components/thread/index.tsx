@@ -37,11 +37,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { MessageContentImageUrl } from "@langchain/core/messages";
+import { MessageContentImageUrl, MessageContentText } from "@langchain/core/messages";
+import { extractPdfText } from "@/lib/pdf";
+
+
 
 interface MessageContentImageUrlWrapper {
   id: string;
   image: MessageContentImageUrl;
+}
+
+interface MessageContentPdfWrapper {
+  id: string;
+  pdf: MessageContentText;
+  name: string;
 }
 
 function StickyToBottomContent(props: {
@@ -123,6 +132,9 @@ export function Thread() {
   const [imageUrlList, setImageUrlList] = useState<MessageContentImageUrlWrapper[]>(
     [],
   );
+  const [pdfUrlList, setPdfUrlList] = useState<MessageContentPdfWrapper[]>(
+    [],
+  );
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
@@ -190,7 +202,7 @@ export function Thread() {
           text: input,
         },
         ...imageUrlList.map((item) => item.image),
-       
+        ...pdfUrlList.map((item) => item.pdf),
       ],
     };
 
@@ -242,6 +254,28 @@ export function Thread() {
     e.target.value = "";
   };
 
+
+  const handlePDFUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const pdfTexts: MessageContentPdfWrapper[] = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const pdf = await extractPdfText(file);
+          return {
+            id: uuidv4(),
+            pdf,
+            name: file.name,
+          };
+        }),
+      );
+      setPdfUrlList([...pdfUrlList, ...pdfTexts]);
+    }
+    e.target.value = "";
+  };
+
+
+
+
   const handleRegenerate = (
     parentCheckpoint: Checkpoint | null | undefined,
   ) => {
@@ -281,7 +315,12 @@ export function Thread() {
       if (files.some(file => !file.type.startsWith("image/") || file.type !== "application/pdf")) {
         toast.error("You have uploaded invalid file type. Please upload an image or a PDF.");
       }
-  
+
+      /**
+       * If there are any image files in the dropped files, this block reads each image file as a data URL,
+       * wraps it in a MessageContentImageUrl object, and updates the imageUrlList state with the new images.
+       * This enables preview and later sending of uploaded images in the chat UI.
+       */
       if (imageFiles.length) {
         const imageUrls = await Promise.all(
           Array.from(imageFiles).map((file) => {
@@ -304,6 +343,20 @@ export function Thread() {
           image,
         }));
         setImageUrlList([...imageUrlList, ...wrappedImages]);
+      }
+
+      /**
+       * If there are any PDF files in the dropped files, this block previews the file name of each uploaded PDF
+       * by rendering a list of file names above the input area, with a remove button for each.
+       */
+      if (files.some(file => file.type === "application/pdf")) {
+        const pdfFiles = files.filter(file => file.type === "application/pdf");
+        const pdfPreviews = pdfFiles.map((file) => ({
+          id: uuidv4(),
+          pdf: { type: 'text' as const, text: '' },
+          name: file.name,
+        }));
+        setPdfUrlList([...pdfUrlList, ...pdfPreviews]);
       }
     };
 
@@ -555,6 +608,19 @@ export function Thread() {
                         })}
                       </div>
                     )}
+                    {pdfUrlList.length > 0 && (
+                      <div className="flex flex-wrap gap-2 p-3.5 pb-0 ">
+                        {pdfUrlList.map((pdf) => (
+                          <div className="relative flex items-center gap-2 bg-gray-100 rounded px-2 py-1 border-1 border-teal-700 bg-teal-900 text-white rounded-md px-2 py-2" key={pdf.id}>
+                            <span className=" truncate max-w-xs text-sm">{pdf.name}</span>
+                            <CircleX
+                              className="size-4 cursor-pointer text-teal-600 hover:text-teal-500"
+                              onClick={() => setPdfUrlList(pdfUrlList.filter((p) => p.id !== pdf.id))}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
@@ -583,15 +649,15 @@ export function Thread() {
                         >
                           <Plus className="size-5 text-gray-600" />
                           <span className="text-sm text-gray-600">
-                            Upload Images
+                            Upload PDF
                           </span>
                         </Label>
                         <input
                           id="file-input"
                           type="file"
-                          onChange={handleImageUpload}
+                          onChange={handlePDFUpload}
                           multiple
-                          accept="image/*"
+                          accept="application/pdf"
                           className="hidden"
                         />
                         <div className="flex items-center space-x-2">
