@@ -40,6 +40,11 @@ import {
 import type { Base64ContentBlock } from "@/lib/pdf";
 
 type MessageContentType = Message["content"];
+interface UploadedBlock {
+  id: string;
+  name: string;
+  block: Base64ContentBlock;
+}
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -104,12 +109,6 @@ function OpenGitHubRepo() {
       </Tooltip>
     </TooltipProvider>
   );
-}
-
-interface UploadedBlock {
-  id: string;
-  name: string;
-  block: Base64ContentBlock;
 }
 
 export function Thread() {
@@ -192,7 +191,6 @@ export function Thread() {
         ...pdfUrlList.map((item) => item.block),
       ] as MessageContentType,
     };
-    
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
@@ -240,13 +238,12 @@ export function Thread() {
             };
             reader.readAsDataURL(file);
           });
-        })
+        }),
       );
       setImageUrlList([...imageUrlList, ...imageFiles]);
     }
     e.target.value = "";
   };
-
 
   const handlePDFUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -274,16 +271,13 @@ export function Thread() {
             };
             reader.readAsDataURL(file);
           });
-        })
+        }),
       );
       console.log(pdfFiles[0]);
       setPdfUrlList([...pdfUrlList, ...pdfFiles]);
     }
     e.target.value = "";
   };
-
-
-
 
   const handleRegenerate = (
     parentCheckpoint: Checkpoint | null | undefined,
@@ -317,12 +311,17 @@ export function Thread() {
       if (!e.dataTransfer) return;
 
       const files = Array.from(e.dataTransfer.files);
-      const imageFiles = files.filter((file) =>
-        file.type.startsWith("image/"),
-      );
+      const imageFiles = files.filter((file) => file.type.startsWith("image/"));
 
-      if (files.some(file => !file.type.startsWith("image/") || file.type !== "application/pdf")) {
-        toast.error("You have uploaded invalid file type. Please upload an image or a PDF.");
+      if (
+        files.some(
+          (file) =>
+            !file.type.startsWith("image/") || file.type !== "application/pdf",
+        )
+      ) {
+        toast.error(
+          "You have uploaded invalid file type. Please upload an image or a PDF.",
+        );
       }
 
       /**
@@ -354,7 +353,7 @@ export function Thread() {
               };
               reader.readAsDataURL(file);
             });
-          })
+          }),
         );
         setImageUrlList([...imageUrlList, ...imageFilesData]);
       }
@@ -363,8 +362,10 @@ export function Thread() {
        * If there are any PDF files in the dropped files, this block previews the file name of each uploaded PDF
        * by rendering a list of file names above the input area, with a remove button for each.
        */
-      if (files.some(file => file.type === "application/pdf")) {
-        const pdfFiles = files.filter(file => file.type === "application/pdf");
+      if (files.some((file) => file.type === "application/pdf")) {
+        const pdfFiles = files.filter(
+          (file) => file.type === "application/pdf",
+        );
         const pdfFilesData: UploadedBlock[] = await Promise.all(
           pdfFiles.map((file) => {
             return new Promise<UploadedBlock>((resolve) => {
@@ -373,7 +374,8 @@ export function Thread() {
                 const result = reader.result as string;
                 const base64 = result.split(",")[1];
                 const match = result.match(/^data:(.*);base64/);
-                const mimeType = match && match[1] ? match[1] : "application/pdf";
+                const mimeType =
+                  match && match[1] ? match[1] : "application/pdf";
                 resolve({
                   id: uuidv4(),
                   name: file.name,
@@ -388,7 +390,7 @@ export function Thread() {
               };
               reader.readAsDataURL(file);
             });
-          })
+          }),
         );
         setPdfUrlList([...pdfUrlList, ...pdfFilesData]);
       }
@@ -417,7 +419,6 @@ export function Thread() {
       element.removeEventListener("dragleave", handleDragLeave);
     };
   });
-
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -640,13 +641,22 @@ export function Thread() {
                       </div>
                     )}
                     {pdfUrlList.length > 0 && (
-                      <div className="flex flex-wrap gap-2 p-3.5 pb-0 ">
+                      <div className="flex flex-wrap gap-2 p-3.5 pb-0">
                         {pdfUrlList.map((pdf) => (
-                          <div className="relative flex items-center gap-2 bg-gray-100 rounded px-2 py-1 border-1 border-teal-700 bg-teal-900 text-white rounded-md px-2 py-2" key={pdf.id}>
-                            <span className=" truncate max-w-xs text-sm">{pdf.name}</span>
+                          <div
+                            className="relative flex items-center gap-2 rounded rounded-md border-1 border-teal-700 bg-gray-100 bg-teal-900 px-2 py-1 py-2 text-white"
+                            key={pdf.id}
+                          >
+                            <span className="max-w-xs truncate text-sm">
+                              {pdf.name}
+                            </span>
                             <CircleX
                               className="size-4 cursor-pointer text-teal-600 hover:text-teal-500"
-                              onClick={() => setPdfUrlList(pdfUrlList.filter((p) => p.id !== pdf.id))}
+                              onClick={() =>
+                                setPdfUrlList(
+                                  pdfUrlList.filter((p) => p.id !== pdf.id),
+                                )
+                              }
                             />
                           </div>
                         ))}
