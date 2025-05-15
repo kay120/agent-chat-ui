@@ -190,6 +190,7 @@ export function Thread() {
           text: input,
         },
         ...imageUrlList.map((item) => item.image),
+       
       ],
     };
 
@@ -277,8 +278,8 @@ export function Thread() {
         file.type.startsWith("image/"),
       );
 
-      if (files.some(file => !file.type.startsWith("image/"))) {
-        toast.error("You have uploaded invalid file type. Please upload an image.");
+      if (files.some(file => !file.type.startsWith("image/") || file.type !== "application/pdf")) {
+        toast.error("You have uploaded invalid file type. Please upload an image or a PDF.");
       }
   
       if (imageFiles.length) {
