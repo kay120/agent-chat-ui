@@ -4,7 +4,7 @@ import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 // import { Base64ContentBlock } from "@langchain/core/messages";
 
 // switch local import with above import
-interface Base64ContentBlock {
+export interface Base64ContentBlock {
     data: string;
     metadata?: Record<string, unknown>;
     mime_type?: string;
@@ -22,3 +22,9 @@ export const extractPdfText = async (file: File): Promise<MessageContentText> =>
     };
   };
 
+
+  const cleanBase64 = (base64String: string): string => {
+    return base64String.replace(/^data:.*?;base64,/, "");
+  };
+
+  

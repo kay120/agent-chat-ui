@@ -37,21 +37,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { MessageContentImageUrl, MessageContentText } from "@langchain/core/messages";
-import { extractPdfText } from "@/lib/pdf";
+import type { Base64ContentBlock } from "@/lib/pdf";
 
-
-
-interface MessageContentImageUrlWrapper {
-  id: string;
-  image: MessageContentImageUrl;
-}
-
-interface MessageContentPdfWrapper {
-  id: string;
-  pdf: MessageContentText;
-  name: string;
-}
+type MessageContentType = Message["content"];
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -118,6 +106,12 @@ function OpenGitHubRepo() {
   );
 }
 
+interface UploadedBlock {
+  id: string;
+  name: string;
+  block: Base64ContentBlock;
+}
+
 export function Thread() {
   const [threadId, setThreadId] = useQueryState("threadId");
   const [chatHistoryOpen, setChatHistoryOpen] = useQueryState(
@@ -129,12 +123,8 @@ export function Thread() {
     parseAsBoolean.withDefault(false),
   );
   const [input, setInput] = useState("");
-  const [imageUrlList, setImageUrlList] = useState<MessageContentImageUrlWrapper[]>(
-    [],
-  );
-  const [pdfUrlList, setPdfUrlList] = useState<MessageContentPdfWrapper[]>(
-    [],
-  );
+  const [imageUrlList, setImageUrlList] = useState<UploadedBlock[]>([]);
+  const [pdfUrlList, setPdfUrlList] = useState<UploadedBlock[]>([]);
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
@@ -197,14 +187,12 @@ export function Thread() {
       id: uuidv4(),
       type: "human",
       content: [
-        {
-          type: "text",
-          text: input,
-        },
-        ...imageUrlList.map((item) => item.image),
-        ...pdfUrlList.map((item) => item.pdf),
-      ],
+        { type: "text", text: input },
+        ...imageUrlList.map((item) => item.block),
+        ...pdfUrlList.map((item) => item.block),
+      ] as MessageContentType,
     };
+    
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
@@ -229,27 +217,32 @@ export function Thread() {
   const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const imageUrls = await Promise.all(
+      const imageFiles: UploadedBlock[] = await Promise.all(
         Array.from(files).map((file) => {
-          return new Promise<MessageContentImageUrl>((resolve) => {
+          return new Promise<UploadedBlock>((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => {
+              const result = reader.result as string;
+              const base64 = result.split(",")[1];
+              const match = result.match(/^data:(.*);base64/);
+              const mimeType = match && match[1] ? match[1] : file.type;
               resolve({
-                type: "image_url",
-                image_url: {
-                  url: reader.result as string
+                id: uuidv4(),
+                name: file.name,
+                block: {
+                  type: "image",
+                  source_type: "base64",
+                  data: base64,
+                  mime_type: mimeType,
+                  metadata: { name: file.name },
                 },
               });
             };
             reader.readAsDataURL(file);
           });
-        }),
+        })
       );
-      const wrappedImages = imageUrls.map((image) => ({
-        id: uuidv4(),
-        image,
-      }));
-      setImageUrlList([...imageUrlList, ...wrappedImages]);
+      setImageUrlList([...imageUrlList, ...imageFiles]);
     }
     e.target.value = "";
   };
@@ -258,17 +251,33 @@ export function Thread() {
   const handlePDFUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const pdfTexts: MessageContentPdfWrapper[] = await Promise.all(
-        Array.from(files).map(async (file) => {
-          const pdf = await extractPdfText(file);
-          return {
-            id: uuidv4(),
-            pdf,
-            name: file.name,
-          };
-        }),
+      const pdfFiles: UploadedBlock[] = await Promise.all(
+        Array.from(files).map((file) => {
+          return new Promise<UploadedBlock>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const result = reader.result as string;
+              const base64 = result.split(",")[1];
+              const match = result.match(/^data:(.*);base64/);
+              const mimeType = match && match[1] ? match[1] : "application/pdf";
+              resolve({
+                id: uuidv4(),
+                name: file.name,
+                block: {
+                  type: "file",
+                  source_type: "base64",
+                  data: base64,
+                  mime_type: mimeType,
+                  metadata: { name: file.name },
+                },
+              });
+            };
+            reader.readAsDataURL(file);
+          });
+        })
       );
-      setPdfUrlList([...pdfUrlList, ...pdfTexts]);
+      console.log(pdfFiles[0]);
+      setPdfUrlList([...pdfUrlList, ...pdfFiles]);
     }
     e.target.value = "";
   };
@@ -318,31 +327,36 @@ export function Thread() {
 
       /**
        * If there are any image files in the dropped files, this block reads each image file as a data URL,
-       * wraps it in a MessageContentImageUrl object, and updates the imageUrlList state with the new images.
+       * wraps it in a MessageContentImageWrapper object, and updates the imageUrlList state with the new images.
        * This enables preview and later sending of uploaded images in the chat UI.
        */
       if (imageFiles.length) {
-        const imageUrls = await Promise.all(
+        const imageFilesData: UploadedBlock[] = await Promise.all(
           Array.from(imageFiles).map((file) => {
-            return new Promise<MessageContentImageUrl>((resolve) => {
+            return new Promise<UploadedBlock>((resolve) => {
               const reader = new FileReader();
               reader.onloadend = () => {
+                const result = reader.result as string;
+                const base64 = result.split(",")[1];
+                const match = result.match(/^data:(.*);base64/);
+                const mimeType = match && match[1] ? match[1] : file.type;
                 resolve({
-                  type: "image_url",
-                  image_url: {
-                    url: reader.result as string,
+                  id: uuidv4(),
+                  name: file.name,
+                  block: {
+                    type: "image",
+                    source_type: "base64",
+                    data: base64,
+                    mime_type: mimeType,
+                    metadata: { name: file.name },
                   },
                 });
               };
               reader.readAsDataURL(file);
             });
-          }),
+          })
         );
-        const wrappedImages = imageUrls.map((image) => ({
-          id: uuidv4(),
-          image,
-        }));
-        setImageUrlList([...imageUrlList, ...wrappedImages]);
+        setImageUrlList([...imageUrlList, ...imageFilesData]);
       }
 
       /**
@@ -351,12 +365,32 @@ export function Thread() {
        */
       if (files.some(file => file.type === "application/pdf")) {
         const pdfFiles = files.filter(file => file.type === "application/pdf");
-        const pdfPreviews = pdfFiles.map((file) => ({
-          id: uuidv4(),
-          pdf: { type: 'text' as const, text: '' },
-          name: file.name,
-        }));
-        setPdfUrlList([...pdfUrlList, ...pdfPreviews]);
+        const pdfFilesData: UploadedBlock[] = await Promise.all(
+          pdfFiles.map((file) => {
+            return new Promise<UploadedBlock>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const result = reader.result as string;
+                const base64 = result.split(",")[1];
+                const match = result.match(/^data:(.*);base64/);
+                const mimeType = match && match[1] ? match[1] : "application/pdf";
+                resolve({
+                  id: uuidv4(),
+                  name: file.name,
+                  block: {
+                    type: "file",
+                    source_type: "base64",
+                    data: base64,
+                    mime_type: mimeType,
+                    metadata: { name: file.name },
+                  },
+                });
+              };
+              reader.readAsDataURL(file);
+            });
+          })
+        );
+        setPdfUrlList([...pdfUrlList, ...pdfFilesData]);
       }
     };
 
@@ -579,10 +613,7 @@ export function Thread() {
                     {imageUrlList.length > 0 && (
                       <div className="flex flex-wrap gap-2 p-3.5 pb-0">
                         {imageUrlList.map((imageItemWrapper) => {
-                          const imageUrlString =
-                            typeof imageItemWrapper.image.image_url === "string"
-                              ? imageItemWrapper.image.image_url
-                              : imageItemWrapper.image.image_url.url;
+                          const imageUrlString = `data:${imageItemWrapper.block.mime_type};base64,${imageItemWrapper.block.data}`;
                           return (
                             <div
                               className="relative"
