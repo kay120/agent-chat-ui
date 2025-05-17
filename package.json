@@ -55,7 +55,7 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
     "use-stick-to-bottom": "^1.0.46",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -63,10 +63,10 @@
     "@tailwindcss/postcss": "^4.0.13",
     "@types/lodash": "^4.17.16",
     "@types/node": "^22.13.5",
-    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.20",
     "dotenv": "^16.4.7",
     "eslint": "^9.19.0",
@@ -75,7 +75,6 @@
     "eslint-plugin-react-refresh": "^0.4.18",
     "globals": "^15.14.0",
     "next": "^15.2.3",
-    "pdf-parse": "^1.1.1",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
