@@ -181,12 +181,12 @@ export function Thread() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     setFirstTokenReceived(false);
-    
-    // TODO: check configurable object for modelname camelcase or snakecase else do openai format 
-    const isOpenAI = true 
+
+    // TODO: check configurable object for modelname camelcase or snakecase else do openai format
+    const isOpenAI = true;
 
     const pdfBlocks = pdfUrlList.map(toOpenAIPDFBlock);
- 
+
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
@@ -224,7 +224,7 @@ export function Thread() {
     const files = e.target.files;
     if (files) {
       const imageBlocks = await Promise.all(
-        Array.from(files).map(fileToImageBlock)
+        Array.from(files).map(fileToImageBlock),
       );
       setImageUrlList((prev) => [...prev, ...imageBlocks]);
     }
@@ -235,7 +235,7 @@ export function Thread() {
     const files = e.target.files;
     if (files) {
       const pdfBlocks = await Promise.all(
-        Array.from(files).map(fileToPDFBlock)
+        Array.from(files).map(fileToPDFBlock),
       );
       setPdfUrlList((prev) => [...prev, ...pdfBlocks]);
     }
@@ -277,25 +277,26 @@ export function Thread() {
       const imageFiles = files.filter((file) => file.type.startsWith("image/"));
       const pdfFiles = files.filter((file) => file.type === "application/pdf");
       const invalidFiles = files.filter(
-        (file) => !file.type.startsWith("image/") && file.type !== "application/pdf"
+        (file) =>
+          !file.type.startsWith("image/") && file.type !== "application/pdf",
       );
 
       if (invalidFiles.length > 0) {
         toast.error(
-          "You have uploaded invalid file type. Please upload an image or a PDF."
+          "You have uploaded invalid file type. Please upload an image or a PDF.",
         );
       }
 
       if (imageFiles.length) {
         const imageBlocks: Base64ContentBlock[] = await Promise.all(
-          imageFiles.map(fileToImageBlock)
+          imageFiles.map(fileToImageBlock),
         );
         setImageUrlList((prev) => [...prev, ...imageBlocks]);
       }
 
       if (pdfFiles.length) {
         const pdfBlocks: Base64ContentBlock[] = await Promise.all(
-          pdfFiles.map(fileToPDFBlock)
+          pdfFiles.map(fileToPDFBlock),
         );
         setPdfUrlList((prev) => [...prev, ...pdfBlocks]);
       }
@@ -521,7 +522,10 @@ export function Thread() {
                         {imageUrlList.map((imageBlock, idx) => {
                           const imageUrlString = `data:${imageBlock.mime_type};base64,${imageBlock.data}`;
                           return (
-                            <div className="relative" key={idx}>
+                            <div
+                              className="relative"
+                              key={idx}
+                            >
                               <img
                                 src={imageUrlString}
                                 alt="uploaded"
@@ -530,7 +534,9 @@ export function Thread() {
                               <CircleX
                                 className="absolute top-[2px] right-[2px] size-4 cursor-pointer rounded-full bg-gray-500 text-white"
                                 onClick={() =>
-                                  setImageUrlList(imageUrlList.filter((_, i) => i !== idx))
+                                  setImageUrlList(
+                                    imageUrlList.filter((_, i) => i !== idx),
+                                  )
                                 }
                               />
                             </div>
@@ -546,12 +552,18 @@ export function Thread() {
                             key={idx}
                           >
                             <span className="max-w-xs truncate text-sm">
-                              {String(pdfBlock.metadata?.filename ?? pdfBlock.metadata?.name ?? "")}
+                              {String(
+                                pdfBlock.metadata?.filename ??
+                                  pdfBlock.metadata?.name ??
+                                  "",
+                              )}
                             </span>
                             <CircleX
                               className="size-4 cursor-pointer text-teal-600 hover:text-teal-500"
                               onClick={() =>
-                                setPdfUrlList(pdfUrlList.filter((_, i) => i !== idx))
+                                setPdfUrlList(
+                                  pdfUrlList.filter((_, i) => i !== idx),
+                                )
                               }
                             />
                           </div>

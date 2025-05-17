@@ -1,9 +1,11 @@
 import type { Base64ContentBlock } from "@langchain/core/messages";
 import { convertToOpenAIImageBlock } from "@langchain/core/messages";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
 // Returns a Promise of a typed multimodal block for images
-export async function fileToImageBlock(file: File): Promise<Base64ContentBlock> {
+export async function fileToImageBlock(
+  file: File,
+): Promise<Base64ContentBlock> {
   const data = await fileToBase64(file);
   return {
     type: "image",
@@ -15,7 +17,7 @@ export async function fileToImageBlock(file: File): Promise<Base64ContentBlock> 
 }
 
 // Returns a Promise of a typed multimodal block for PDFs
-export async function fileToPDFBlock(file: File): Promise<Base64ContentBlock>{
+export async function fileToPDFBlock(file: File): Promise<Base64ContentBlock> {
   const data = await fileToBase64(file);
   return {
     type: "file",
@@ -35,7 +37,7 @@ export function toOpenAIPDFBlock(block: Base64ContentBlock) {
       data: block.data,
       mime_type: block.mime_type ?? "application/pdf",
       filename: block.metadata?.name ?? block.metadata?.filename ?? "file.pdf",
-    }
+    },
   };
 }
 
@@ -52,7 +54,6 @@ export async function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
-
 
 // Utility to convert base64 image blocks to OpenAI image_url format
 export function toOpenAIImageBlock(block: Base64ContentBlock | any) {
