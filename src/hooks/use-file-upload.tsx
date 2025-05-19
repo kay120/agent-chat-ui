@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, ChangeEvent } from "react";
 import { toast } from "sonner";
 import type { Base64ContentBlock } from "@langchain/core/messages";
-import { fileToImageBlock, fileToPDFBlock } from "@/lib/multimodal-utils";
+import { fileToContentBlock } from "@/lib/multimodal-utils";
 
 export const SUPPORTED_IMAGE_TYPES = [
   "image/jpeg",
@@ -73,20 +73,10 @@ export function useFileUpload({
       );
     }
 
-    const imageFiles = uniqueFiles.filter((file) =>
-      SUPPORTED_IMAGE_TYPES.includes(file.type),
-    );
-    const pdfFiles = uniqueFiles.filter(
-      (file) => file.type === "application/pdf",
-    );
-
-    const imageBlocks = imageFiles.length
-      ? await Promise.all(imageFiles.map(fileToImageBlock))
+    const newBlocks = uniqueFiles.length
+      ? await Promise.all(uniqueFiles.map(fileToContentBlock))
       : [];
-    const pdfBlocks = pdfFiles.length
-      ? await Promise.all(pdfFiles.map(fileToPDFBlock))
-      : [];
-    setContentBlocks((prev) => [...prev, ...imageBlocks, ...pdfBlocks]);
+    setContentBlocks((prev) => [...prev, ...newBlocks]);
     e.target.value = "";
   };
 
@@ -130,20 +120,10 @@ export function useFileUpload({
         );
       }
 
-      const imageFiles = uniqueFiles.filter((file) =>
-        SUPPORTED_IMAGE_TYPES.includes(file.type),
-      );
-      const pdfFiles = uniqueFiles.filter(
-        (file) => file.type === "application/pdf",
-      );
-
-      const imageBlocks: Base64ContentBlock[] = imageFiles.length
-        ? await Promise.all(imageFiles.map(fileToImageBlock))
+      const newBlocks = uniqueFiles.length
+        ? await Promise.all(uniqueFiles.map(fileToContentBlock))
         : [];
-      const pdfBlocks: Base64ContentBlock[] = pdfFiles.length
-        ? await Promise.all(pdfFiles.map(fileToPDFBlock))
-        : [];
-      setContentBlocks((prev) => [...prev, ...imageBlocks, ...pdfBlocks]);
+      setContentBlocks((prev) => [...prev, ...newBlocks]);
     };
 
     const handleDragEnter = (e: DragEvent) => {

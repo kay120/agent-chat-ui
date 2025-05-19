@@ -37,10 +37,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { fileToImageBlock, fileToPDFBlock } from "@/lib/multimodal-utils";
-import type { Base64ContentBlock } from "@langchain/core/messages";
-import { MultimodalPreview } from "../ui/MultimodalPreview";
 import { useFileUpload } from "@/hooks/use-file-upload";
+import { ContentBlocksPreview } from "./ContentBlocksPreview";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -393,44 +391,10 @@ export function Thread() {
                     onSubmit={handleSubmit}
                     className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
                   >
-                    {contentBlocks.filter((b) => b.type === "image").length >
-                      0 && (
-                      <div className="flex flex-wrap gap-2 p-3.5 pb-0">
-                        {contentBlocks
-                          .filter((b) => b.type === "image")
-                          .map((imageBlock, idx) => (
-                            <MultimodalPreview
-                              key={idx}
-                              block={imageBlock}
-                              removable
-                              onRemove={() => removeBlock(idx)}
-                              size="md"
-                            />
-                          ))}
-                      </div>
-                    )}
-                    {contentBlocks.filter(
-                      (b) =>
-                        b.type === "file" && b.mime_type === "application/pdf",
-                    ).length > 0 && (
-                      <div className="flex flex-wrap gap-2 p-3.5 pb-0">
-                        {contentBlocks
-                          .filter(
-                            (b) =>
-                              b.type === "file" &&
-                              b.mime_type === "application/pdf",
-                          )
-                          .map((pdfBlock, idx) => (
-                            <MultimodalPreview
-                              key={idx}
-                              block={pdfBlock}
-                              removable
-                              onRemove={() => removeBlock(idx)}
-                              size="md"
-                            />
-                          ))}
-                      </div>
-                    )}
+                    <ContentBlocksPreview
+                      blocks={contentBlocks}
+                      onRemove={removeBlock}
+                    />
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
