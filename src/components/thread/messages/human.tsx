@@ -1,10 +1,12 @@
 import { useStreamContext } from "@/providers/Stream";
 import { Message } from "@langchain/langgraph-sdk";
 import { useState } from "react";
-import { getContentImageUrls, getContentString } from "../utils";
+import {getContentString } from "../utils";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";
+import { MultimodalPreview } from "@/components/ui/MultimodalPreview";
+import type { Base64ContentBlock } from "@langchain/core/messages";
 
 function EditableContent({
   value,
@@ -32,6 +34,35 @@ function EditableContent({
   );
 }
 
+// Type guard for Base64ContentBlock
+function isBase64ContentBlock(block: unknown): block is Base64ContentBlock {
+  if (typeof block !== "object" || block === null || !("type" in block)) return false;
+  // file type (legacy)
+  if (
+    (block as { type: unknown }).type === "file" &&
+    "source_type" in block &&
+    (block as { source_type: unknown }).source_type === "base64" &&
+    "mime_type" in block &&
+    typeof (block as { mime_type?: unknown }).mime_type === "string" &&
+    ((block as { mime_type: string }).mime_type.startsWith("image/") ||
+      (block as { mime_type: string }).mime_type === "application/pdf")
+  ) {
+    return true;
+  }
+  // image type (new)
+  if (
+    (block as { type: unknown }).type === "image" &&
+    "source_type" in block &&
+    (block as { source_type: unknown }).source_type === "base64" &&
+    "mime_type" in block &&
+    typeof (block as { mime_type?: unknown }).mime_type === "string" &&
+    (block as { mime_type: string }).mime_type.startsWith("image/")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function HumanMessage({
   message,
   isLoading,
@@ -46,7 +77,6 @@ export function HumanMessage({
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState("");
   const contentString = getContentString(message.content);
-  const contentImageUrls = getContentImageUrls(message.content);
 
   const handleSubmitEdit = () => {
     setIsEditing(false);
@@ -89,60 +119,14 @@ export function HumanMessage({
             {/* Render images and files if no text */}
             {Array.isArray(message.content) && message.content.length > 0 && (
               <div className="flex flex-col items-end gap-2">
-                {message.content.map((block, idx) => {
-                  // Type guard for image block
-                  const isImageBlock =
-                    typeof block === "object" &&
-                    block !== null &&
-                    "type" in block &&
-                    (block as any).type === "image" &&
-                    "source_type" in block &&
-                    (block as any).source_type === "base64" &&
-                    "mime_type" in block &&
-                    "data" in block;
-                  if (isImageBlock) {
-                    const imgBlock = block as {
-                      type: string;
-                      source_type: string;
-                      mime_type: string;
-                      data: string;
-                      metadata?: { name?: string };
-                    };
-                    const url = `data:${imgBlock.mime_type};base64,${imgBlock.data}`;
-                    return (
-                      <img
-                        key={idx}
-                        src={url}
-                        alt={imgBlock.metadata?.name || "uploaded image"}
-                        className="bg-muted h-16 w-16 rounded-md object-cover"
-                      />
+                {message.content.reduce<React.ReactNode[]>((acc, block, idx) => {
+                  if (isBase64ContentBlock(block)) {
+                    acc.push(
+                      <MultimodalPreview key={idx} block={block} size="md" />
                     );
                   }
-                  // Type guard for file block (PDF)
-                  const isPdfBlock =
-                    typeof block === "object" &&
-                    block !== null &&
-                    "type" in block &&
-                    (block as any).type === "file" &&
-                    "mime_type" in block &&
-                    (block as any).mime_type === "application/pdf";
-                  if (isPdfBlock) {
-                    const pdfBlock = block as {
-                      metadata?: { filename?: string; name?: string };
-                    };
-                    return (
-                      <div
-                        key={idx}
-                        className="bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap"
-                      >
-                        {pdfBlock.metadata?.filename ||
-                          pdfBlock.metadata?.name ||
-                          "PDF file"}
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
+                  return acc;
+                }, [])}
               </div>
             )}
             {/* Render text if present, otherwise fallback to file/image name */}

@@ -39,6 +39,7 @@ import {
 } from "../ui/tooltip";
 import { fileToImageBlock, fileToPDFBlock } from "@/lib/multimodal-utils";
 import type { Base64ContentBlock } from "@langchain/core/messages";
+import { MultimodalPreview } from "../ui/MultimodalPreview";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -192,7 +193,6 @@ export function Thread() {
       ] as Message["content"],
     };
 
-    console.log("Message content:", newHumanMessage.content);
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
@@ -237,7 +237,7 @@ export function Thread() {
     }
 
     if (imageFiles.length) {
-      console.log("imageFiles", imageFiles);
+
       const imageBlocks = await Promise.all(imageFiles.map(fileToImageBlock));
       setImageUrlList((prev) => [...prev, ...imageBlocks]);
     }
@@ -526,54 +526,27 @@ export function Thread() {
                   >
                     {imageUrlList.length > 0 && (
                       <div className="flex flex-wrap gap-2 p-3.5 pb-0">
-                        {imageUrlList.map((imageBlock, idx) => {
-                          const imageUrlString = `data:${imageBlock.mime_type};base64,${imageBlock.data}`;
-                          return (
-                            <div
-                              className="relative"
-                              key={idx}
-                            >
-                              <img
-                                src={imageUrlString}
-                                alt="uploaded"
-                                className="h-16 w-16 rounded-md object-cover"
-                              />
-                              <CircleX
-                                className="absolute top-[2px] right-[2px] size-4 cursor-pointer rounded-full bg-gray-500 text-white"
-                                onClick={() =>
-                                  setImageUrlList(
-                                    imageUrlList.filter((_, i) => i !== idx),
-                                  )
-                                }
-                              />
-                            </div>
-                          );
-                        })}
+                        {imageUrlList.map((imageBlock, idx) => (
+                          <MultimodalPreview
+                            key={idx}
+                            block={imageBlock}
+                            removable
+                            onRemove={() => setImageUrlList(imageUrlList.filter((_, i) => i !== idx))}
+                            size="md"
+                          />
+                        ))}
                       </div>
                     )}
                     {pdfUrlList.length > 0 && (
                       <div className="flex flex-wrap gap-2 p-3.5 pb-0">
                         {pdfUrlList.map((pdfBlock, idx) => (
-                          <div
-                            className="relative flex items-center gap-2 rounded rounded-md border-1 border-teal-700 bg-gray-100 bg-teal-900 px-2 py-1 py-2 text-white"
+                          <MultimodalPreview
                             key={idx}
-                          >
-                            <span className="max-w-xs truncate text-sm">
-                              {String(
-                                pdfBlock.metadata?.filename ??
-                                  pdfBlock.metadata?.name ??
-                                  "",
-                              )}
-                            </span>
-                            <CircleX
-                              className="size-4 cursor-pointer text-teal-600 hover:text-teal-500"
-                              onClick={() =>
-                                setPdfUrlList(
-                                  pdfUrlList.filter((_, i) => i !== idx),
-                                )
-                              }
-                            />
-                          </div>
+                            block={pdfBlock}
+                            removable
+                            onRemove={() => setPdfUrlList(pdfUrlList.filter((_, i) => i !== idx))}
+                            size="md"
+                          />
                         ))}
                       </div>
                     )}
