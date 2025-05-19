@@ -5,11 +5,22 @@ import { convertToOpenAIImageBlock } from "@langchain/core/messages";
 export async function fileToImageBlock(
   file: File,
 ): Promise<Base64ContentBlock> {
+  const supportedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ];
+  if (!supportedTypes.includes(file.type)) {
+    throw new Error(
+      `Unsupported image type: ${file.type}. Supported types are: ${supportedTypes.join(", ")}`,
+    );
+  }
   const data = await fileToBase64(file);
   return {
     type: "image",
     source_type: "base64",
-    mime_type: "image/jpeg",
+    mime_type: file.type,
     data,
     metadata: { name: file.name },
   };
