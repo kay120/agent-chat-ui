@@ -215,29 +215,43 @@ export function Thread() {
     setPdfUrlList([]);
   };
 
+  const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  const SUPPORTED_FILE_TYPES = [...SUPPORTED_IMAGE_TYPES, "application/pdf"];
+
+  const isDuplicate = (file: File, images: Base64ContentBlock[], pdfs: Base64ContentBlock[]) => {
+    if (SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+      return images.some(img => img.metadata?.name === file.name && img.mime_type === file.type);
+    }
+    if (file.type === "application/pdf") {
+      return pdfs.some(pdf => pdf.metadata?.filename === file.name);
+    }
+    return false;
+  };
+
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter((file) =>
-      file.type.startsWith("image"),
-    );
-    const pdfFiles = fileArray.filter(
-      (file) => file.type === "application/pdf",
-    );
-    const invalidFiles = fileArray.filter(
-      (file) =>
-        !file.type.startsWith("image/") && file.type !== "application/pdf",
-    );
+    const validFiles = fileArray.filter((file) => SUPPORTED_FILE_TYPES.includes(file.type));
+    const invalidFiles = fileArray.filter((file) => !SUPPORTED_FILE_TYPES.includes(file.type));
+    const duplicateFiles = validFiles.filter((file) => isDuplicate(file, imageUrlList, pdfUrlList));
+    const uniqueFiles = validFiles.filter((file) => !isDuplicate(file, imageUrlList, pdfUrlList));
 
     if (invalidFiles.length > 0) {
       toast.error(
-        "You have uploaded invalid file type. Please upload an image or a PDF.",
+        "You have uploaded invalid file type. Please upload a JPEG, PNG, GIF, WEBP image or a PDF.",
+      );
+    }
+    if (duplicateFiles.length > 0) {
+      toast.error(
+        `Duplicate file(s) detected: ${duplicateFiles.map(f => f.name).join(", ")}. Each file can only be uploaded once per message.`,
       );
     }
 
-    if (imageFiles.length) {
+    const imageFiles = uniqueFiles.filter((file) => SUPPORTED_IMAGE_TYPES.includes(file.type));
+    const pdfFiles = uniqueFiles.filter((file) => file.type === "application/pdf");
 
+    if (imageFiles.length) {
       const imageBlocks = await Promise.all(imageFiles.map(fileToImageBlock));
       setImageUrlList((prev) => [...prev, ...imageBlocks]);
     }
@@ -281,18 +295,24 @@ export function Thread() {
       if (!e.dataTransfer) return;
 
       const files = Array.from(e.dataTransfer.files);
-      const imageFiles = files.filter((file) => file.type.startsWith("image/"));
-      const pdfFiles = files.filter((file) => file.type === "application/pdf");
-      const invalidFiles = files.filter(
-        (file) =>
-          !file.type.startsWith("image/") && file.type !== "application/pdf",
-      );
+      const validFiles = files.filter((file) => SUPPORTED_FILE_TYPES.includes(file.type));
+      const invalidFiles = files.filter((file) => !SUPPORTED_FILE_TYPES.includes(file.type));
+      const duplicateFiles = validFiles.filter((file) => isDuplicate(file, imageUrlList, pdfUrlList));
+      const uniqueFiles = validFiles.filter((file) => !isDuplicate(file, imageUrlList, pdfUrlList));
 
       if (invalidFiles.length > 0) {
         toast.error(
-          "You have uploaded invalid file type. Please upload an image or a PDF.",
+          "You have uploaded invalid file type. Please upload a JPEG, PNG, GIF, WEBP image or a PDF.",
         );
       }
+      if (duplicateFiles.length > 0) {
+        toast.error(
+          `Duplicate file(s) detected: ${duplicateFiles.map(f => f.name).join(", ")}. Each file can only be uploaded once per message.`,
+        );
+      }
+
+      const imageFiles = uniqueFiles.filter((file) => SUPPORTED_IMAGE_TYPES.includes(file.type));
+      const pdfFiles = uniqueFiles.filter((file) => file.type === "application/pdf");
 
       if (imageFiles.length) {
         const imageBlocks: Base64ContentBlock[] = await Promise.all(
@@ -586,7 +606,7 @@ export function Thread() {
                           type="file"
                           onChange={handleFileUpload}
                           multiple
-                          accept="image/*,application/pdf"
+                          accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
                           className="hidden"
                         />
                         <div className="flex items-center space-x-2">
