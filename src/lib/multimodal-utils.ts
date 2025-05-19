@@ -1,5 +1,4 @@
 import type { Base64ContentBlock } from "@langchain/core/messages";
-import { convertToOpenAIImageBlock } from "@langchain/core/messages";
 
 // Returns a Promise of a typed multimodal block for images
 export async function fileToImageBlock(
@@ -46,15 +45,3 @@ export async function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
-
-// Utility to convert base64 image blocks to OpenAI image_url format
-export function toOpenAIImageBlock(block: Base64ContentBlock | any) {
-  if (block.type === "image" && block.source_type === "base64") {
-    return convertToOpenAIImageBlock(block);
-  }
-  return block;
-}
-
-const cleanBase64 = (base64String: string): string => {
-  return base64String.replace(/^data:.*?;base64,/, "");
-};

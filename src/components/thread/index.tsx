@@ -182,9 +182,6 @@ export function Thread() {
       return;
     setFirstTokenReceived(false);
 
-    // TODO: check configurable object for modelname camelcase or snakecase else do openai format
-    const isOpenAI = true;
-
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
