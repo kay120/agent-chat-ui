@@ -173,7 +173,13 @@ export function Thread() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if ((input.trim().length === 0 && imageUrlList.length === 0 && pdfUrlList.length === 0) || isLoading) return;
+    if (
+      (input.trim().length === 0 &&
+        imageUrlList.length === 0 &&
+        pdfUrlList.length === 0) ||
+      isLoading
+    )
+      return;
     setFirstTokenReceived(false);
 
     // TODO: check configurable object for modelname camelcase or snakecase else do openai format
@@ -639,7 +645,12 @@ export function Thread() {
                         <Button
                           type="submit"
                           className="shadow-md transition-all"
-                          disabled={isLoading || (!input.trim() && imageUrlList.length === 0 && pdfUrlList.length === 0)}
+                          disabled={
+                            isLoading ||
+                            (!input.trim() &&
+                              imageUrlList.length === 0 &&
+                              pdfUrlList.length === 0)
+                          }
                         >
                           Send
                         </Button>

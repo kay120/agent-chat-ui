@@ -88,7 +88,7 @@ export function HumanMessage({
           <div className="flex flex-col gap-2">
             {/* Render images and files if no text */}
             {Array.isArray(message.content) && message.content.length > 0 && (
-              <div className="flex flex-col gap-2 items-end">
+              <div className="flex flex-col items-end gap-2">
                 {message.content.map((block, idx) => {
                   // Type guard for image block
                   const isImageBlock =
@@ -135,7 +135,9 @@ export function HumanMessage({
                         key={idx}
                         className="bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap"
                       >
-                        {pdfBlock.metadata?.filename || pdfBlock.metadata?.name || "PDF file"}
+                        {pdfBlock.metadata?.filename ||
+                          pdfBlock.metadata?.name ||
+                          "PDF file"}
                       </div>
                     );
                   }
@@ -144,7 +146,9 @@ export function HumanMessage({
               </div>
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
-            {contentString && contentString !== "Other" && contentString !== "Multimodal message" ? (
+            {contentString &&
+            contentString !== "Other" &&
+            contentString !== "Multimodal message" ? (
               <p className="bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap">
                 {contentString}
               </p>
