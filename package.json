@@ -19,7 +19,6 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@langchain/community": "^0.3.42",
     "@langchain/core": "^0.3.44",
     "@langchain/langgraph": "^0.2.63",
     "@langchain/langgraph-sdk": "^0.0.73",
@@ -85,7 +84,6 @@
   },
   "overrides": {
     "react-is": "^19.0.0-rc-69d4b800-20241021",
-    "@langchain/langgraph-checkpoint": "^0.0.17"
   },
   "packageManager": "pnpm@10.5.1"
 }
