@@ -1,4 +1,5 @@
 import type { Base64ContentBlock } from "@langchain/core/messages";
+import { toast } from "sonner";
 
 // Returns a Promise of a typed multimodal block for images
 export async function fileToImageBlock(
@@ -6,9 +7,10 @@ export async function fileToImageBlock(
 ): Promise<Base64ContentBlock> {
   const supportedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
   if (!supportedTypes.includes(file.type)) {
-    throw new Error(
+    toast.error(
       `Unsupported image type: ${file.type}. Supported types are: ${supportedTypes.join(", ")}`,
     );
+    return Promise.reject(new Error(`Unsupported image type: ${file.type}`));
   }
   const data = await fileToBase64(file);
   return {

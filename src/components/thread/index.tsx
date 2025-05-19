@@ -117,8 +117,7 @@ export function Thread() {
     parseAsBoolean.withDefault(false),
   );
   const [input, setInput] = useState("");
-  const [imageUrlList, setImageUrlList] = useState<Base64ContentBlock[]>([]);
-  const [pdfUrlList, setPdfUrlList] = useState<Base64ContentBlock[]>([]);
+  const [contentBlocks, setContentBlocks] = useState<Base64ContentBlock[]>([]);
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
@@ -174,12 +173,7 @@ export function Thread() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (
-      (input.trim().length === 0 &&
-        imageUrlList.length === 0 &&
-        pdfUrlList.length === 0) ||
-      isLoading
-    )
+    if ((input.trim().length === 0 && contentBlocks.length === 0) || isLoading)
       return;
     setFirstTokenReceived(false);
 
@@ -188,11 +182,9 @@ export function Thread() {
       type: "human",
       content: [
         ...(input.trim().length > 0 ? [{ type: "text", text: input }] : []),
-        ...pdfUrlList,
-        ...imageUrlList,
+        ...contentBlocks,
       ] as Message["content"],
     };
-
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
@@ -211,19 +203,33 @@ export function Thread() {
     );
 
     setInput("");
-    setImageUrlList([]);
-    setPdfUrlList([]);
+    setContentBlocks([]);
   };
 
-  const SUPPORTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  const SUPPORTED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+  ];
   const SUPPORTED_FILE_TYPES = [...SUPPORTED_IMAGE_TYPES, "application/pdf"];
 
-  const isDuplicate = (file: File, images: Base64ContentBlock[], pdfs: Base64ContentBlock[]) => {
+  const isDuplicate = (file: File, blocks: Base64ContentBlock[]) => {
     if (SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-      return images.some(img => img.metadata?.name === file.name && img.mime_type === file.type);
+      return blocks.some(
+        (b) =>
+          b.type === "image" &&
+          b.metadata?.name === file.name &&
+          b.mime_type === file.type,
+      );
     }
     if (file.type === "application/pdf") {
-      return pdfs.some(pdf => pdf.metadata?.filename === file.name);
+      return blocks.some(
+        (b) =>
+          b.type === "file" &&
+          b.mime_type === "application/pdf" &&
+          b.metadata?.filename === file.name,
+      );
     }
     return false;
   };
@@ -232,10 +238,18 @@ export function Thread() {
     const files = e.target.files;
     if (!files) return;
     const fileArray = Array.from(files);
-    const validFiles = fileArray.filter((file) => SUPPORTED_FILE_TYPES.includes(file.type));
-    const invalidFiles = fileArray.filter((file) => !SUPPORTED_FILE_TYPES.includes(file.type));
-    const duplicateFiles = validFiles.filter((file) => isDuplicate(file, imageUrlList, pdfUrlList));
-    const uniqueFiles = validFiles.filter((file) => !isDuplicate(file, imageUrlList, pdfUrlList));
+    const validFiles = fileArray.filter((file) =>
+      SUPPORTED_FILE_TYPES.includes(file.type),
+    );
+    const invalidFiles = fileArray.filter(
+      (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
+    );
+    const duplicateFiles = validFiles.filter((file) =>
+      isDuplicate(file, contentBlocks),
+    );
+    const uniqueFiles = validFiles.filter(
+      (file) => !isDuplicate(file, contentBlocks),
+    );
 
     if (invalidFiles.length > 0) {
       toast.error(
@@ -244,22 +258,24 @@ export function Thread() {
     }
     if (duplicateFiles.length > 0) {
       toast.error(
-        `Duplicate file(s) detected: ${duplicateFiles.map(f => f.name).join(", ")}. Each file can only be uploaded once per message.`,
+        `Duplicate file(s) detected: ${duplicateFiles.map((f) => f.name).join(", ")}. Each file can only be uploaded once per message.`,
       );
     }
 
-    const imageFiles = uniqueFiles.filter((file) => SUPPORTED_IMAGE_TYPES.includes(file.type));
-    const pdfFiles = uniqueFiles.filter((file) => file.type === "application/pdf");
+    const imageFiles = uniqueFiles.filter((file) =>
+      SUPPORTED_IMAGE_TYPES.includes(file.type),
+    );
+    const pdfFiles = uniqueFiles.filter(
+      (file) => file.type === "application/pdf",
+    );
 
-    if (imageFiles.length) {
-      const imageBlocks = await Promise.all(imageFiles.map(fileToImageBlock));
-      setImageUrlList((prev) => [...prev, ...imageBlocks]);
-    }
-
-    if (pdfFiles.length) {
-      const pdfBlocks = await Promise.all(pdfFiles.map(fileToPDFBlock));
-      setPdfUrlList((prev) => [...prev, ...pdfBlocks]);
-    }
+    const imageBlocks = imageFiles.length
+      ? await Promise.all(imageFiles.map(fileToImageBlock))
+      : [];
+    const pdfBlocks = pdfFiles.length
+      ? await Promise.all(pdfFiles.map(fileToPDFBlock))
+      : [];
+    setContentBlocks((prev) => [...prev, ...imageBlocks, ...pdfBlocks]);
     e.target.value = "";
   };
 
@@ -295,10 +311,18 @@ export function Thread() {
       if (!e.dataTransfer) return;
 
       const files = Array.from(e.dataTransfer.files);
-      const validFiles = files.filter((file) => SUPPORTED_FILE_TYPES.includes(file.type));
-      const invalidFiles = files.filter((file) => !SUPPORTED_FILE_TYPES.includes(file.type));
-      const duplicateFiles = validFiles.filter((file) => isDuplicate(file, imageUrlList, pdfUrlList));
-      const uniqueFiles = validFiles.filter((file) => !isDuplicate(file, imageUrlList, pdfUrlList));
+      const validFiles = files.filter((file) =>
+        SUPPORTED_FILE_TYPES.includes(file.type),
+      );
+      const invalidFiles = files.filter(
+        (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
+      );
+      const duplicateFiles = validFiles.filter((file) =>
+        isDuplicate(file, contentBlocks),
+      );
+      const uniqueFiles = validFiles.filter(
+        (file) => !isDuplicate(file, contentBlocks),
+      );
 
       if (invalidFiles.length > 0) {
         toast.error(
@@ -307,26 +331,24 @@ export function Thread() {
       }
       if (duplicateFiles.length > 0) {
         toast.error(
-          `Duplicate file(s) detected: ${duplicateFiles.map(f => f.name).join(", ")}. Each file can only be uploaded once per message.`,
+          `Duplicate file(s) detected: ${duplicateFiles.map((f) => f.name).join(", ")}. Each file can only be uploaded once per message.`,
         );
       }
 
-      const imageFiles = uniqueFiles.filter((file) => SUPPORTED_IMAGE_TYPES.includes(file.type));
-      const pdfFiles = uniqueFiles.filter((file) => file.type === "application/pdf");
+      const imageFiles = uniqueFiles.filter((file) =>
+        SUPPORTED_IMAGE_TYPES.includes(file.type),
+      );
+      const pdfFiles = uniqueFiles.filter(
+        (file) => file.type === "application/pdf",
+      );
 
-      if (imageFiles.length) {
-        const imageBlocks: Base64ContentBlock[] = await Promise.all(
-          imageFiles.map(fileToImageBlock),
-        );
-        setImageUrlList((prev) => [...prev, ...imageBlocks]);
-      }
-
-      if (pdfFiles.length) {
-        const pdfBlocks: Base64ContentBlock[] = await Promise.all(
-          pdfFiles.map(fileToPDFBlock),
-        );
-        setPdfUrlList((prev) => [...prev, ...pdfBlocks]);
-      }
+      const imageBlocks: Base64ContentBlock[] = imageFiles.length
+        ? await Promise.all(imageFiles.map(fileToImageBlock))
+        : [];
+      const pdfBlocks: Base64ContentBlock[] = pdfFiles.length
+        ? await Promise.all(pdfFiles.map(fileToPDFBlock))
+        : [];
+      setContentBlocks((prev) => [...prev, ...imageBlocks, ...pdfBlocks]);
     };
 
     const handleDragEnter = (e: DragEvent) => {
@@ -544,30 +566,50 @@ export function Thread() {
                     onSubmit={handleSubmit}
                     className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
                   >
-                    {imageUrlList.length > 0 && (
+                    {contentBlocks.filter((b) => b.type === "image").length >
+                      0 && (
                       <div className="flex flex-wrap gap-2 p-3.5 pb-0">
-                        {imageUrlList.map((imageBlock, idx) => (
-                          <MultimodalPreview
-                            key={idx}
-                            block={imageBlock}
-                            removable
-                            onRemove={() => setImageUrlList(imageUrlList.filter((_, i) => i !== idx))}
-                            size="md"
-                          />
-                        ))}
+                        {contentBlocks
+                          .filter((b) => b.type === "image")
+                          .map((imageBlock, idx) => (
+                            <MultimodalPreview
+                              key={idx}
+                              block={imageBlock}
+                              removable
+                              onRemove={() =>
+                                setContentBlocks(
+                                  contentBlocks.filter((_, i) => i !== idx),
+                                )
+                              }
+                              size="md"
+                            />
+                          ))}
                       </div>
                     )}
-                    {pdfUrlList.length > 0 && (
+                    {contentBlocks.filter(
+                      (b) =>
+                        b.type === "file" && b.mime_type === "application/pdf",
+                    ).length > 0 && (
                       <div className="flex flex-wrap gap-2 p-3.5 pb-0">
-                        {pdfUrlList.map((pdfBlock, idx) => (
-                          <MultimodalPreview
-                            key={idx}
-                            block={pdfBlock}
-                            removable
-                            onRemove={() => setPdfUrlList(pdfUrlList.filter((_, i) => i !== idx))}
-                            size="md"
-                          />
-                        ))}
+                        {contentBlocks
+                          .filter(
+                            (b) =>
+                              b.type === "file" &&
+                              b.mime_type === "application/pdf",
+                          )
+                          .map((pdfBlock, idx) => (
+                            <MultimodalPreview
+                              key={idx}
+                              block={pdfBlock}
+                              removable
+                              onRemove={() =>
+                                setContentBlocks(
+                                  contentBlocks.filter((_, i) => i !== idx),
+                                )
+                              }
+                              size="md"
+                            />
+                          ))}
                       </div>
                     )}
                     <textarea
@@ -637,9 +679,7 @@ export function Thread() {
                           className="shadow-md transition-all"
                           disabled={
                             isLoading ||
-                            (!input.trim() &&
-                              imageUrlList.length === 0 &&
-                              pdfUrlList.length === 0)
+                            (!input.trim() && contentBlocks.length === 0)
                           }
                         >
                           Send

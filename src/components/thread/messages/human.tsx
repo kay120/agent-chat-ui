@@ -1,7 +1,7 @@
 import { useStreamContext } from "@/providers/Stream";
 import { Message } from "@langchain/langgraph-sdk";
 import { useState } from "react";
-import {getContentString } from "../utils";
+import { getContentString } from "../utils";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";
@@ -36,7 +36,8 @@ function EditableContent({
 
 // Type guard for Base64ContentBlock
 function isBase64ContentBlock(block: unknown): block is Base64ContentBlock {
-  if (typeof block !== "object" || block === null || !("type" in block)) return false;
+  if (typeof block !== "object" || block === null || !("type" in block))
+    return false;
   // file type (legacy)
   if (
     (block as { type: unknown }).type === "file" &&
@@ -119,14 +120,21 @@ export function HumanMessage({
             {/* Render images and files if no text */}
             {Array.isArray(message.content) && message.content.length > 0 && (
               <div className="flex flex-col items-end gap-2">
-                {message.content.reduce<React.ReactNode[]>((acc, block, idx) => {
-                  if (isBase64ContentBlock(block)) {
-                    acc.push(
-                      <MultimodalPreview key={idx} block={block} size="md" />
-                    );
-                  }
-                  return acc;
-                }, [])}
+                {message.content.reduce<React.ReactNode[]>(
+                  (acc, block, idx) => {
+                    if (isBase64ContentBlock(block)) {
+                      acc.push(
+                        <MultimodalPreview
+                          key={idx}
+                          block={block}
+                          size="md"
+                        />,
+                      );
+                    }
+                    return acc;
+                  },
+                  [],
+                )}
               </div>
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
