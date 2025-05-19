@@ -31,13 +31,11 @@ export async function fileToPDFBlock(file: File): Promise<Base64ContentBlock> {
 // in lib/multimodal-utils.ts
 export function toOpenAIPDFBlock(block: Base64ContentBlock) {
   return {
-    type: "file",
-    file: {
+       type: "file",
       source_type: "base64",
       data: block.data,
       mime_type: block.mime_type ?? "application/pdf",
       filename: block.metadata?.name ?? block.metadata?.filename ?? "file.pdf",
-    },
   };
 }
 
