@@ -22,6 +22,7 @@ import {
   SquarePen,
   Plus,
   CircleX,
+  XIcon,
 } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
@@ -39,6 +40,12 @@ import {
 } from "../ui/tooltip";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { ContentBlocksPreview } from "./ContentBlocksPreview";
+import {
+  useArtifactOpen,
+  ArtifactContent,
+  ArtifactTitle,
+  useArtifactContext,
+} from "./artifact";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -106,7 +113,10 @@ function OpenGitHubRepo() {
 }
 
 export function Thread() {
-  const [threadId, setThreadId] = useQueryState("threadId");
+  const [_threadId, _setThreadId] = useQueryState("threadId");
+
+  const [artifactContext, setArtifactContext] = useArtifactContext();
+  const [artifactOpen, closeArtifact] = useArtifactOpen();
   const [chatHistoryOpen, setChatHistoryOpen] = useQueryState(
     "chatHistoryOpen",
     parseAsBoolean.withDefault(false),
@@ -132,6 +142,33 @@ export function Thread() {
   const isLoading = stream.isLoading;
 
   const lastError = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!stream.error) {
+      lastError.current = undefined;
+      return;
+    }
+    try {
+      const message = (stream.error as any).message;
+      if (!message || lastError.current === message) {
+        // Message has already been logged. do not modify ref, return early.
+        return;
+      }
+      // Message is defined, and it has not been logged yet. Save it, and send the error
+      lastError.current = message;
+      toast.error("An error occurred. Please try again.", {
+        description: (
+          <p>
+            <strong>Error:</strong> <code>{message}</code>
+          </p>
+        ),
+        richColors: true,
+        closeButton: true,
+      });
+    } catch {
+      // no-op
+    }
+  }, [stream.error]);
 
   // TODO: this should be part of the useStream hook
   const prevMessageLength = useRef(0);
@@ -164,11 +201,15 @@ export function Thread() {
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
     stream.submit(
-      { messages: [...toolMessages, newHumanMessage] },
+      {
+        messages: [...toolMessages, newHumanMessage],
+        context: artifactContext,
+      },
       {
         streamMode: ["values"],
         optimisticValues: (prev) => ({
           ...prev,
+          context: artifactContext,
           messages: [
             ...(prev.messages ?? []),
             ...toolMessages,
@@ -182,11 +223,6 @@ export function Thread() {
     setContentBlocks([]);
   };
 
-  const chatStarted = !!threadId || !!messages.length;
-  const hasNoAIOrToolMessages = !messages.find(
-    (m) => m.type === "ai" || m.type === "tool",
-  );
-
   // Restore handleRegenerate
   const handleRegenerate = (
     parentCheckpoint: Checkpoint | null | undefined,
@@ -199,6 +235,18 @@ export function Thread() {
       streamMode: ["values"],
     });
   };
+
+  const setThreadId = (id: string | null) => {
+    _setThreadId(id);
+    // close artifact and reset artifact context
+    closeArtifact();
+    setArtifactContext({});
+  };
+  const threadId = _threadId;
+  const chatStarted = !!threadId || !!messages.length;
+  const hasNoAIOrToolMessages = !messages.find(
+    (m) => m.type === "ai" || m.type === "tool",
+  );
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -476,6 +524,20 @@ export function Thread() {
           />
         </StickToBottom>
       </motion.div>
+      <div className="relative flex flex-col border-l">
+        <div className="absolute inset-0 flex min-w-[30vw] flex-col">
+          <div className="grid grid-cols-[1fr_auto] border-b p-4">
+            <ArtifactTitle className="truncate overflow-hidden" />
+            <button
+              onClick={closeArtifact}
+              className="cursor-pointer"
+            >
+              <XIcon className="size-5" />
+            </button>
+          </div>
+          <ArtifactContent className="relative flex-grow" />
+        </div>
+      </div>
     </div>
   );
 }
