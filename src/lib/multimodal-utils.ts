@@ -9,7 +9,7 @@ export async function fileToImageBlock(
   return {
     type: "image",
     source_type: "base64",
-    mime_type: file.type,
+    mime_type: "image/jpeg",
     data,
     metadata: { name: file.name },
   };
@@ -24,19 +24,6 @@ export async function fileToPDFBlock(file: File): Promise<Base64ContentBlock> {
     mime_type: "application/pdf",
     data,
     metadata: { filename: file.name },
-  };
-}
-
-// in lib/multimodal-utils.ts
-export function toOpenAIPDFBlock(
-  block: Base64ContentBlock,
-): Base64ContentBlock {
-  return {
-    type: "file",
-    source_type: "base64",
-    data: block.data,
-    mime_type: block.mime_type ?? "application/pdf",
-    metadata: { filename: block.metadata?.filename ?? "file.pdf" },
   };
 }
 

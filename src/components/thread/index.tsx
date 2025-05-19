@@ -40,7 +40,6 @@ import {
 import {
   fileToImageBlock,
   fileToPDFBlock,
-  toOpenAIPDFBlock,
 } from "@/lib/multimodal-utils";
 import type { Base64ContentBlock } from "@langchain/core/messages";
 
@@ -183,14 +182,14 @@ export function Thread() {
     // TODO: check configurable object for modelname camelcase or snakecase else do openai format
     const isOpenAI = true;
 
-    const pdfBlocks = pdfUrlList.map(toOpenAIPDFBlock);
 
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
       content: [
         { type: "text", text: input },
-        ...pdfBlocks,
+        ...pdfUrlList,
+        ...imageUrlList,
       ] as Message["content"],
     };
 
@@ -217,23 +216,30 @@ export function Thread() {
     setPdfUrlList([]);
   };
 
-  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files) {
-      const imageBlocks = await Promise.all(
-        Array.from(files).map(fileToImageBlock),
+    if (!files) return;
+    const fileArray = Array.from(files);
+    const imageFiles = fileArray.filter((file) => file.type.startsWith("image"));
+    const pdfFiles = fileArray.filter((file) => file.type === "application/pdf");
+    const invalidFiles = fileArray.filter(
+      (file) => !file.type.startsWith("image/") && file.type !== "application/pdf",
+    );
+
+    if (invalidFiles.length > 0) {
+      toast.error(
+        "You have uploaded invalid file type. Please upload an image or a PDF.",
       );
+    }
+
+    if (imageFiles.length) {
+      console.log("imageFiles", imageFiles);
+      const imageBlocks = await Promise.all(imageFiles.map(fileToImageBlock));
       setImageUrlList((prev) => [...prev, ...imageBlocks]);
     }
-    e.target.value = "";
-  };
 
-  const handlePDFUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const pdfBlocks = await Promise.all(
-        Array.from(files).map(fileToPDFBlock),
-      );
+    if (pdfFiles.length) {
+      const pdfBlocks = await Promise.all(pdfFiles.map(fileToPDFBlock));
       setPdfUrlList((prev) => [...prev, ...pdfBlocks]);
     }
     e.target.value = "";
@@ -595,15 +601,15 @@ export function Thread() {
                         >
                           <Plus className="size-5 text-gray-600" />
                           <span className="text-sm text-gray-600">
-                            Upload PDF
+                            Upload PDF or Image
                           </span>
                         </Label>
                         <input
                           id="file-input"
                           type="file"
-                          onChange={handlePDFUpload}
+                          onChange={handleFileUpload}
                           multiple
-                          accept="application/pdf"
+                          accept="image/*,application/pdf"
                           className="hidden"
                         />
                         <div className="flex items-center space-x-2">
