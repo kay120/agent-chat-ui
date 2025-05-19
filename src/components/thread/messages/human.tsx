@@ -86,20 +86,69 @@ export function HumanMessage({
           />
         ) : (
           <div className="flex flex-col gap-2">
-            {contentImageUrls.length > 0 && (
-              <div className="flex flex-wrap justify-end gap-2">
-                {contentImageUrls.map((imageUrl) => (
-                  <img
-                    src={imageUrl}
-                    alt="uploaded image"
-                    className="bg-muted h-16 w-16 rounded-md object-cover"
-                  />
-                ))}
+            {/* Render images and files if no text */}
+            {Array.isArray(message.content) && message.content.length > 0 && (
+              <div className="flex flex-col gap-2 items-end">
+                {message.content.map((block, idx) => {
+                  // Type guard for image block
+                  const isImageBlock =
+                    typeof block === "object" &&
+                    block !== null &&
+                    "type" in block &&
+                    (block as any).type === "image" &&
+                    "source_type" in block &&
+                    (block as any).source_type === "base64" &&
+                    "mime_type" in block &&
+                    "data" in block;
+                  if (isImageBlock) {
+                    const imgBlock = block as {
+                      type: string;
+                      source_type: string;
+                      mime_type: string;
+                      data: string;
+                      metadata?: { name?: string };
+                    };
+                    const url = `data:${imgBlock.mime_type};base64,${imgBlock.data}`;
+                    return (
+                      <img
+                        key={idx}
+                        src={url}
+                        alt={imgBlock.metadata?.name || "uploaded image"}
+                        className="bg-muted h-16 w-16 rounded-md object-cover"
+                      />
+                    );
+                  }
+                  // Type guard for file block (PDF)
+                  const isPdfBlock =
+                    typeof block === "object" &&
+                    block !== null &&
+                    "type" in block &&
+                    (block as any).type === "file" &&
+                    "mime_type" in block &&
+                    (block as any).mime_type === "application/pdf";
+                  if (isPdfBlock) {
+                    const pdfBlock = block as {
+                      metadata?: { filename?: string; name?: string };
+                    };
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap"
+                      >
+                        {pdfBlock.metadata?.filename || pdfBlock.metadata?.name || "PDF file"}
+                      </div>
+                    );
+                  }
+                  return null;
+                })}
               </div>
             )}
-            <p className="bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap">
-              {contentString}
-            </p>
+            {/* Render text if present, otherwise fallback to file/image name */}
+            {contentString && contentString !== "Other" && contentString !== "Multimodal message" ? (
+              <p className="bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap">
+                {contentString}
+              </p>
+            ) : null}
           </div>
         )}
 

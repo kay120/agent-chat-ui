@@ -37,10 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import {
-  fileToImageBlock,
-  fileToPDFBlock,
-} from "@/lib/multimodal-utils";
+import { fileToImageBlock, fileToPDFBlock } from "@/lib/multimodal-utils";
 import type { Base64ContentBlock } from "@langchain/core/messages";
 
 function StickyToBottomContent(props: {
@@ -176,18 +173,17 @@ export function Thread() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if ((input.trim().length === 0 && imageUrlList.length === 0 && pdfUrlList.length === 0) || isLoading) return;
     setFirstTokenReceived(false);
 
     // TODO: check configurable object for modelname camelcase or snakecase else do openai format
     const isOpenAI = true;
 
-
     const newHumanMessage: Message = {
       id: uuidv4(),
       type: "human",
       content: [
-        { type: "text", text: input },
+        ...(input.trim().length > 0 ? [{ type: "text", text: input }] : []),
         ...pdfUrlList,
         ...imageUrlList,
       ] as Message["content"],
@@ -220,10 +216,15 @@ export function Thread() {
     const files = e.target.files;
     if (!files) return;
     const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter((file) => file.type.startsWith("image"));
-    const pdfFiles = fileArray.filter((file) => file.type === "application/pdf");
+    const imageFiles = fileArray.filter((file) =>
+      file.type.startsWith("image"),
+    );
+    const pdfFiles = fileArray.filter(
+      (file) => file.type === "application/pdf",
+    );
     const invalidFiles = fileArray.filter(
-      (file) => !file.type.startsWith("image/") && file.type !== "application/pdf",
+      (file) =>
+        !file.type.startsWith("image/") && file.type !== "application/pdf",
     );
 
     if (invalidFiles.length > 0) {
@@ -638,7 +639,7 @@ export function Thread() {
                         <Button
                           type="submit"
                           className="shadow-md transition-all"
-                          disabled={isLoading || !input.trim()}
+                          disabled={isLoading || (!input.trim() && imageUrlList.length === 0 && pdfUrlList.length === 0)}
                         >
                           Send
                         </Button>
