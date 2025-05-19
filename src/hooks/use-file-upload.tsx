@@ -9,14 +9,20 @@ export const SUPPORTED_IMAGE_TYPES = [
   "image/gif",
   "image/webp",
 ];
-export const SUPPORTED_FILE_TYPES = [...SUPPORTED_IMAGE_TYPES, "application/pdf"];
+export const SUPPORTED_FILE_TYPES = [
+  ...SUPPORTED_IMAGE_TYPES,
+  "application/pdf",
+];
 
 interface UseFileUploadOptions {
   initialBlocks?: Base64ContentBlock[];
 }
 
-export function useFileUpload({ initialBlocks = [] }: UseFileUploadOptions = {}) {
-  const [contentBlocks, setContentBlocks] = useState<Base64ContentBlock[]>(initialBlocks);
+export function useFileUpload({
+  initialBlocks = [],
+}: UseFileUploadOptions = {}) {
+  const [contentBlocks, setContentBlocks] =
+    useState<Base64ContentBlock[]>(initialBlocks);
   const dropRef = useRef<HTMLDivElement>(null);
 
   const isDuplicate = (file: File, blocks: Base64ContentBlock[]) => {
@@ -178,4 +184,4 @@ export function useFileUpload({ initialBlocks = [] }: UseFileUploadOptions = {})
     removeBlock,
     resetBlocks,
   };
-} 
+}

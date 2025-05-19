@@ -13,5 +13,3 @@ export function getContentString(content: Message["content"]): string {
     .map((c) => c.text);
   return texts.join(" ");
 }
-
-
