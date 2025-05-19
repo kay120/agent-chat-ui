@@ -11,28 +11,7 @@ export function getContentString(content: Message["content"]): string {
   const texts = content
     .filter((c): c is { type: "text"; text: string } => c.type === "text")
     .map((c) => c.text);
-  if (texts.length > 0) return texts.join(" ");
-  // Handle multimodal: fallback to first non-text type
-  if (Array.isArray(content) && content.length > 0) {
-    const first = content[0];
-    if (typeof first === "object" && first !== null && "type" in first) {
-      switch (first.type) {
-        case "image_url":
-          return "Image";
-        default:
-          return "Other";
-      }
-    }
-  }
-  return "Multimodal message";
+  return texts.join(" ");
 }
 
-export function getContentImageUrls(content: Message["content"]): string[] {
-  if (typeof content === "string") return [];
-  return content
-    .filter((c) => c.type === "image_url")
-    .map((c) => {
-      if (typeof c.image_url === "string") return c.image_url;
-      return c.image_url.url;
-    });
-}
+

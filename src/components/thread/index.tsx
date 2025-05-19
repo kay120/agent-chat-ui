@@ -40,6 +40,7 @@ import {
 import { fileToImageBlock, fileToPDFBlock } from "@/lib/multimodal-utils";
 import type { Base64ContentBlock } from "@langchain/core/messages";
 import { MultimodalPreview } from "../ui/MultimodalPreview";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -117,7 +118,14 @@ export function Thread() {
     parseAsBoolean.withDefault(false),
   );
   const [input, setInput] = useState("");
-  const [contentBlocks, setContentBlocks] = useState<Base64ContentBlock[]>([]);
+  const {
+    contentBlocks,
+    setContentBlocks,
+    handleFileUpload,
+    dropRef,
+    removeBlock,
+    resetBlocks,
+  } = useFileUpload();
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
 
@@ -126,36 +134,6 @@ export function Thread() {
   const isLoading = stream.isLoading;
 
   const lastError = useRef<string | undefined>(undefined);
-
-  const dropRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!stream.error) {
-      lastError.current = undefined;
-      return;
-    }
-    try {
-      const message = (stream.error as any).message;
-      if (!message || lastError.current === message) {
-        // Message has already been logged. do not modify ref, return early.
-        return;
-      }
-
-      // Message is defined, and it has not been logged yet. Save it, and send the error
-      lastError.current = message;
-      toast.error("An error occurred. Please try again.", {
-        description: (
-          <p>
-            <strong>Error:</strong> <code>{message}</code>
-          </p>
-        ),
-        richColors: true,
-        closeButton: true,
-      });
-    } catch {
-      // no-op
-    }
-  }, [stream.error]);
 
   // TODO: this should be part of the useStream hook
   const prevMessageLength = useRef(0);
@@ -206,79 +184,12 @@ export function Thread() {
     setContentBlocks([]);
   };
 
-  const SUPPORTED_IMAGE_TYPES = [
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-  ];
-  const SUPPORTED_FILE_TYPES = [...SUPPORTED_IMAGE_TYPES, "application/pdf"];
+  const chatStarted = !!threadId || !!messages.length;
+  const hasNoAIOrToolMessages = !messages.find(
+    (m) => m.type === "ai" || m.type === "tool",
+  );
 
-  const isDuplicate = (file: File, blocks: Base64ContentBlock[]) => {
-    if (SUPPORTED_IMAGE_TYPES.includes(file.type)) {
-      return blocks.some(
-        (b) =>
-          b.type === "image" &&
-          b.metadata?.name === file.name &&
-          b.mime_type === file.type,
-      );
-    }
-    if (file.type === "application/pdf") {
-      return blocks.some(
-        (b) =>
-          b.type === "file" &&
-          b.mime_type === "application/pdf" &&
-          b.metadata?.filename === file.name,
-      );
-    }
-    return false;
-  };
-
-  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const fileArray = Array.from(files);
-    const validFiles = fileArray.filter((file) =>
-      SUPPORTED_FILE_TYPES.includes(file.type),
-    );
-    const invalidFiles = fileArray.filter(
-      (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
-    );
-    const duplicateFiles = validFiles.filter((file) =>
-      isDuplicate(file, contentBlocks),
-    );
-    const uniqueFiles = validFiles.filter(
-      (file) => !isDuplicate(file, contentBlocks),
-    );
-
-    if (invalidFiles.length > 0) {
-      toast.error(
-        "You have uploaded invalid file type. Please upload a JPEG, PNG, GIF, WEBP image or a PDF.",
-      );
-    }
-    if (duplicateFiles.length > 0) {
-      toast.error(
-        `Duplicate file(s) detected: ${duplicateFiles.map((f) => f.name).join(", ")}. Each file can only be uploaded once per message.`,
-      );
-    }
-
-    const imageFiles = uniqueFiles.filter((file) =>
-      SUPPORTED_IMAGE_TYPES.includes(file.type),
-    );
-    const pdfFiles = uniqueFiles.filter(
-      (file) => file.type === "application/pdf",
-    );
-
-    const imageBlocks = imageFiles.length
-      ? await Promise.all(imageFiles.map(fileToImageBlock))
-      : [];
-    const pdfBlocks = pdfFiles.length
-      ? await Promise.all(pdfFiles.map(fileToPDFBlock))
-      : [];
-    setContentBlocks((prev) => [...prev, ...imageBlocks, ...pdfBlocks]);
-    e.target.value = "";
-  };
-
+  // Restore handleRegenerate
   const handleRegenerate = (
     parentCheckpoint: Checkpoint | null | undefined,
   ) => {
@@ -290,90 +201,6 @@ export function Thread() {
       streamMode: ["values"],
     });
   };
-
-  const chatStarted = !!threadId || !!messages.length;
-  const hasNoAIOrToolMessages = !messages.find(
-    (m) => m.type === "ai" || m.type === "tool",
-  );
-
-  useEffect(() => {
-    if (!dropRef.current) return;
-
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDrop = async (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (!e.dataTransfer) return;
-
-      const files = Array.from(e.dataTransfer.files);
-      const validFiles = files.filter((file) =>
-        SUPPORTED_FILE_TYPES.includes(file.type),
-      );
-      const invalidFiles = files.filter(
-        (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
-      );
-      const duplicateFiles = validFiles.filter((file) =>
-        isDuplicate(file, contentBlocks),
-      );
-      const uniqueFiles = validFiles.filter(
-        (file) => !isDuplicate(file, contentBlocks),
-      );
-
-      if (invalidFiles.length > 0) {
-        toast.error(
-          "You have uploaded invalid file type. Please upload a JPEG, PNG, GIF, WEBP image or a PDF.",
-        );
-      }
-      if (duplicateFiles.length > 0) {
-        toast.error(
-          `Duplicate file(s) detected: ${duplicateFiles.map((f) => f.name).join(", ")}. Each file can only be uploaded once per message.`,
-        );
-      }
-
-      const imageFiles = uniqueFiles.filter((file) =>
-        SUPPORTED_IMAGE_TYPES.includes(file.type),
-      );
-      const pdfFiles = uniqueFiles.filter(
-        (file) => file.type === "application/pdf",
-      );
-
-      const imageBlocks: Base64ContentBlock[] = imageFiles.length
-        ? await Promise.all(imageFiles.map(fileToImageBlock))
-        : [];
-      const pdfBlocks: Base64ContentBlock[] = pdfFiles.length
-        ? await Promise.all(pdfFiles.map(fileToPDFBlock))
-        : [];
-      setContentBlocks((prev) => [...prev, ...imageBlocks, ...pdfBlocks]);
-    };
-
-    const handleDragEnter = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDragLeave = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const element = dropRef.current;
-    element.addEventListener("dragover", handleDragOver);
-    element.addEventListener("drop", handleDrop);
-    element.addEventListener("dragenter", handleDragEnter);
-    element.addEventListener("dragleave", handleDragLeave);
-
-    return () => {
-      element.removeEventListener("dragover", handleDragOver);
-      element.removeEventListener("drop", handleDrop);
-      element.removeEventListener("dragenter", handleDragEnter);
-      element.removeEventListener("dragleave", handleDragLeave);
-    };
-  });
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -576,11 +403,7 @@ export function Thread() {
                               key={idx}
                               block={imageBlock}
                               removable
-                              onRemove={() =>
-                                setContentBlocks(
-                                  contentBlocks.filter((_, i) => i !== idx),
-                                )
-                              }
+                              onRemove={() => removeBlock(idx)}
                               size="md"
                             />
                           ))}
@@ -602,11 +425,7 @@ export function Thread() {
                               key={idx}
                               block={pdfBlock}
                               removable
-                              onRemove={() =>
-                                setContentBlocks(
-                                  contentBlocks.filter((_, i) => i !== idx),
-                                )
-                              }
+                              onRemove={() => removeBlock(idx)}
                               size="md"
                             />
                           ))}
