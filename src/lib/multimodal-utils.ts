@@ -1,6 +1,5 @@
 import type { Base64ContentBlock } from "@langchain/core/messages";
 import { convertToOpenAIImageBlock } from "@langchain/core/messages";
-import { v4 as uuidv4 } from "uuid";
 
 // Returns a Promise of a typed multimodal block for images
 export async function fileToImageBlock(
@@ -24,18 +23,20 @@ export async function fileToPDFBlock(file: File): Promise<Base64ContentBlock> {
     source_type: "base64",
     mime_type: "application/pdf",
     data,
-    metadata: { name: file.name, filename: file.name },
+    metadata: { filename: file.name },
   };
 }
 
 // in lib/multimodal-utils.ts
-export function toOpenAIPDFBlock(block: Base64ContentBlock) {
+export function toOpenAIPDFBlock(
+  block: Base64ContentBlock,
+): Base64ContentBlock {
   return {
-       type: "file",
-      source_type: "base64",
-      data: block.data,
-      mime_type: block.mime_type ?? "application/pdf",
-      filename: block.metadata?.name ?? block.metadata?.filename ?? "file.pdf",
+    type: "file",
+    source_type: "base64",
+    data: block.data,
+    mime_type: block.mime_type ?? "application/pdf",
+    metadata: { filename: block.metadata?.filename ?? "file.pdf" },
   };
 }
 
