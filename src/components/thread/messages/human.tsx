@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { BranchSwitcher, CommandBar } from "./shared";
 import { MultimodalPreview } from "@/components/thread/MultimodalPreview";
-import type { Base64ContentBlock } from "@langchain/core/messages";
+import { isBase64ContentBlock } from "@/lib/multimodal-utils";
 
 function EditableContent({
   value,
@@ -32,36 +32,6 @@ function EditableContent({
       className="focus-visible:ring-0"
     />
   );
-}
-
-// Type guard for Base64ContentBlock
-function isBase64ContentBlock(block: unknown): block is Base64ContentBlock {
-  if (typeof block !== "object" || block === null || !("type" in block))
-    return false;
-  // file type (legacy)
-  if (
-    (block as { type: unknown }).type === "file" &&
-    "source_type" in block &&
-    (block as { source_type: unknown }).source_type === "base64" &&
-    "mime_type" in block &&
-    typeof (block as { mime_type?: unknown }).mime_type === "string" &&
-    ((block as { mime_type: string }).mime_type.startsWith("image/") ||
-      (block as { mime_type: string }).mime_type === "application/pdf")
-  ) {
-    return true;
-  }
-  // image type (new)
-  if (
-    (block as { type: unknown }).type === "image" &&
-    "source_type" in block &&
-    (block as { source_type: unknown }).source_type === "base64" &&
-    "mime_type" in block &&
-    typeof (block as { mime_type?: unknown }).mime_type === "string" &&
-    (block as { mime_type: string }).mime_type.startsWith("image/")
-  ) {
-    return true;
-  }
-  return false;
 }
 
 export function HumanMessage({
