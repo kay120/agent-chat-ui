@@ -21,6 +21,8 @@ export function useFileUpload({
   const [contentBlocks, setContentBlocks] =
     useState<Base64ContentBlock[]>(initialBlocks);
   const dropRef = useRef<HTMLDivElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const dragCounter = useRef(0);
 
   const isDuplicate = (file: File, blocks: Base64ContentBlock[]) => {
     if (file.type === "application/pdf") {
@@ -81,14 +83,45 @@ export function useFileUpload({
   useEffect(() => {
     if (!dropRef.current) return;
 
+    // Global drag events with counter for robust dragOver state
+    const handleWindowDragEnter = (e: DragEvent) => {
+      if (e.dataTransfer?.types?.includes("Files")) {
+        dragCounter.current++;
+        setDragOver(true);
+      }
+    };
+    const handleWindowDragLeave = (e: DragEvent) => {
+      if (e.dataTransfer?.types?.includes("Files")) {
+        dragCounter.current--;
+        if (dragCounter.current <= 0) {
+          setDragOver(false);
+          dragCounter.current = 0;
+        }
+      }
+    };
+    const handleWindowDrop = (e: DragEvent) => {
+      dragCounter.current = 0;
+      setDragOver(false);
+    };
+    const handleWindowDragEnd = (e: DragEvent) => {
+      dragCounter.current = 0;
+      setDragOver(false);
+    };
+    window.addEventListener("dragenter", handleWindowDragEnter);
+    window.addEventListener("dragleave", handleWindowDragLeave);
+    window.addEventListener("drop", handleWindowDrop);
+    window.addEventListener("dragend", handleWindowDragEnd);
+
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setDragOver(true);
     };
 
     const handleDrop = async (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setDragOver(false);
 
       if (!e.dataTransfer) return;
 
@@ -126,11 +159,13 @@ export function useFileUpload({
     const handleDragEnter = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setDragOver(true);
     };
 
     const handleDragLeave = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setDragOver(false);
     };
 
     const element = dropRef.current;
@@ -144,6 +179,11 @@ export function useFileUpload({
       element.removeEventListener("drop", handleDrop);
       element.removeEventListener("dragenter", handleDragEnter);
       element.removeEventListener("dragleave", handleDragLeave);
+      window.removeEventListener("dragenter", handleWindowDragEnter);
+      window.removeEventListener("dragleave", handleWindowDragLeave);
+      window.removeEventListener("drop", handleWindowDrop);
+      window.removeEventListener("dragend", handleWindowDragEnd);
+      dragCounter.current = 0;
     };
   }, [contentBlocks]);
 
@@ -160,5 +200,6 @@ export function useFileUpload({
     dropRef,
     removeBlock,
     resetBlocks,
+    dragOver,
   };
 }
