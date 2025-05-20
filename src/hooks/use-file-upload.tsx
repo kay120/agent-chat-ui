@@ -23,20 +23,20 @@ export function useFileUpload({
   const dropRef = useRef<HTMLDivElement>(null);
 
   const isDuplicate = (file: File, blocks: Base64ContentBlock[]) => {
-    if (SUPPORTED_FILE_TYPES.includes(file.type)) {
-      return blocks.some(
-        (b) =>
-          b.type === "image" &&
-          b.metadata?.name === file.name &&
-          b.mime_type === file.type,
-      );
-    }
     if (file.type === "application/pdf") {
       return blocks.some(
         (b) =>
           b.type === "file" &&
           b.mime_type === "application/pdf" &&
           b.metadata?.filename === file.name,
+      );
+    }
+    if (SUPPORTED_FILE_TYPES.includes(file.type)) {
+      return blocks.some(
+        (b) =>
+          b.type === "image" &&
+          b.metadata?.name === file.name &&
+          b.mime_type === file.type,
       );
     }
     return false;
