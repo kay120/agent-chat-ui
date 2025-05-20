@@ -440,15 +440,18 @@ export function Thread() {
 
                   <ScrollToBottom className="animate-in fade-in-0 zoom-in-95 absolute bottom-full left-1/2 mb-4 -translate-x-1/2" />
 
-                  <div ref={dropRef} className="bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl border shadow-xs">
+                  <div
+                    ref={dropRef}
+                    className="bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl border shadow-xs"
+                  >
                     <form
                       onSubmit={handleSubmit}
                       className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
                     >
                       <ContentBlocksPreview
-                      blocks={contentBlocks}
-                      onRemove={removeBlock}
-                    />
+                        blocks={contentBlocks}
+                        onRemove={removeBlock}
+                      />
                       <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
@@ -514,7 +517,7 @@ export function Thread() {
                         ) : (
                           <Button
                             type="submit"
-                            className="shadow-md transition-all ml-auto"
+                            className="ml-auto shadow-md transition-all"
                             disabled={
                               isLoading ||
                               (!input.trim() && contentBlocks.length === 0)
