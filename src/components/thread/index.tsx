@@ -133,6 +133,8 @@ export function Thread() {
     dropRef,
     removeBlock,
     resetBlocks,
+    dragOver,
+    handlePaste,
   } = useFileUpload();
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
@@ -442,7 +444,12 @@ export function Thread() {
 
                   <div
                     ref={dropRef}
-                    className="bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl border shadow-xs"
+                    className={cn(
+                      "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
+                      dragOver
+                        ? "border-primary border-2 border-dotted"
+                        : "border border-solid",
+                    )}
                   >
                     <form
                       onSubmit={handleSubmit}
@@ -455,6 +462,7 @@ export function Thread() {
                       <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        onPaste={handlePaste}
                         onKeyDown={(e) => {
                           if (
                             e.key === "Enter" &&

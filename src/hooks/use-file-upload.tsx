@@ -21,6 +21,8 @@ export function useFileUpload({
   const [contentBlocks, setContentBlocks] =
     useState<Base64ContentBlock[]>(initialBlocks);
   const dropRef = useRef<HTMLDivElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const dragCounter = useRef(0);
 
   const isDuplicate = (file: File, blocks: Base64ContentBlock[]) => {
     if (file.type === "application/pdf") {
@@ -81,14 +83,27 @@ export function useFileUpload({
   useEffect(() => {
     if (!dropRef.current) return;
 
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+    // Global drag events with counter for robust dragOver state
+    const handleWindowDragEnter = (e: DragEvent) => {
+      if (e.dataTransfer?.types?.includes("Files")) {
+        dragCounter.current += 1;
+        setDragOver(true);
+      }
     };
-
-    const handleDrop = async (e: DragEvent) => {
+    const handleWindowDragLeave = (e: DragEvent) => {
+      if (e.dataTransfer?.types?.includes("Files")) {
+        dragCounter.current -= 1;
+        if (dragCounter.current <= 0) {
+          setDragOver(false);
+          dragCounter.current = 0;
+        }
+      }
+    };
+    const handleWindowDrop = async (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      dragCounter.current = 0;
+      setDragOver(false);
 
       if (!e.dataTransfer) return;
 
@@ -122,28 +137,53 @@ export function useFileUpload({
         : [];
       setContentBlocks((prev) => [...prev, ...newBlocks]);
     };
+    const handleWindowDragEnd = (e: DragEvent) => {
+      dragCounter.current = 0;
+      setDragOver(false);
+    };
+    window.addEventListener("dragenter", handleWindowDragEnter);
+    window.addEventListener("dragleave", handleWindowDragLeave);
+    window.addEventListener("drop", handleWindowDrop);
+    window.addEventListener("dragend", handleWindowDragEnd);
 
+    // Prevent default browser behavior for dragover globally
+    const handleWindowDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    window.addEventListener("dragover", handleWindowDragOver);
+
+    // Remove element-specific drop event (handled globally)
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOver(true);
+    };
     const handleDragEnter = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setDragOver(true);
     };
-
     const handleDragLeave = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      setDragOver(false);
     };
-
     const element = dropRef.current;
     element.addEventListener("dragover", handleDragOver);
-    element.addEventListener("drop", handleDrop);
     element.addEventListener("dragenter", handleDragEnter);
     element.addEventListener("dragleave", handleDragLeave);
 
     return () => {
       element.removeEventListener("dragover", handleDragOver);
-      element.removeEventListener("drop", handleDrop);
       element.removeEventListener("dragenter", handleDragEnter);
       element.removeEventListener("dragleave", handleDragLeave);
+      window.removeEventListener("dragenter", handleWindowDragEnter);
+      window.removeEventListener("dragleave", handleWindowDragLeave);
+      window.removeEventListener("drop", handleWindowDrop);
+      window.removeEventListener("dragend", handleWindowDragEnd);
+      window.removeEventListener("dragover", handleWindowDragOver);
+      dragCounter.current = 0;
     };
   }, [contentBlocks]);
 
@@ -153,6 +193,68 @@ export function useFileUpload({
 
   const resetBlocks = () => setContentBlocks([]);
 
+  /**
+   * Handle paste event for files (images, PDFs)
+   * Can be used as onPaste={handlePaste} on a textarea or input
+   */
+  const handlePaste = async (
+    e: React.ClipboardEvent<HTMLTextAreaElement | HTMLInputElement>,
+  ) => {
+    e.preventDefault();
+    const items = e.clipboardData.items;
+    if (!items) return;
+    const files: File[] = [];
+    for (let i = 0; i < items.length; i += 1) {
+      const item = items[i];
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) files.push(file);
+      }
+    }
+    if (files.length === 0) return;
+    const validFiles = files.filter((file) =>
+      SUPPORTED_FILE_TYPES.includes(file.type),
+    );
+    const invalidFiles = files.filter(
+      (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
+    );
+    const isDuplicate = (file: File) => {
+      if (file.type === "application/pdf") {
+        return contentBlocks.some(
+          (b) =>
+            b.type === "file" &&
+            b.mime_type === "application/pdf" &&
+            b.metadata?.filename === file.name,
+        );
+      }
+      if (SUPPORTED_FILE_TYPES.includes(file.type)) {
+        return contentBlocks.some(
+          (b) =>
+            b.type === "image" &&
+            b.metadata?.name === file.name &&
+            b.mime_type === file.type,
+        );
+      }
+      return false;
+    };
+    const duplicateFiles = validFiles.filter(isDuplicate);
+    const uniqueFiles = validFiles.filter((file) => !isDuplicate(file));
+    if (invalidFiles.length > 0) {
+      toast.error(
+        "You have pasted an invalid file type. Please paste a JPEG, PNG, GIF, WEBP image or a PDF.",
+      );
+    }
+    if (duplicateFiles.length > 0) {
+      toast.error(
+        `Duplicate file(s) detected: ${duplicateFiles.map((f) => f.name).join(", ")}. Each file can only be uploaded once per message.`,
+      );
+    }
+    if (uniqueFiles.length > 0) {
+      const newBlocks = await Promise.all(uniqueFiles.map(fileToContentBlock));
+      setContentBlocks((prev) => [...prev, ...newBlocks]);
+    }
+  };
+
   return {
     contentBlocks,
     setContentBlocks,
@@ -160,5 +262,7 @@ export function useFileUpload({
     dropRef,
     removeBlock,
     resetBlocks,
+    dragOver,
+    handlePaste,
   };
 }
