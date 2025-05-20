@@ -86,13 +86,13 @@ export function useFileUpload({
     // Global drag events with counter for robust dragOver state
     const handleWindowDragEnter = (e: DragEvent) => {
       if (e.dataTransfer?.types?.includes("Files")) {
-        dragCounter.current++;
+        dragCounter.current += 1;
         setDragOver(true);
       }
     };
     const handleWindowDragLeave = (e: DragEvent) => {
       if (e.dataTransfer?.types?.includes("Files")) {
-        dragCounter.current--;
+        dragCounter.current -= 1;
         if (dragCounter.current <= 0) {
           setDragOver(false);
           dragCounter.current = 0;
@@ -204,7 +204,7 @@ export function useFileUpload({
     const items = e.clipboardData.items;
     if (!items) return;
     const files: File[] = [];
-    for (let i = 0; i < items.length; i++) {
+    for (let i = 0; i < items.length; i += 1) {
       const item = items[i];
       if (item.kind === "file") {
         const file = item.getAsFile();
