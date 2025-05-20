@@ -53,7 +53,7 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss-animate": "^1.0.7",
     "use-stick-to-bottom": "^1.0.46",
-    "uuid": "^11.0.5",
+    "uuid": "^11.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -64,6 +64,7 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@types/react-syntax-highlighter": "^15.5.13",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.20",
     "dotenv": "^16.4.7",
     "eslint": "^9.19.0",
@@ -81,8 +82,7 @@
     "typescript-eslint": "^8.22.0"
   },
   "overrides": {
-    "react-is": "^19.0.0-rc-69d4b800-20241021",
-    "@langchain/langgraph-checkpoint": "^0.0.16"
+    "react-is": "^19.0.0-rc-69d4b800-20241021"
   },
   "packageManager": "pnpm@10.5.1"
 }
