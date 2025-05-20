@@ -193,6 +193,67 @@ export function useFileUpload({
 
   const resetBlocks = () => setContentBlocks([]);
 
+  /**
+   * Handle paste event for files (images, PDFs)
+   * Can be used as onPaste={handlePaste} on a textarea or input
+   */
+  const handlePaste = async (
+    e: React.ClipboardEvent<HTMLTextAreaElement | HTMLInputElement>,
+  ) => {
+    const items = e.clipboardData.items;
+    if (!items) return;
+    const files: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) files.push(file);
+      }
+    }
+    if (files.length === 0) return;
+    const validFiles = files.filter((file) =>
+      SUPPORTED_FILE_TYPES.includes(file.type),
+    );
+    const invalidFiles = files.filter(
+      (file) => !SUPPORTED_FILE_TYPES.includes(file.type),
+    );
+    const isDuplicate = (file: File) => {
+      if (file.type === "application/pdf") {
+        return contentBlocks.some(
+          (b) =>
+            b.type === "file" &&
+            b.mime_type === "application/pdf" &&
+            b.metadata?.filename === file.name,
+        );
+      }
+      if (SUPPORTED_FILE_TYPES.includes(file.type)) {
+        return contentBlocks.some(
+          (b) =>
+            b.type === "image" &&
+            b.metadata?.name === file.name &&
+            b.mime_type === file.type,
+        );
+      }
+      return false;
+    };
+    const duplicateFiles = validFiles.filter(isDuplicate);
+    const uniqueFiles = validFiles.filter((file) => !isDuplicate(file));
+    if (invalidFiles.length > 0) {
+      toast.error(
+        "You have pasted an invalid file type. Please paste a JPEG, PNG, GIF, WEBP image or a PDF.",
+      );
+    }
+    if (duplicateFiles.length > 0) {
+      toast.error(
+        `Duplicate file(s) detected: ${duplicateFiles.map((f) => f.name).join(", ")}. Each file can only be uploaded once per message.`,
+      );
+    }
+    if (uniqueFiles.length > 0) {
+      const newBlocks = await Promise.all(uniqueFiles.map(fileToContentBlock));
+      setContentBlocks((prev) => [...prev, ...newBlocks]);
+    }
+  };
+
   return {
     contentBlocks,
     setContentBlocks,
@@ -201,5 +262,6 @@ export function useFileUpload({
     removeBlock,
     resetBlocks,
     dragOver,
+    handlePaste,
   };
 }

@@ -134,6 +134,7 @@ export function Thread() {
     removeBlock,
     resetBlocks,
     dragOver,
+    handlePaste,
   } = useFileUpload();
   const [firstTokenReceived, setFirstTokenReceived] = useState(false);
   const isLargeScreen = useMediaQuery("(min-width: 1024px)");
@@ -466,6 +467,7 @@ export function Thread() {
                       <textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        onPaste={handlePaste}
                         onKeyDown={(e) => {
                           if (
                             e.key === "Enter" &&
