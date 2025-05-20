@@ -99,28 +99,10 @@ export function useFileUpload({
         }
       }
     };
-    const handleWindowDrop = (e: DragEvent) => {
-      dragCounter.current = 0;
-      setDragOver(false);
-    };
-    const handleWindowDragEnd = (e: DragEvent) => {
-      dragCounter.current = 0;
-      setDragOver(false);
-    };
-    window.addEventListener("dragenter", handleWindowDragEnter);
-    window.addEventListener("dragleave", handleWindowDragLeave);
-    window.addEventListener("drop", handleWindowDrop);
-    window.addEventListener("dragend", handleWindowDragEnd);
-
-    const handleDragOver = (e: DragEvent) => {
+    const handleWindowDrop = async (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      setDragOver(true);
-    };
-
-    const handleDrop = async (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+      dragCounter.current = 0;
       setDragOver(false);
 
       if (!e.dataTransfer) return;
@@ -155,34 +137,52 @@ export function useFileUpload({
         : [];
       setContentBlocks((prev) => [...prev, ...newBlocks]);
     };
+    const handleWindowDragEnd = (e: DragEvent) => {
+      dragCounter.current = 0;
+      setDragOver(false);
+    };
+    window.addEventListener("dragenter", handleWindowDragEnter);
+    window.addEventListener("dragleave", handleWindowDragLeave);
+    window.addEventListener("drop", handleWindowDrop);
+    window.addEventListener("dragend", handleWindowDragEnd);
 
+    // Prevent default browser behavior for dragover globally
+    const handleWindowDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    window.addEventListener("dragover", handleWindowDragOver);
+
+    // Remove element-specific drop event (handled globally)
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragOver(true);
+    };
     const handleDragEnter = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setDragOver(true);
     };
-
     const handleDragLeave = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setDragOver(false);
     };
-
     const element = dropRef.current;
     element.addEventListener("dragover", handleDragOver);
-    element.addEventListener("drop", handleDrop);
     element.addEventListener("dragenter", handleDragEnter);
     element.addEventListener("dragleave", handleDragLeave);
 
     return () => {
       element.removeEventListener("dragover", handleDragOver);
-      element.removeEventListener("drop", handleDrop);
       element.removeEventListener("dragenter", handleDragEnter);
       element.removeEventListener("dragleave", handleDragLeave);
       window.removeEventListener("dragenter", handleWindowDragEnter);
       window.removeEventListener("dragleave", handleWindowDragLeave);
       window.removeEventListener("drop", handleWindowDrop);
       window.removeEventListener("dragend", handleWindowDragEnd);
+      window.removeEventListener("dragover", handleWindowDragOver);
       dragCounter.current = 0;
     };
   }, [contentBlocks]);
@@ -200,6 +200,7 @@ export function useFileUpload({
   const handlePaste = async (
     e: React.ClipboardEvent<HTMLTextAreaElement | HTMLInputElement>,
   ) => {
+    e.preventDefault();
     const items = e.clipboardData.items;
     if (!items) return;
     const files: File[] = [];
