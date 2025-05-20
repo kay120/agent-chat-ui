@@ -445,17 +445,12 @@ export function Thread() {
                   <div
                     ref={dropRef}
                     className={cn(
-                      "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl border shadow-xs transition-all",
-                      dragOver ? "border-primary border-2 border-dotted" : "",
+                      "bg-muted relative z-10 mx-auto mb-8 w-full max-w-3xl rounded-2xl shadow-xs transition-all",
+                      dragOver
+                        ? "border-primary border-2 border-dotted"
+                        : "border border-solid",
                     )}
                   >
-                    {dragOver && (
-                      <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-black/40">
-                        <span className="text-lg font-semibold text-white">
-                          Drop file here
-                        </span>
-                      </div>
-                    )}
                     <form
                       onSubmit={handleSubmit}
                       className="mx-auto grid max-w-3xl grid-rows-[1fr_auto] gap-2"
