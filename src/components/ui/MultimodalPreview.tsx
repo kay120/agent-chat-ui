@@ -1,7 +1,8 @@
 import React from "react";
 import { File, Image as ImageIcon, X as XIcon } from "lucide-react";
 import type { Base64ContentBlock } from "@langchain/core/messages";
-
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 export interface MultimodalPreviewProps {
   block: Base64ContentBlock;
   removable?: boolean;
@@ -14,7 +15,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
   block,
   removable = false,
   onRemove,
-  className = "",
+  className,
   size = "md",
 }) => {
   // Sizing
@@ -38,13 +39,13 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
     if (size === "sm") imgClass = "rounded-md object-cover h-10 w-10 text-base";
     if (size === "lg") imgClass = "rounded-md object-cover h-24 w-24 text-xl";
     return (
-      <div
-        className={`relative inline-block${className ? ` ${className}` : ""}`}
-      >
-        <img
+      <div className={cn("relative inline-block", className)}>
+        <Image
           src={url}
           alt={String(block.metadata?.name || "uploaded image")}
           className={imgClass}
+          width={size === "sm" ? 16 : size === "md" ? 32 : 48}
+          height={size === "sm" ? 16 : size === "md" ? 32 : 48}
         />
         {removable && (
           <button
@@ -68,20 +69,24 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
   ) {
     const filename =
       block.metadata?.filename || block.metadata?.name || "PDF file";
-    const fileClass = `relative flex items-center gap-2 rounded-md border bg-gray-100 px-3 py-2${className ? ` ${className}` : ""}`;
     return (
-      <div className={fileClass}>
+      <div
+        className={cn(
+          "relative flex items-center gap-2 rounded-md border bg-gray-100 px-3 py-2",
+          className
+        )}
+      >
         <File
-          className={
-            "flex-shrink-0 text-teal-700 " +
-            (size === "sm" ? "h-5 w-5" : "h-7 w-7")
-          }
+          className={cn(
+            "flex-shrink-0 text-teal-700",
+            size === "sm" ? "h-5 w-5" : "h-7 w-7"
+          )}
         />
         <span
-          className={
-            "truncate text-sm text-gray-800 " +
-            (size === "sm" ? "max-w-[80px]" : "max-w-[160px]")
-          }
+          className={cn(
+            "truncate text-sm text-gray-800",
+            size === "sm" ? "max-w-[80px]" : "max-w-[160px]"
+          )}
         >
           {String(filename)}
         </span>
@@ -100,9 +105,13 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
   }
 
   // Fallback for unknown types
-  const fallbackClass = `flex items-center gap-2 rounded-md border bg-gray-100 px-3 py-2 text-gray-500${className ? ` ${className}` : ""}`;
   return (
-    <div className={fallbackClass}>
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-md border bg-gray-100 px-3 py-2 text-gray-500",
+        className
+      )}
+    >
       <File className="h-5 w-5 flex-shrink-0" />
       <span className="truncate text-xs">Unsupported file type</span>
       {removable && (

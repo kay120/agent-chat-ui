@@ -138,9 +138,7 @@ export function HumanMessage({
               </div>
             )}
             {/* Render text if present, otherwise fallback to file/image name */}
-            {contentString &&
-            contentString !== "Other" &&
-            contentString !== "Multimodal message" ? (
+            {contentString ? (
               <p className="bg-muted ml-auto w-fit rounded-3xl px-4 py-2 text-right whitespace-pre-wrap">
                 {contentString}
               </p>

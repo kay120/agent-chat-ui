@@ -3,14 +3,11 @@ import { toast } from "sonner";
 import type { Base64ContentBlock } from "@langchain/core/messages";
 import { fileToContentBlock } from "@/lib/multimodal-utils";
 
-export const SUPPORTED_IMAGE_TYPES = [
+export const SUPPORTED_FILE_TYPES = [
   "image/jpeg",
   "image/png",
   "image/gif",
   "image/webp",
-];
-export const SUPPORTED_FILE_TYPES = [
-  ...SUPPORTED_IMAGE_TYPES,
   "application/pdf",
 ];
 
@@ -26,7 +23,7 @@ export function useFileUpload({
   const dropRef = useRef<HTMLDivElement>(null);
 
   const isDuplicate = (file: File, blocks: Base64ContentBlock[]) => {
-    if (SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+    if (SUPPORTED_FILE_TYPES.includes(file.type)) {
       return blocks.some(
         (b) =>
           b.type === "image" &&
