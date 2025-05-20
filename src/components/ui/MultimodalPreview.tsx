@@ -73,19 +73,19 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
       <div
         className={cn(
           "relative flex items-center gap-2 rounded-md border bg-gray-100 px-3 py-2",
-          className
+          className,
         )}
       >
         <File
           className={cn(
             "flex-shrink-0 text-teal-700",
-            size === "sm" ? "h-5 w-5" : "h-7 w-7"
+            size === "sm" ? "h-5 w-5" : "h-7 w-7",
           )}
         />
         <span
           className={cn(
             "truncate text-sm text-gray-800",
-            size === "sm" ? "max-w-[80px]" : "max-w-[160px]"
+            size === "sm" ? "max-w-[80px]" : "max-w-[160px]",
           )}
         >
           {String(filename)}
@@ -109,7 +109,7 @@ export const MultimodalPreview: React.FC<MultimodalPreviewProps> = ({
     <div
       className={cn(
         "flex items-center gap-2 rounded-md border bg-gray-100 px-3 py-2 text-gray-500",
-        className
+        className,
       )}
     >
       <File className="h-5 w-5 flex-shrink-0" />
