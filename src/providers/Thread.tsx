@@ -19,6 +19,8 @@ interface ThreadContextType {
   setThreads: Dispatch<SetStateAction<Thread[]>>;
   threadsLoading: boolean;
   setThreadsLoading: Dispatch<SetStateAction<boolean>>;
+  deleteThread: (threadId: string) => Promise<boolean>;
+  createThread: () => Promise<string | null>;
 }
 
 const ThreadContext = createContext<ThreadContextType | undefined>(undefined);
@@ -39,19 +41,68 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadsLoading, setThreadsLoading] = useState(false);
 
+  // 使用默认值，与 Stream 提供者保持一致
+  const DEFAULT_API_URL = "http://localhost:2024";
+  const effectiveApiUrl = apiUrl || DEFAULT_API_URL;
+
   const getThreads = useCallback(async (): Promise<Thread[]> => {
-    if (!apiUrl || !assistantId) return [];
-    const client = createClient(apiUrl, getApiKey() ?? undefined);
+    if (!effectiveApiUrl) return [];
 
-    const threads = await client.threads.search({
-      metadata: {
-        ...getThreadSearchMetadata(assistantId),
-      },
-      limit: 100,
-    });
+    try {
+      setThreadsLoading(true);
+      const response = await fetch(`${effectiveApiUrl}/threads`);
+      if (!response.ok) {
+        throw new Error('获取线程失败');
+      }
+      const threads = await response.json();
+      setThreads(threads);
+      return threads;
+    } catch (error) {
+      console.error('获取历史记录失败:', error);
+      return [];
+    } finally {
+      setThreadsLoading(false);
+    }
+  }, [effectiveApiUrl]);
 
-    return threads;
-  }, [apiUrl, assistantId]);
+  const deleteThread = useCallback(async (threadId: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${effectiveApiUrl}/threads/${threadId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('删除线程失败');
+      }
+      const result = await response.json();
+      if (result.status === 'deleted') {
+        // 从本地状态中移除已删除的线程
+        setThreads(prevThreads => prevThreads.filter(t => t.thread_id !== threadId));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('删除历史记录失败:', error);
+      return false;
+    }
+  }, [effectiveApiUrl]);
+
+  const createThread = useCallback(async (): Promise<string | null> => {
+    try {
+      console.log('🆕 创建新线程...');
+      const response = await fetch(`${effectiveApiUrl}/threads`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        throw new Error('创建线程失败');
+      }
+      const result = await response.json();
+      console.log('✅ 新线程创建成功:', result.thread_id);
+      return result.thread_id;
+    } catch (error) {
+      console.error('创建新线程失败:', error);
+      return null;
+    }
+  }, [effectiveApiUrl]);
 
   const value = {
     getThreads,
@@ -59,6 +110,8 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     setThreads,
     threadsLoading,
     setThreadsLoading,
+    deleteThread,
+    createThread,
   };
 
   return (
@@ -69,7 +122,7 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 export function useThreads() {
   const context = useContext(ThreadContext);
   if (context === undefined) {
-    throw new Error("useThreads must be used within a ThreadProvider");
+    throw new Error("useThreads 必须在 ThreadProvider 内使用");
   }
   return context;
 }
