@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useStreamContext } from "@/providers/Stream";
+import { useThreads } from "@/providers/Thread";
 import { useState, FormEvent } from "react";
 import { Button } from "../ui/button";
 import { Checkpoint, Message } from "@langchain/langgraph-sdk";
@@ -114,6 +115,7 @@ function OpenGitHubRepo() {
 export function Thread() {
   const [artifactContext, setArtifactContext] = useArtifactContext();
   const [artifactOpen, closeArtifact] = useArtifactOpen();
+  const { createThread } = useThreads();
 
   const [threadId, _setThreadId] = useQueryState("threadId");
   const [chatHistoryOpen, setChatHistoryOpen] = useQueryState(
@@ -142,14 +144,39 @@ export function Thread() {
   const messages = stream.messages;
   const isLoading = stream.isLoading;
 
+  // 调试日志
+  console.log('🔍 Thread组件状态:', {
+    isLoading: stream.isLoading,
+    messagesCount: messages.length,
+    hasStopMethod: typeof stream.stop === 'function'
+  });
+
   const lastError = useRef<string | undefined>(undefined);
 
   const setThreadId = (id: string | null) => {
+    console.log('🔄 设置 threadId:', id);
     _setThreadId(id);
 
     // close artifact and reset artifact context
     closeArtifact();
     setArtifactContext({});
+  };
+
+  const handleNewThread = async () => {
+    console.log('🆕 开始创建新对话...');
+    try {
+      const newThreadId = await createThread();
+      if (newThreadId) {
+        console.log('✅ 新对话创建成功，threadId:', newThreadId);
+        // 直接切换到新线程，不中断当前对话
+        // 当前对话会在后台继续完成
+        setThreadId(newThreadId);
+      } else {
+        console.error('❌ 创建新对话失败');
+      }
+    } catch (error) {
+      console.error('❌ 创建新对话时出错:', error);
+    }
   };
 
   useEffect(() => {
@@ -166,10 +193,10 @@ export function Thread() {
 
       // Message is defined, and it has not been logged yet. Save it, and send the error
       lastError.current = message;
-      toast.error("An error occurred. Please try again.", {
+      toast.error("发生错误，请重试。", {
         description: (
           <p>
-            <strong>Error:</strong> <code>{message}</code>
+            <strong>错误:</strong> <code>{message}</code>
           </p>
         ),
         richColors: true,
@@ -194,11 +221,25 @@ export function Thread() {
     prevMessageLength.current = messages.length;
   }, [messages]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if ((input.trim().length === 0 && contentBlocks.length === 0) || isLoading)
       return;
     setFirstTokenReceived(false);
+
+    // 如果当前没有线程ID，先创建新线程
+    let currentThreadId = threadId;
+    if (!currentThreadId) {
+      console.log('🆕 首页提交，创建新线程...');
+      currentThreadId = await createThread();
+      if (currentThreadId) {
+        setThreadId(currentThreadId);
+        console.log('✅ 新线程创建成功:', currentThreadId);
+      } else {
+        console.error('❌ 创建新线程失败');
+        return;
+      }
+    }
 
     const newHumanMessage: Message = {
       id: uuidv4(),
@@ -350,7 +391,7 @@ export function Thread() {
                 </div>
                 <motion.button
                   className="flex cursor-pointer items-center gap-2"
-                  onClick={() => setThreadId(null)}
+                  onClick={handleNewThread}
                   animate={{
                     marginLeft: !chatHistoryOpen ? 48 : 0,
                   }}
@@ -377,9 +418,9 @@ export function Thread() {
                 <TooltipIconButton
                   size="lg"
                   className="p-4"
-                  tooltip="New thread"
+                  tooltip="新建对话"
                   variant="ghost"
-                  onClick={() => setThreadId(null)}
+                  onClick={handleNewThread}
                 >
                   <SquarePen className="size-5" />
                 </TooltipIconButton>
@@ -479,7 +520,7 @@ export function Thread() {
                             form?.requestSubmit();
                           }
                         }}
-                        placeholder="Type your message..."
+                        placeholder="输入您的消息..."
                         className="field-sizing-content resize-none border-none bg-transparent p-3.5 pb-0 shadow-none ring-0 outline-none focus:ring-0 focus:outline-none"
                       />
 
@@ -495,7 +536,7 @@ export function Thread() {
                               htmlFor="render-tool-calls"
                               className="text-sm text-gray-600"
                             >
-                              Hide Tool Calls
+                              隐藏工具调用
                             </Label>
                           </div>
                         </div>
@@ -505,7 +546,7 @@ export function Thread() {
                         >
                           <Plus className="size-5 text-gray-600" />
                           <span className="text-sm text-gray-600">
-                            Upload PDF or Image
+                            上传PDF或图片
                           </span>
                         </Label>
                         <input
@@ -519,11 +560,17 @@ export function Thread() {
                         {stream.isLoading ? (
                           <Button
                             key="stop"
-                            onClick={() => stream.stop()}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('🔴 取消按钮被点击');
+                              stream.stop();
+                            }}
                             className="ml-auto"
+                            type="button"
                           >
                             <LoaderCircle className="h-4 w-4 animate-spin" />
-                            Cancel
+                            取消
                           </Button>
                         ) : (
                           <Button
@@ -534,7 +581,7 @@ export function Thread() {
                               (!input.trim() && contentBlocks.length === 0)
                             }
                           >
-                            Send
+                            发送
                           </Button>
                         )}
                       </div>
