@@ -173,9 +173,10 @@ async def delete_thread(thread_id: str):
     """删除线程"""
     if thread_id not in thread_history:
         raise HTTPException(status_code=404, detail="Thread not found")
-    
+
     del thread_history[thread_id]
-    return {"message": f"Thread {thread_id} deleted successfully"}
+    print(f"🗑️ 删除线程: {thread_id}")
+    return {"status": "deleted", "thread_id": thread_id}
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
@@ -370,8 +371,24 @@ async def runs_stream(request: Request):
         thread_id = str(uuid.uuid4())
         config = {"configurable": {"thread_id": thread_id}}
 
+        # 初始化线程历史
+        if thread_id not in thread_history:
+            thread_history[thread_id] = []
+
+        # 保存用户消息到历史
+        for msg in messages:
+            if isinstance(msg, HumanMessage):
+                thread_history[thread_id].append({
+                    "role": "user",
+                    "content": msg.content,
+                    "timestamp": datetime.now().isoformat()
+                })
+
         async def generate():
+            full_response = ""
+            chunk_count = 0
             try:
+                print(f"🌊 开始流式处理，线程ID: {thread_id}")
                 # LangGraph SDK 格式的流式响应
                 async for event in graph.astream_events(
                     {"messages": messages},
@@ -384,11 +401,28 @@ async def runs_stream(request: Request):
                         if "chunk" in chunk_data and hasattr(chunk_data["chunk"], "content"):
                             chunk_content = chunk_data["chunk"].content
                             if chunk_content:
+                                chunk_count += 1
+                                full_response += chunk_content
+                                print(f"📦 收到chunk #{chunk_count}: {chunk_content[:20]}...")
                                 # 使用 LangGraph SDK 兼容的格式
                                 yield f"data: {json.dumps({'event': 'values', 'data': {'messages': [{'type': 'ai', 'content': chunk_content}]}})}\n\n"
+
+                print(f"✅ 流式处理完成，共收到 {chunk_count} 个chunks，总长度: {len(full_response)}")
+
             except Exception as e:
                 print(f"❌ LangGraph SDK stream error: {e}")
+                import traceback
+                traceback.print_exc()
                 yield f"data: {json.dumps({'event': 'error', 'data': {'error': str(e)}})}\n\n"
+            finally:
+                # 保存AI回复到历史（即使流式请求被中断也要保存）
+                if full_response:
+                    thread_history[thread_id].append({
+                        "role": "assistant",
+                        "content": full_response,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    print(f"💾 已保存对话到线程: {thread_id}, 共 {len(thread_history[thread_id])} 条消息")
 
         return StreamingResponse(generate(), media_type="text/plain")
 

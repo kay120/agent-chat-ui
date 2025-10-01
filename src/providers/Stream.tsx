@@ -4,6 +4,7 @@ import React, {
   ReactNode,
   useState,
   useEffect,
+  useRef,
 } from "react";
 import { flushSync } from "react-dom";
 import { useStream } from "@langchain/langgraph-sdk/react";
@@ -90,34 +91,65 @@ const StreamSession = ({
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [currentStreamThreadId, setCurrentStreamThreadId] = useState<string | null>(null);
 
+  // 用一个 ref 来跟踪上一个 threadId
+  const prevThreadIdRef = useRef<string | null>(threadId);
+
+  // 用一个 ref 来实时跟踪当前的 threadId（不受 useEffect 延迟影响）
+  const currentThreadIdRef = useRef<string | null>(threadId);
+
+  // 后台运行的线程映射：threadId -> messages
+  const backgroundThreadsRef = useRef<Map<string, Message[]>>(new Map());
+
+  // 同步更新 currentThreadIdRef
+  useEffect(() => {
+    currentThreadIdRef.current = threadId;
+  }, [threadId]);
+
   // 当 threadId 改变时处理消息加载
   useEffect(() => {
+    const prevThreadId = prevThreadIdRef.current;
     console.log('🔍 useEffect 触发:', {
+      prevThreadId,
       threadId,
       isLoading,
-      currentStreamThreadId,
       messagesLength: messages.length
     });
 
+    // 如果 threadId 没有变化，不要重新加载
+    if (prevThreadId === threadId) {
+      console.log('📝 threadId 未变化，跳过加载');
+      return;
+    }
+
+    // 如果之前的线程正在加载，保存当前消息到后台线程映射
+    if (prevThreadId && isLoading) {
+      console.log('💾 保存当前线程到后台:', prevThreadId, '消息数:', messages.length);
+      backgroundThreadsRef.current.set(prevThreadId, [...messages]);
+    }
+
+    // 更新 ref
+    prevThreadIdRef.current = threadId;
+
+    // 如果 threadId 变为 null（新建对话）
     if (threadId === null) {
       setMessages([]);
       console.log('🆕 新建对话，清空消息历史');
-    } else {
-      // 只有在没有正在进行的流式请求，或者流式请求不是当前线程时才加载消息
-      // 但是如果当前已经有消息了，并且是同一个线程，就不要重新加载
-      if (!isLoading || currentStreamThreadId !== threadId) {
-        // 如果当前消息不为空，并且是同一个线程，跳过加载
-        if (messages.length > 0 && currentStreamThreadId === threadId) {
-          console.log('📝 当前线程已有消息，跳过重新加载');
-          return;
-        }
-        console.log('🔄 切换到线程:', threadId, '当前流式线程:', currentStreamThreadId);
-        loadThreadMessages(threadId);
-      } else {
-        console.log('⏳ 当前线程正在流式处理中，跳过消息加载');
-      }
+      return;
     }
-  }, [threadId, isLoading, currentStreamThreadId]);
+
+    // 检查是否有后台运行的线程数据
+    const backgroundMessages = backgroundThreadsRef.current.get(threadId);
+    if (backgroundMessages) {
+      console.log('📥 从后台恢复线程消息:', threadId, '消息数:', backgroundMessages.length);
+      setMessages(backgroundMessages);
+      // 不要删除后台数据，因为可能还在继续接收
+      return;
+    }
+
+    // 切换到不同的线程，加载该线程的消息
+    console.log('🔄 切换线程，加载消息:', threadId);
+    loadThreadMessages(threadId);
+  }, [threadId]);
 
   const loadThreadMessages = async (selectedThreadId: string) => {
     try {
@@ -126,12 +158,16 @@ const StreamSession = ({
       if (!response.ok) {
         throw new Error('获取线程失败');
       }
-      const threads = await response.json();
-      const selectedThread = threads.find((t: any) => t.thread_id === selectedThreadId);
+      const data = await response.json();
+      // 后端返回的是 {threads: [...]} 格式
+      const threadsList = data.threads || data;
+      console.log('📋 获取到线程列表:', threadsList);
+
+      const selectedThread = threadsList.find((t: any) => t.thread_id === selectedThreadId);
 
       if (selectedThread && selectedThread.values && selectedThread.values.messages) {
         const threadMessages = selectedThread.values.messages.map((msg: any) => ({
-          id: msg.id,
+          id: msg.id || `msg-${Date.now()}`,
           type: msg.type,
           content: msg.content,
         }));
@@ -227,6 +263,15 @@ const StreamSession = ({
     setCurrentRunId(tempRunId);
     console.log('🆔 设置临时 Run ID:', tempRunId);
 
+    // 🆕 立即刷新历史记录列表（在开始流式输出时）
+    console.log('🔄 开始流式输出，立即刷新历史记录...');
+    try {
+      await getThreads();  // getThreads() 内部已经调用了 setThreads()
+      console.log('✅ 历史记录已刷新（开始时）');
+    } catch (error) {
+      console.error('❌ 刷新历史记录失败（开始时）:', error);
+    }
+
     try {
       const requestBody = {
         input: {
@@ -291,42 +336,58 @@ const StreamSession = ({
                 const lastMessage = messages[messages.length - 1];
 
                 if (lastMessage && lastMessage.type === 'ai' && lastMessage.content) {
-                  // 这是AI的回复内容
-                  const newContent = lastMessage.content;
-                  console.log('🤖 收到AI回复片段:', newContent);
+                  // 这是AI的回复内容（后端已经累积好了，直接使用）
+                  const fullContent = lastMessage.content;
+                  console.log('🤖 收到AI回复（完整内容）:', fullContent.substring(0, 50) + '...');
 
-                  // 累积内容 - LangGraph 发送的是增量内容，需要累积
-                  aiContent += newContent;
-                  console.log('📝 累积AI内容，新增:', newContent, '总长度:', aiContent.length);
+                  // 直接使用后端发送的完整内容，不需要前端再累积
+                  aiContent = fullContent;
+                  console.log('📝 更新AI内容，总长度:', aiContent.length);
 
-                  // 立即更新界面
-                  flushSync(() => {
-                    setMessages(prevMessages => {
-                      const newMessages = [...prevMessages];
+                  // 立即更新界面或后台线程
+                  const updateMessages = (prevMessages: Message[]) => {
+                    const newMessages = [...prevMessages];
 
-                      // 查找或创建AI消息
-                      let aiMessageIndex = newMessages.findIndex(
-                        msg => msg.id === aiMessageId && msg.type === 'ai'
-                      );
+                    // 查找或创建AI消息
+                    let aiMessageIndex = newMessages.findIndex(
+                      msg => msg.id === aiMessageId && msg.type === 'ai'
+                    );
 
-                      if (aiMessageIndex === -1) {
-                        // 创建新的AI消息
-                        newMessages.push({
-                          id: aiMessageId,
-                          type: 'ai',
-                          content: aiContent
-                        });
-                      } else {
-                        // 更新现有AI消息
-                        newMessages[aiMessageIndex] = {
-                          ...newMessages[aiMessageIndex],
-                          content: aiContent
-                        };
-                      }
+                    if (aiMessageIndex === -1) {
+                      // 创建新的AI消息
+                      newMessages.push({
+                        id: aiMessageId,
+                        type: 'ai',
+                        content: aiContent
+                      });
+                    } else {
+                      // 更新现有AI消息
+                      newMessages[aiMessageIndex] = {
+                        ...newMessages[aiMessageIndex],
+                        content: aiContent
+                      };
+                    }
 
-                      return newMessages;
+                    return newMessages;
+                  };
+
+                  // 总是更新后台线程数据
+                  const currentBackgroundMessages = backgroundThreadsRef.current.get(requestThreadId) || input.messages;
+                  const updatedMessages = updateMessages(currentBackgroundMessages);
+                  backgroundThreadsRef.current.set(requestThreadId, updatedMessages);
+
+                  // 只有当前显示的是这个线程时，才更新界面
+                  const currentDisplayThreadId = currentThreadIdRef.current;
+                  if (currentDisplayThreadId === requestThreadId) {
+                    // 当前显示的就是这个线程，更新界面
+                    flushSync(() => {
+                      setMessages(updatedMessages);
                     });
-                  });
+                    console.log('🖥️ 更新前台界面:', requestThreadId, '消息数:', updatedMessages.length);
+                  } else {
+                    // 当前显示的是其他线程，只更新后台数据
+                    console.log('🔄 仅更新后台线程:', requestThreadId, '当前显示:', currentDisplayThreadId, '消息数:', updatedMessages.length);
+                  }
                 }
               }
 
@@ -354,11 +415,19 @@ const StreamSession = ({
         console.error('请求失败:', error);
       }
     } finally {
-      // 无论当前显示的是哪个线程，都要保存流式处理的结果到对应线程的历史记录
-      if (requestThreadId && aiContent.trim()) {
-        console.log('💾 保存流式处理结果到线程:', requestThreadId);
-        // 这里可以调用保存历史记录的API
-        // 暂时通过控制台日志记录
+      // 刷新历史记录列表（后端已经保存了对话）
+      console.log('🔄 刷新历史记录列表...');
+      try {
+        await getThreads();  // getThreads() 内部已经调用了 setThreads()
+        console.log('✅ 历史记录已刷新');
+      } catch (error) {
+        console.error('❌ 刷新历史记录失败:', error);
+      }
+
+      // 清理后台线程数据（流式请求已完成）
+      if (requestThreadId) {
+        backgroundThreadsRef.current.delete(requestThreadId);
+        console.log('🧹 清理后台线程数据:', requestThreadId);
       }
 
       setIsLoading(false);
@@ -380,6 +449,7 @@ const StreamSession = ({
     getMessagesMetadata: () => ({}),
     meta: {},
     thread: null,
+    setMessages,  // 添加 setMessages 方法供外部调用
   };
 
   useEffect(() => {
