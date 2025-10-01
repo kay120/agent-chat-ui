@@ -20,7 +20,6 @@ interface ThreadContextType {
   threadsLoading: boolean;
   setThreadsLoading: Dispatch<SetStateAction<boolean>>;
   deleteThread: (threadId: string) => Promise<boolean>;
-  createThread: () => Promise<string | null>;
 }
 
 const ThreadContext = createContext<ThreadContextType | undefined>(undefined);
@@ -54,7 +53,9 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         throw new Error('获取线程失败');
       }
-      const threads = await response.json();
+      const data = await response.json();
+      // 后端返回 {threads: [...]} 格式，需要提取 threads 数组
+      const threads = data.threads || [];
       setThreads(threads);
       return threads;
     } catch (error) {
@@ -86,23 +87,7 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     }
   }, [effectiveApiUrl]);
 
-  const createThread = useCallback(async (): Promise<string | null> => {
-    try {
-      console.log('🆕 创建新线程...');
-      const response = await fetch(`${effectiveApiUrl}/threads`, {
-        method: 'POST',
-      });
-      if (!response.ok) {
-        throw new Error('创建线程失败');
-      }
-      const result = await response.json();
-      console.log('✅ 新线程创建成功:', result.thread_id);
-      return result.thread_id;
-    } catch (error) {
-      console.error('创建新线程失败:', error);
-      return null;
-    }
-  }, [effectiveApiUrl]);
+
 
   const value = {
     getThreads,
@@ -111,7 +96,6 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
     threadsLoading,
     setThreadsLoading,
     deleteThread,
-    createThread,
   };
 
   return (
