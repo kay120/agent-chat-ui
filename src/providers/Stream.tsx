@@ -92,12 +92,25 @@ const StreamSession = ({
 
   // 当 threadId 改变时处理消息加载
   useEffect(() => {
+    console.log('🔍 useEffect 触发:', {
+      threadId,
+      isLoading,
+      currentStreamThreadId,
+      messagesLength: messages.length
+    });
+
     if (threadId === null) {
       setMessages([]);
       console.log('🆕 新建对话，清空消息历史');
     } else {
       // 只有在没有正在进行的流式请求，或者流式请求不是当前线程时才加载消息
+      // 但是如果当前已经有消息了，并且是同一个线程，就不要重新加载
       if (!isLoading || currentStreamThreadId !== threadId) {
+        // 如果当前消息不为空，并且是同一个线程，跳过加载
+        if (messages.length > 0 && currentStreamThreadId === threadId) {
+          console.log('📝 当前线程已有消息，跳过重新加载');
+          return;
+        }
         console.log('🔄 切换到线程:', threadId, '当前流式线程:', currentStreamThreadId);
         loadThreadMessages(threadId);
       } else {
@@ -125,11 +138,12 @@ const StreamSession = ({
         setMessages(threadMessages);
         console.log('✅ 成功加载线程消息:', threadMessages.length, '条');
       } else {
-        console.log('⚠️ 线程消息为空或不存在');
+        console.log('⚠️ 线程消息为空或不存在，即将清空消息！');
+        console.log('🔍 selectedThread:', selectedThread);
         setMessages([]);
       }
     } catch (error) {
-      console.error('❌ 加载线程消息失败:', error);
+      console.error('❌ 加载线程消息失败，即将清空消息:', error);
       setMessages([]);
     }
   };
@@ -214,20 +228,24 @@ const StreamSession = ({
     console.log('🆔 设置临时 Run ID:', tempRunId);
 
     try {
+      const requestBody = {
+        input: {
+          messages: input.messages.map(msg => ({
+            id: msg.id,
+            type: msg.type,
+            content: msg.content
+          }))
+        }
+      };
+
+
+
       const response = await fetch(`${apiUrl}/runs/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          input: {
-            messages: input.messages.map(msg => ({
-              id: msg.id,
-              type: msg.type,
-              content: msg.content
-            }))
-          }
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
 
@@ -265,42 +283,64 @@ const StreamSession = ({
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
+              console.log('📦 收到流式数据:', data);
 
-              if (data.content) {
-                // 立即显示收到的内容，不做延迟处理
-                aiContent += data.content;
-                console.log('📝 收到增量片段:', data.content, '累积内容长度:', aiContent.length);
+              // 处理 LangGraph SDK 格式
+              if (data.event === 'values' && data.data && data.data.messages) {
+                const messages = data.data.messages;
+                const lastMessage = messages[messages.length - 1];
 
-                // 总是更新界面，因为这是当前活跃的流式处理
-                // 使用 flushSync 强制立即渲染
-                flushSync(() => {
-                  setMessages(prevMessages => {
-                    const newMessages = [...prevMessages];
+                if (lastMessage && lastMessage.type === 'ai' && lastMessage.content) {
+                  // 这是AI的回复内容
+                  const newContent = lastMessage.content;
+                  console.log('🤖 收到AI回复片段:', newContent);
 
-                    // 查找或创建AI消息
-                    let aiMessageIndex = newMessages.findIndex(
-                      msg => msg.id === aiMessageId && msg.type === 'ai'
-                    );
+                  // 累积内容 - LangGraph 发送的是增量内容，需要累积
+                  aiContent += newContent;
+                  console.log('📝 累积AI内容，新增:', newContent, '总长度:', aiContent.length);
 
-                    if (aiMessageIndex === -1) {
-                      // 创建新的AI消息
-                      newMessages.push({
-                        id: aiMessageId,
-                        type: 'ai',
-                        content: aiContent
-                      });
-                    } else {
-                      // 更新现有AI消息的内容
-                      newMessages[aiMessageIndex] = {
-                        ...newMessages[aiMessageIndex],
-                        content: aiContent
-                      };
-                    }
+                  // 立即更新界面
+                  flushSync(() => {
+                    setMessages(prevMessages => {
+                      const newMessages = [...prevMessages];
+
+                      // 查找或创建AI消息
+                      let aiMessageIndex = newMessages.findIndex(
+                        msg => msg.id === aiMessageId && msg.type === 'ai'
+                      );
+
+                      if (aiMessageIndex === -1) {
+                        // 创建新的AI消息
+                        newMessages.push({
+                          id: aiMessageId,
+                          type: 'ai',
+                          content: aiContent
+                        });
+                      } else {
+                        // 更新现有AI消息
+                        newMessages[aiMessageIndex] = {
+                          ...newMessages[aiMessageIndex],
+                          content: aiContent
+                        };
+                      }
 
                       return newMessages;
                     });
                   });
+                }
               }
+
+              // 处理线程ID（保持原有逻辑以防需要）
+              if (data.type === 'thread_id' && data.thread_id) {
+                console.log('📍 从流式响应获取到 Thread ID:', data.thread_id);
+                // 如果当前没有线程ID，设置新的线程ID
+                if (!requestThreadId) {
+                  setThreadId(data.thread_id);
+                  console.log('✅ 设置新线程ID:', data.thread_id);
+                }
+              }
+
+
             } catch (e) {
               console.error('解析数据失败:', e);
             }
@@ -406,6 +446,8 @@ export const StreamProvider: React.FC<{ children: ReactNode }> = ({
   // Determine final values to use, prioritizing URL params then env vars
   const finalApiUrl = apiUrl || envApiUrl;
   const finalAssistantId = assistantId || envAssistantId;
+
+
 
   // Show the form if we: don't have an API URL, or don't have an assistant ID
   if (!finalApiUrl || !finalAssistantId) {

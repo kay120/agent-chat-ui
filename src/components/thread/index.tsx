@@ -115,7 +115,6 @@ function OpenGitHubRepo() {
 export function Thread() {
   const [artifactContext, setArtifactContext] = useArtifactContext();
   const [artifactOpen, closeArtifact] = useArtifactOpen();
-  const { createThread } = useThreads();
 
   const [threadId, _setThreadId] = useQueryState("threadId");
   const [chatHistoryOpen, setChatHistoryOpen] = useQueryState(
@@ -148,8 +147,15 @@ export function Thread() {
   console.log('🔍 Thread组件状态:', {
     isLoading: stream.isLoading,
     messagesCount: messages.length,
-    hasStopMethod: typeof stream.stop === 'function'
+    hasStopMethod: typeof stream.stop === 'function',
+    hasSubmitMethod: typeof stream.submit === 'function',
+    inputValue: input,
+    threadId: threadId
   });
+
+
+
+
 
   const lastError = useRef<string | undefined>(undefined);
 
@@ -164,19 +170,9 @@ export function Thread() {
 
   const handleNewThread = async () => {
     console.log('🆕 开始创建新对话...');
-    try {
-      const newThreadId = await createThread();
-      if (newThreadId) {
-        console.log('✅ 新对话创建成功，threadId:', newThreadId);
-        // 直接切换到新线程，不中断当前对话
-        // 当前对话会在后台继续完成
-        setThreadId(newThreadId);
-      } else {
-        console.error('❌ 创建新对话失败');
-      }
-    } catch (error) {
-      console.error('❌ 创建新对话时出错:', error);
-    }
+    // 清空当前线程ID，下次发送消息时会自动创建新线程
+    setThreadId(null);
+    console.log('✅ 已清空线程ID，下次发送消息时会自动创建新线程');
   };
 
   useEffect(() => {
@@ -223,22 +219,18 @@ export function Thread() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if ((input.trim().length === 0 && contentBlocks.length === 0) || isLoading)
+    console.log('🚀 handleSubmit 被调用，输入内容:', input);
+    if ((input.trim().length === 0 && contentBlocks.length === 0) || isLoading) {
+      console.log('❌ 提交被阻止：输入为空或正在加载');
       return;
+    }
+    console.log('✅ 开始处理提交');
     setFirstTokenReceived(false);
 
-    // 如果当前没有线程ID，先创建新线程
+    // 如果当前没有线程ID，后端会在发送消息时自动创建新线程
     let currentThreadId = threadId;
     if (!currentThreadId) {
-      console.log('🆕 首页提交，创建新线程...');
-      currentThreadId = await createThread();
-      if (currentThreadId) {
-        setThreadId(currentThreadId);
-        console.log('✅ 新线程创建成功:', currentThreadId);
-      } else {
-        console.error('❌ 创建新线程失败');
-        return;
-      }
+      console.log('🆕 首页提交，后端将自动创建新线程...');
     }
 
     const newHumanMessage: Message = {
@@ -505,7 +497,10 @@ export function Thread() {
                       />
                       <textarea
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        onChange={(e) => {
+                          console.log('⌨️ 用户输入:', e.target.value);
+                          setInput(e.target.value);
+                        }}
                         onPaste={handlePaste}
                         onKeyDown={(e) => {
                           if (
