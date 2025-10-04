@@ -33,3 +33,6 @@ next-env.d.ts
 *.sqlite
 *.sqlite3
 *.db
+
+# 学习笔记（包含敏感信息）
+study-langgraph/
