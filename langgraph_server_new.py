@@ -21,7 +21,9 @@ from langgraph.checkpoint.memory import MemorySaver
 from langchain_openai import ChatOpenAI
 
 # 配置 DeepSeek API
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "sk-dba4d0f1ee754dba9be2debdb1b410f2")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+if not DEEPSEEK_API_KEY:
+    raise ValueError("DEEPSEEK_API_KEY 环境变量未设置")
 DEEPSEEK_BASE_URL = "https://api.deepseek.com"
 
 # 初始化 DeepSeek 模型
