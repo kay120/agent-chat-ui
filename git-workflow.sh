@@ -182,6 +182,7 @@ merge_to_main() {
     git pull my-fork main --rebase
     
     print_info "合并 $CURRENT_BRANCH..."
+    git merge "$CURRENT_BRANCH" --no-edit --allow-unrelated-histories 2>/dev/null || \
     git merge "$CURRENT_BRANCH" --no-edit
     
     print_info "推送到远程..."
