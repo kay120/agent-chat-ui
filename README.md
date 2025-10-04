@@ -5,10 +5,72 @@ Agent Chat UI is a Next.js application which enables chatting with any LangGraph
 > [!NOTE]
 > 🎥 Watch the video setup guide [here](https://youtu.be/lInrwVnZ83o).
 
+## Quick Start
+
+```bash
+# 1. Configure API Key (Required!)
+export DEEPSEEK_API_KEY=sk-your-actual-api-key-here
+
+# 2. Clone and install
+git clone https://github.com/langchain-ai/agent-chat-ui.git
+cd agent-chat-ui
+pnpm install
+
+# 3. Run the app
+pnpm dev
+```
+
+> [!IMPORTANT]
+> **You must configure your API key before running the app!** See the [Prerequisites](#prerequisites) section below for detailed instructions.
+
 ## Setup
 
 > [!TIP]
 > Don't want to run the app locally? Use the deployed site here: [agentchat.vercel.app](https://agentchat.vercel.app)!
+
+### Prerequisites
+
+Before running the app, you need to configure your API keys:
+
+#### Option 1: System Environment Variables (Recommended)
+
+Configure API keys in your shell profile (most secure, won't be committed to Git):
+
+**macOS / Linux:**
+```bash
+# Edit your shell profile
+nano ~/.zshrc  # or ~/.bash_profile for bash
+
+# Add the following line
+export DEEPSEEK_API_KEY=sk-your-actual-api-key-here
+
+# Save and reload
+source ~/.zshrc
+```
+
+**Windows:**
+1. Right-click "This PC" → "Properties" → "Advanced system settings" → "Environment Variables"
+2. Add new user variable: `DEEPSEEK_API_KEY` = `sk-your-actual-api-key-here`
+3. Restart your terminal
+
+#### Option 2: .env File (Alternative)
+
+If you prefer not to use system environment variables:
+
+```bash
+# Copy the example file
+cp .env.example .env
+
+# Edit .env and uncomment the DEEPSEEK_API_KEY line
+# DEEPSEEK_API_KEY=sk-your-actual-api-key-here
+```
+
+> [!WARNING]
+> Never commit your `.env` file to Git! It's already in `.gitignore` for safety.
+
+For detailed configuration instructions, see [ENVIRONMENT_SETUP.md](../ENVIRONMENT_SETUP.md).
+
+### Installation
 
 First, clone the repository, or run the [`npx` command](https://www.npmjs.com/package/create-agent-chat-app):
 
@@ -67,6 +129,48 @@ To use these variables:
 3. Restart the application
 
 When these environment variables are set, the application will use them instead of showing the setup form.
+
+## Troubleshooting
+
+### API Key Not Working
+
+If you see errors like `DEEPSEEK_API_KEY environment variable not set`:
+
+1. **Verify environment variable is set:**
+   ```bash
+   echo $DEEPSEEK_API_KEY
+   ```
+   Should output your API key (not empty).
+
+2. **Reload your shell configuration:**
+   ```bash
+   source ~/.zshrc  # or ~/.bash_profile
+   ```
+
+3. **Restart your terminal** and try again.
+
+4. **Check the correct shell profile:**
+   ```bash
+   echo $SHELL
+   # /bin/bash → edit ~/.bash_profile
+   # /bin/zsh  → edit ~/.zshrc
+   ```
+
+### Conversation History Lost After Restart
+
+This project now uses **SQLite persistence** to save conversation history. Your conversations are stored in `checkpoints.sqlite` and will persist across restarts.
+
+If you're experiencing issues:
+- Check if `checkpoints.sqlite` file exists in the project root
+- Ensure the file has write permissions
+- See [LANGGRAPH_PERSISTENCE_GUIDE.md](../LANGGRAPH_PERSISTENCE_GUIDE.md) for details
+
+### More Help
+
+For detailed configuration instructions, see:
+- [ENVIRONMENT_SETUP.md](../ENVIRONMENT_SETUP.md) - Complete environment variable setup guide
+- [LANGGRAPH_PERSISTENCE_GUIDE.md](../LANGGRAPH_PERSISTENCE_GUIDE.md) - Persistence configuration
+- [API_KEY_CLEANUP_SUMMARY.md](../API_KEY_CLEANUP_SUMMARY.md) - Security best practices
 
 ## Hiding Messages in the Chat
 
