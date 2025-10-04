@@ -49,13 +49,25 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
     try {
       setThreadsLoading(true);
-      const response = await fetch(`${effectiveApiUrl}/threads`);
+
+      // 官方 LangGraph API 使用 POST /threads/search
+      const response = await fetch(`${effectiveApiUrl}/threads/search`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          limit: 100,  // 获取最近 100 个线程
+          offset: 0,
+        }),
+      });
+
       if (!response.ok) {
         throw new Error('获取线程失败');
       }
-      const data = await response.json();
-      // 后端返回 {threads: [...]} 格式，需要提取 threads 数组
-      const threads = data.threads || [];
+
+      const threads = await response.json();
+      // 官方 API 直接返回线程数组
       setThreads(threads);
       return threads;
     } catch (error) {
@@ -71,16 +83,15 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
       const response = await fetch(`${effectiveApiUrl}/threads/${threadId}`, {
         method: 'DELETE',
       });
+
       if (!response.ok) {
         throw new Error('删除线程失败');
       }
-      const result = await response.json();
-      if (result.status === 'deleted') {
-        // 从本地状态中移除已删除的线程
-        setThreads(prevThreads => prevThreads.filter(t => t.thread_id !== threadId));
-        return true;
-      }
-      return false;
+
+      // 官方 API 删除成功后返回空响应或 204 状态码
+      // 直接从本地状态中移除已删除的线程
+      setThreads(prevThreads => prevThreads.filter(t => t.thread_id !== threadId));
+      return true;
     } catch (error) {
       console.error('删除历史记录失败:', error);
       return false;
