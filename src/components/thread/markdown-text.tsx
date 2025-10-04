@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import remarkMath from "remark-math";
-import { FC, memo, useState } from "react";
+import { FC, memo, useState, useMemo, useEffect, useRef } from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { SyntaxHighlighter } from "@/components/thread/syntax-highlighter";
 
@@ -245,15 +245,94 @@ const defaultComponents: any = {
 };
 
 const MarkdownTextImpl: FC<{ children: string }> = ({ children }) => {
+  // 🚀 性能优化：使用防抖 + requestAnimationFrame 减少渲染频率
+  const [debouncedContent, setDebouncedContent] = useState(children);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const rafRef = useRef<number>();
+  const lastLengthRef = useRef(0);
+
+  useEffect(() => {
+    // 清除之前的定时器和动画帧
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
+
+    // 检测是否包含未闭合的代码块
+    const hasUnclosedCodeBlock = (text: string) => {
+      const codeBlockMatches = text.match(/```/g);
+      return codeBlockMatches && codeBlockMatches.length % 2 !== 0;
+    };
+
+    // 检测内容增长速度（判断是否在流式输出）
+    const isStreaming = children.length > lastLengthRef.current;
+    lastLengthRef.current = children.length;
+
+    // 策略 1: 短文本（< 500 字符）- 立即更新
+    if (children.length < 500) {
+      rafRef.current = requestAnimationFrame(() => {
+        setDebouncedContent(children);
+      });
+      return;
+    }
+
+    // 策略 2: 包含未闭合代码块 - 使用较短的防抖（50ms）
+    if (hasUnclosedCodeBlock(children) && isStreaming) {
+      timeoutRef.current = setTimeout(() => {
+        rafRef.current = requestAnimationFrame(() => {
+          setDebouncedContent(children);
+        });
+      }, 50);  // 代码块使用 50ms 防抖，更快显示
+      return;
+    }
+
+    // 策略 3: 长文本 - 使用标准防抖（150ms）
+    timeoutRef.current = setTimeout(() => {
+      rafRef.current = requestAnimationFrame(() => {
+        setDebouncedContent(children);
+      });
+    }, 150);
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [children]);
+
+  // 🚀 处理未闭合的代码块（流式输出时）
+  const processedContent = useMemo(() => {
+    // 检查是否有未闭合的代码块
+    const codeBlockMatches = debouncedContent.match(/```/g);
+    const hasUnclosedCodeBlock = codeBlockMatches && codeBlockMatches.length % 2 !== 0;
+
+    if (hasUnclosedCodeBlock) {
+      // 临时闭合代码块，让 ReactMarkdown 能够正确解析
+      return debouncedContent + '\n```';
+    }
+
+    return debouncedContent;
+  }, [debouncedContent]);
+
+  // 使用 useMemo 缓存 ReactMarkdown 组件
+  const markdownComponent = useMemo(() => (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[rehypeRaw, rehypeKatex]}
+      components={defaultComponents}
+    >
+      {processedContent}
+    </ReactMarkdown>
+  ), [processedContent]);
+
   return (
     <div className="markdown-content">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeRaw, rehypeKatex]}
-        components={defaultComponents}
-      >
-        {children}
-      </ReactMarkdown>
+      {markdownComponent}
     </div>
   );
 };

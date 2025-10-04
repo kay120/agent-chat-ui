@@ -154,19 +154,25 @@ const StreamSession = ({
   const loadThreadMessages = async (selectedThreadId: string) => {
     try {
       console.log('📥 加载线程消息:', selectedThreadId);
-      const response = await fetch(`${apiUrl}/threads`);
+
+      // 官方 API: 获取单个线程的状态
+      const response = await fetch(`${apiUrl}/threads/${selectedThreadId}/state`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
       if (!response.ok) {
-        throw new Error('获取线程失败');
+        throw new Error(`获取线程状态失败: ${response.status}`);
       }
-      const data = await response.json();
-      // 后端返回的是 {threads: [...]} 格式
-      const threadsList = data.threads || data;
-      console.log('📋 获取到线程列表:', threadsList);
 
-      const selectedThread = threadsList.find((t: any) => t.thread_id === selectedThreadId);
+      const threadState = await response.json();
+      console.log('📋 获取到线程状态:', threadState);
 
-      if (selectedThread && selectedThread.values && selectedThread.values.messages) {
-        const threadMessages = selectedThread.values.messages.map((msg: any) => ({
+      // 官方 API 返回格式: {values: {messages: [...]}, ...}
+      if (threadState.values && threadState.values.messages) {
+        const threadMessages = threadState.values.messages.map((msg: any) => ({
           id: msg.id || `msg-${Date.now()}`,
           type: msg.type,
           content: msg.content,
@@ -174,12 +180,11 @@ const StreamSession = ({
         setMessages(threadMessages);
         console.log('✅ 成功加载线程消息:', threadMessages.length, '条');
       } else {
-        console.log('⚠️ 线程消息为空或不存在，即将清空消息！');
-        console.log('🔍 selectedThread:', selectedThread);
+        console.log('⚠️ 线程消息为空');
         setMessages([]);
       }
     } catch (error) {
-      console.error('❌ 加载线程消息失败，即将清空消息:', error);
+      console.error('❌ 加载线程消息失败:', error);
       setMessages([]);
     }
   };
@@ -200,10 +205,12 @@ const StreamSession = ({
         abortController.abort();
 
         // 只有当 run_id 不是临时的时候才调用后端取消端点
-        if (!currentRunId.startsWith('temp-')) {
-          console.log('📡 调用后端取消端点:', `${apiUrl}/runs/${currentRunId}/cancel`);
+        if (!currentRunId.startsWith('temp-') && currentStreamThreadId) {
+          // 官方 API 使用 /threads/{thread_id}/runs/{run_id}/cancel
+          const cancelUrl = `${apiUrl}/threads/${currentStreamThreadId}/runs/${currentRunId}/cancel`;
+          console.log('📡 调用后端取消端点:', cancelUrl);
           try {
-            const response = await fetch(`${apiUrl}/runs/${currentRunId}/cancel`, {
+            const response = await fetch(cancelUrl, {
               method: 'POST',
             });
             const result = await response.json();
@@ -212,7 +219,7 @@ const StreamSession = ({
             console.warn('⚠️ 后端取消请求失败，但前端已中止:', backendError);
           }
         } else {
-          console.log('⏭️ 使用临时 Run ID，跳过后端取消请求');
+          console.log('⏭️ 使用临时 Run ID 或缺少 Thread ID，跳过后端取消请求');
         }
 
         console.log('🛑 取消请求成功:', currentRunId);
@@ -242,8 +249,43 @@ const StreamSession = ({
   const submit = async (input: { messages: Message[] }) => {
     setIsLoading(true);
 
-    // 记录当前流式请求的线程ID
-    const requestThreadId = threadId;
+    // 如果没有 threadId，先创建一个新线程
+    let requestThreadId = threadId;
+    if (!requestThreadId) {
+      console.log('🆕 没有 threadId，创建新线程...');
+      try {
+        const response = await fetch(`${apiUrl}/threads`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
+        });
+
+        if (!response.ok) {
+          throw new Error(`创建线程失败: ${response.status}`);
+        }
+
+        const newThread = await response.json();
+        requestThreadId = newThread.thread_id;
+
+        // 立即设置 threadId（同步更新 URL）
+        await setThreadId(requestThreadId);
+        console.log('✅ 创建新线程成功:', requestThreadId);
+      } catch (error) {
+        console.error('❌ 创建线程失败:', error);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // 确保 requestThreadId 不是 null
+    if (!requestThreadId) {
+      console.error('❌ requestThreadId 为 null，无法继续');
+      setIsLoading(false);
+      return;
+    }
+
     setCurrentStreamThreadId(requestThreadId);
     console.log('🚀 开始流式请求，线程ID:', requestThreadId);
 
@@ -273,19 +315,23 @@ const StreamSession = ({
     }
 
     try {
+      // 官方 LangGraph API 格式
       const requestBody = {
+        assistant_id: "agent",  // 使用配置的助手 ID
         input: {
           messages: input.messages.map(msg => ({
-            id: msg.id,
-            type: msg.type,
+            role: msg.type === 'human' ? 'user' : 'assistant',  // 官方 API 使用 role
             content: msg.content
           }))
-        }
+        },
+        stream_mode: ["messages", "values"]  // 使用 messages 模式获取流式输出
       };
 
+      // 官方 API 使用 /threads/{thread_id}/runs/stream
+      const streamUrl = `${apiUrl}/threads/${requestThreadId}/runs/stream`;
+      console.log('📡 发送流式请求到:', streamUrl);
 
-
-      const response = await fetch(`${apiUrl}/runs/stream`, {
+      const response = await fetch(streamUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -294,19 +340,7 @@ const StreamSession = ({
         signal: controller.signal
       });
 
-      // 从响应头获取 run_id 和 thread_id
-      const runId = response.headers.get('X-Run-ID');
-      const responseThreadId = response.headers.get('X-Thread-ID');
-      if (runId) {
-        setCurrentRunId(runId);
-        console.log('📍 更新为真实 Run ID:', runId);
-      } else {
-        console.log('⚠️ 后端未返回 Run ID，使用临时 ID:', tempRunId);
-      }
-      if (responseThreadId) {
-        console.log('📍 获取到 Thread ID:', responseThreadId);
-      }
-
+      // 官方 API 通过 SSE 的 metadata 事件发送 run_id
       // 使用请求开始时的threadId，不受后续threadId变化影响
       console.log('🔒 流式处理锁定到线程:', requestThreadId);
 
@@ -317,30 +351,92 @@ const StreamSession = ({
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
+      let currentEvent = '';  // 用于存储当前事件类型
+      let buffer = '';  // 累积未完成的行
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        buffer += chunk;
+
+        // 按行分割，保留最后一个可能不完整的行
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';  // 保存最后一个可能不完整的行
 
         for (const line of lines) {
+          // 官方 API 使用 SSE 格式: event: xxx 和 data: xxx 分开
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7).trim();
+            continue;
+          }
+
           if (line.startsWith('data: ')) {
             try {
-              const data = JSON.parse(line.slice(6));
-              console.log('📦 收到流式数据:', data);
+              const dataStr = line.slice(6).trim();
+              if (!dataStr) continue;  // 跳过空数据
 
-              // 处理 LangGraph SDK 格式
-              if (data.event === 'values' && data.data && data.data.messages) {
-                const messages = data.data.messages;
+              const data = JSON.parse(dataStr);
+              console.log('📦 收到流式数据 [event:', currentEvent, ']:', data);
+
+              // 官方 API 的 messages/partial 事件包含流式消息块
+              if (currentEvent === 'messages/partial' && data.length > 0) {
+                const messageChunk = data[0];  // messages/partial 事件返回数组
+
+                if (messageChunk && messageChunk.type === 'ai' && messageChunk.content) {
+                  // 这是流式的 AI 消息块（官方 API 直接给完整内容，不是增量）
+                  aiContent = messageChunk.content;
+                  console.log('🤖 收到AI流式块，总长度:', aiContent.length);
+
+                  // 立即更新界面（流式效果）
+                  const updateMessages = (prevMessages: Message[]) => {
+                    const newMessages = [...prevMessages];
+                    let aiMessageIndex = newMessages.findIndex(
+                      msg => msg.id === aiMessageId && msg.type === 'ai'
+                    );
+
+                    if (aiMessageIndex === -1) {
+                      newMessages.push({
+                        id: aiMessageId,
+                        type: 'ai',
+                        content: aiContent
+                      });
+                    } else {
+                      newMessages[aiMessageIndex] = {
+                        ...newMessages[aiMessageIndex],
+                        content: aiContent
+                      };
+                    }
+                    return newMessages;
+                  };
+
+                  // 更新后台线程数据
+                  const currentBackgroundMessages = backgroundThreadsRef.current.get(requestThreadId) || input.messages;
+                  const updatedMessages = updateMessages(currentBackgroundMessages);
+                  backgroundThreadsRef.current.set(requestThreadId, updatedMessages);
+
+                  // 只有当前显示的是这个线程时，才更新界面
+                  const currentDisplayThreadId = currentThreadIdRef.current;
+                  if (currentDisplayThreadId === requestThreadId) {
+                    flushSync(() => {
+                      setMessages(updatedMessages);
+                    });
+                  }
+                }
+              }
+
+              // 官方 API 的 values 事件包含完整的消息列表
+              if (currentEvent === 'values' && data.messages) {
+                const messages = data.messages;
                 const lastMessage = messages[messages.length - 1];
 
                 if (lastMessage && lastMessage.type === 'ai' && lastMessage.content) {
-                  // 这是AI的回复内容（后端已经累积好了，直接使用）
+                  // 这是AI的回复内容（完整版本）
                   const fullContent = lastMessage.content;
                   console.log('🤖 收到AI回复（完整内容）:', fullContent.substring(0, 50) + '...');
 
-                  // 直接使用后端发送的完整内容，不需要前端再累积
+                  // 直接使用完整内容
                   aiContent = fullContent;
                   console.log('📝 更新AI内容，总长度:', aiContent.length);
 
@@ -391,16 +487,16 @@ const StreamSession = ({
                 }
               }
 
-              // 处理线程ID（保持原有逻辑以防需要）
-              if (data.type === 'thread_id' && data.thread_id) {
-                console.log('📍 从流式响应获取到 Thread ID:', data.thread_id);
-                // 如果当前没有线程ID，设置新的线程ID
-                if (!requestThreadId) {
-                  setThreadId(data.thread_id);
-                  console.log('✅ 设置新线程ID:', data.thread_id);
-                }
+              // 官方 API 的 metadata 事件包含 run_id
+              if (currentEvent === 'metadata' && data.run_id) {
+                setCurrentRunId(data.run_id);
+                console.log('📍 从 metadata 获取到 Run ID:', data.run_id);
               }
 
+              // 处理结束事件
+              if (currentEvent === 'end') {
+                console.log('✅ 流式输出结束');
+              }
 
             } catch (e) {
               console.error('解析数据失败:', e);

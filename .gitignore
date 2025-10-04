@@ -28,3 +28,8 @@ dist-ssr
 .env
 .next/
 next-env.d.ts
+
+# SQLite 数据库文件
+*.sqlite
+*.sqlite3
+*.db
