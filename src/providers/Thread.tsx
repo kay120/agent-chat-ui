@@ -68,7 +68,9 @@ export function ThreadProvider({ children }: { children: ReactNode }) {
 
       const threads = await response.json();
       // 官方 API 直接返回线程数组
+      console.log('📋 getThreads 获取到线程:', threads.length, '个');
       setThreads(threads);
+      console.log('✅ setThreads 已调用');
       return threads;
     } catch (error) {
       console.error('获取历史记录失败:', error);

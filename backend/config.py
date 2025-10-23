@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     cors_credentials: bool = True
     cors_methods: list[str] = ["*"]
     cors_headers: list[str] = ["*"]
+
+    # 数据库配置
+    sqlite_db_path: str = "checkpoints.sqlite"
     
     class Config:
         env_file = ".env"

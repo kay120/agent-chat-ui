@@ -44,16 +44,81 @@ async def handle_stream_run(run_input: RunInput) -> StreamingResponse:
     )
 
 
-async def handle_get_threads() -> ThreadsResponse:
+async def handle_search_threads() -> list:
     """
-    处理获取线程列表请求
-    
+    处理搜索线程请求
+
     Returns:
-        线程列表响应
+        线程列表
     """
     threads = thread_service.get_all_threads()
-    print(f"📋 返回 {len(threads)} 个线程")
-    return ThreadsResponse(threads=threads)
+
+    # 转换为前端期望的格式
+    result = []
+    for thread in threads:
+        result.append({
+            "thread_id": thread["thread_id"],
+            "created_at": thread["created_at"],
+            "updated_at": thread["updated_at"],
+            "metadata": {},
+            "values": {
+                "messages": thread["messages"]
+            }
+        })
+
+    print(f"📋 搜索线程: 找到 {len(result)} 个线程")
+    return result
+
+
+async def handle_create_thread() -> dict:
+    """
+    处理创建线程请求
+
+    Returns:
+        新线程信息
+    """
+    import uuid
+    from datetime import datetime
+
+    thread_id = str(uuid.uuid4())
+    thread_service.create_thread(thread_id)
+
+    return {
+        "thread_id": thread_id,
+        "created_at": datetime.now().isoformat(),
+        "metadata": {}
+    }
+
+
+async def handle_get_thread_state(thread_id: str) -> dict:
+    """
+    处理获取线程状态请求
+
+    Args:
+        thread_id: 线程ID
+
+    Returns:
+        线程状态
+
+    Raises:
+        HTTPException: 线程不存在时抛出 404 错误
+    """
+    thread = thread_service.get_thread(thread_id)
+
+    if not thread:
+        raise HTTPException(status_code=404, detail="Thread not found")
+
+    return {
+        "values": {
+            "messages": thread["messages"]
+        },
+        "next": [],
+        "config": {
+            "configurable": {
+                "thread_id": thread_id
+            }
+        }
+    }
 
 
 async def handle_delete_thread(thread_id: str) -> DeleteResponse:

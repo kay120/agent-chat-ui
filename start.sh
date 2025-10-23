@@ -2,6 +2,12 @@
 
 # 启动脚本 - Agent Chat UI with DeepSeek
 
+# 清理端口
+echo "🧹 清理端口..."
+lsof -ti:3000 | xargs kill -9 2>/dev/null || echo "  ✓ 端口 3000 未被占用"
+lsof -ti:2024 | xargs kill -9 2>/dev/null || echo "  ✓ 端口 2024 未被占用"
+sleep 1
+
 # 设置环境
 export CONDA_ENV="langgraph"
 
@@ -15,9 +21,9 @@ echo "🔍 检查环境配置..."
 echo "Python版本: $(python --version)"
 echo "当前目录: $(pwd)"
 
-# 启动后端服务器 (后台运行)
+# 启动后端服务器 (后台运行) - 使用模块化版本
 echo "🚀 启动后端服务器 (端口 2024)..."
-python langgraph_server.py &
+python -m backend.main &
 BACKEND_PID=$!
 echo "后端 PID: $BACKEND_PID"
 

@@ -20,6 +20,10 @@
 
 | 文档 | 说明 |
 |------|------|
+| [分支管理规范](git-workflow/BRANCH_MANAGEMENT.md) | Git 分支策略和管理规范 ⭐ |
+| [发布流程](git-workflow/RELEASE_PROCESS.md) | 版本发布的完整流程 ⭐ |
+| [Commit 规范](git-workflow/COMMIT_CONVENTION.md) | Commit 消息编写规范 ⭐ |
+| [Code Review 指南](git-workflow/CODE_REVIEW_GUIDE.md) | 代码审查流程和最佳实践 ⭐ |
 | [Git 工作流](git-workflow/) | Git 自动化脚本和使用指南 |
 | [环境配置](setup/ENVIRONMENT_SETUP.md) | API Key 和环境变量配置 |
 | [LangGraph 持久化](setup/LANGGRAPH_PERSISTENCE_GUIDE.md) | SQLite 持久化配置 |
@@ -75,6 +79,15 @@
 | [模块化总结](summaries/MODULARIZATION_SUMMARY.md) | 代码模块化重构总结 |
 | [测试报告](summaries/TESTING_REPORT.md) | 功能测试报告 |
 
+### 📖 学习资源
+
+| 文档 | 说明 |
+|------|------|
+| [LangGraph & LangChain 1.0 完整指南](learning/LANGGRAPH_LANGCHAIN_1.0_GUIDE.md) | 基于源码的深度学习指南 ⭐⭐⭐ |
+| [LangChain 与 LangGraph 协作指南](learning/LANGCHAIN_LANGGRAPH_COLLABORATION.md) | 智能体和工作流构建 ⭐⭐⭐ |
+| [LangGraph 快速参考](learning/LANGGRAPH_QUICK_REFERENCE.md) | API 快速查询卡片 ⭐⭐ |
+| [代码改进指南](learning/CODE_IMPROVEMENT_GUIDE.md) | 项目代码优化建议 ⭐⭐ |
+
 ---
 
 ## 🗂️ 目录结构
@@ -87,6 +100,10 @@ docs/
 │   └── LANGGRAPH_PERSISTENCE_GUIDE.md
 ├── git-workflow/               # Git 工作流
 │   ├── README.md
+│   ├── BRANCH_MANAGEMENT.md        # 分支管理规范
+│   ├── RELEASE_PROCESS.md          # 发布流程
+│   ├── COMMIT_CONVENTION.md        # Commit 规范
+│   ├── CODE_REVIEW_GUIDE.md        # Code Review 指南
 │   ├── QUICK_REFERENCE.md
 │   └── GUIDE.md
 ├── architecture/               # 架构文档
@@ -110,9 +127,14 @@ docs/
 │   └── TEST_SUMMARY.md
 ├── fixes/                      # 问题修复
 │   └── BUG_FIX_SUMMARY.md
-└── summaries/                  # 总结报告
-    ├── MODULARIZATION_SUMMARY.md
-    └── TESTING_REPORT.md
+├── summaries/                  # 总结报告
+│   ├── MODULARIZATION_SUMMARY.md
+│   └── TESTING_REPORT.md
+└── learning/                   # 学习资源
+    ├── LANGGRAPH_LANGCHAIN_1.0_GUIDE.md
+    ├── LANGCHAIN_LANGGRAPH_COLLABORATION.md
+    ├── CODE_IMPROVEMENT_GUIDE.md
+    └── LANGGRAPH_QUICK_REFERENCE.md
 ```
 
 ---
@@ -128,6 +150,8 @@ docs/
 - **优化性能** → [性能优化](performance/FRONTEND_PERFORMANCE_OPTIMIZATION.md)
 - **查看测试** → [测试报告](testing/AUTOMATED_TEST_REPORT.md)
 - **修复问题** → [Bug 修复总结](fixes/BUG_FIX_SUMMARY.md)
+- **学习 LangGraph** → [LangGraph 完整指南](learning/LANGGRAPH_LANGCHAIN_1.0_GUIDE.md)
+- **快速查询 API** → [LangGraph 快速参考](learning/LANGGRAPH_QUICK_REFERENCE.md)
 
 ---
 
@@ -174,5 +198,4 @@ source ~/.zshrc
 
 ---
 
-**最后更新**: 2025-10-04
-
+**最后更新**: 2025-01-16

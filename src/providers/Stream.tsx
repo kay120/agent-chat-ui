@@ -164,6 +164,12 @@ const StreamSession = ({
       });
 
       if (!response.ok) {
+        // 404 表示线程还没有状态（新创建的线程），这是正常的
+        if (response.status === 404) {
+          console.log('ℹ️ 线程还没有消息历史（新线程）');
+          setMessages([]);
+          return;
+        }
         throw new Error(`获取线程状态失败: ${response.status}`);
       }
 
@@ -272,6 +278,12 @@ const StreamSession = ({
         // 立即设置 threadId（同步更新 URL）
         await setThreadId(requestThreadId);
         console.log('✅ 创建新线程成功:', requestThreadId);
+
+        // 异步刷新历史记录列表（不阻塞流式处理）
+        console.log('🔄 创建新线程后异步刷新历史记录...');
+        getThreads()
+          .then(() => console.log('✅ 新线程已添加到历史记录'))
+          .catch(error => console.error('❌ 刷新历史记录失败:', error));
       } catch (error) {
         console.error('❌ 创建线程失败:', error);
         setIsLoading(false);
@@ -354,11 +366,17 @@ const StreamSession = ({
       let currentEvent = '';  // 用于存储当前事件类型
       let buffer = '';  // 累积未完成的行
 
+      console.log('🎬 开始读取流式数据...');
+
       while (true) {
         const { done, value } = await reader.read();
-        if (done) break;
+        if (done) {
+          console.log('✅ 流式数据读取完成');
+          break;
+        }
 
         const chunk = decoder.decode(value);
+        console.log('📦 收到原始chunk:', chunk.substring(0, 200));
         buffer += chunk;
 
         // 按行分割，保留最后一个可能不完整的行
@@ -366,9 +384,14 @@ const StreamSession = ({
         buffer = lines.pop() || '';  // 保存最后一个可能不完整的行
 
         for (const line of lines) {
+          if (!line.trim()) continue;  // 跳过空行
+
+          console.log('📝 处理行:', line.substring(0, 100));
+
           // 官方 API 使用 SSE 格式: event: xxx 和 data: xxx 分开
           if (line.startsWith('event: ')) {
             currentEvent = line.slice(7).trim();
+            console.log('🏷️ 事件类型:', currentEvent);
             continue;
           }
 
@@ -383,11 +406,12 @@ const StreamSession = ({
               // 官方 API 的 messages/partial 事件包含流式消息块
               if (currentEvent === 'messages/partial' && data.length > 0) {
                 const messageChunk = data[0];  // messages/partial 事件返回数组
+                console.log('📨 messages/partial 数据:', messageChunk);
 
                 if (messageChunk && messageChunk.type === 'ai' && messageChunk.content) {
                   // 这是流式的 AI 消息块（官方 API 直接给完整内容，不是增量）
                   aiContent = messageChunk.content;
-                  console.log('🤖 收到AI流式块，总长度:', aiContent.length);
+                  console.log('🤖 收到AI流式块，总长度:', aiContent.length, '内容:', aiContent.substring(0, 50));
 
                   // 立即更新界面（流式效果）
                   const updateMessages = (prevMessages: Message[]) => {
@@ -418,10 +442,14 @@ const StreamSession = ({
 
                   // 只有当前显示的是这个线程时，才更新界面
                   const currentDisplayThreadId = currentThreadIdRef.current;
+                  console.log('🔍 检查是否更新界面 - 当前线程:', currentDisplayThreadId, '请求线程:', requestThreadId);
                   if (currentDisplayThreadId === requestThreadId) {
+                    console.log('✅ 更新界面，消息数:', updatedMessages.length);
                     flushSync(() => {
                       setMessages(updatedMessages);
                     });
+                  } else {
+                    console.log('⏭️ 跳过界面更新（线程不匹配）');
                   }
                 }
               }
@@ -511,14 +539,11 @@ const StreamSession = ({
         console.error('请求失败:', error);
       }
     } finally {
-      // 刷新历史记录列表（后端已经保存了对话）
-      console.log('🔄 刷新历史记录列表...');
-      try {
-        await getThreads();  // getThreads() 内部已经调用了 setThreads()
-        console.log('✅ 历史记录已刷新');
-      } catch (error) {
-        console.error('❌ 刷新历史记录失败:', error);
-      }
+      // 异步刷新历史记录列表（不阻塞）
+      console.log('🔄 异步刷新历史记录列表...');
+      getThreads()
+        .then(() => console.log('✅ 历史记录已刷新'))
+        .catch(error => console.error('❌ 刷新历史记录失败:', error));
 
       // 清理后台线程数据（流式请求已完成）
       if (requestThreadId) {
